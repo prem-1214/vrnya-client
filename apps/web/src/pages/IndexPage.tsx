@@ -11,6 +11,7 @@ import {
   FileText,
   Folder,
   RefreshCcw,
+  CloudUpload,
 } from "lucide-react";
 import {
   addAllowedIndexPath,
@@ -28,6 +29,7 @@ import {
   pickFolderPath,
 } from "../platform/shell";
 import "./IndexPage.css";
+import R2UploadModal from "../components/upload/R2UploadModal";
 
 function getErrorMessage(error: unknown, fallback: string): string {
   return error instanceof Error ? error.message : fallback;
@@ -45,13 +47,15 @@ const IndexPage: React.FC = () => {
   const [isSavingPath, setIsSavingPath] = useState(false);
   const [isIndexingAll, setIsIndexingAll] = useState(false);
   const [activePath, setActivePath] = useState<string | null>(null);
-  // Add to state declarations (around line 47)
+  // Add to state declarations
   const [progress, setProgress] = useState<{
     current: number;
     total: number;
     currentFile: string;
     failed: number;
   } | null>(null);
+
+  const [showUploadModal, setShowUploadModal] = useState(false);
 
   const resetFeedback = () => {
     setStatus("idle");
@@ -281,6 +285,14 @@ const IndexPage: React.FC = () => {
               >
                 <FileText size={18} />
                 <span>File</span>
+              </button>
+              <button
+                className="r2-upload-trigger-btn"
+                onClick={() => setShowUploadModal(true)}
+                title="Upload file to cloud storage"
+              >
+                <CloudUpload size={16} />
+                <span>Upload to Cloud</span>
               </button>
             </div>
 
@@ -531,6 +543,17 @@ const IndexPage: React.FC = () => {
               already covers them.
             </li>
           </ul>
+          <AnimatePresence>
+            {showUploadModal && (
+              <R2UploadModal
+                onClose={() => setShowUploadModal(false)}
+                onSuccess={(fileId, fileName) => {
+                  console.log(`Uploaded & indexed: ${fileName} (${fileId})`);
+                  // optionally show a toast or refresh document list
+                }}
+              />
+            )}
+          </AnimatePresence>
         </div>
       </div>
     </div>

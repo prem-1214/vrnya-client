@@ -52,6 +52,27 @@ export interface DeleteFileResult {
   permanent: boolean;
 }
 
+export interface PresignUploadResponse {
+  uploadUrl: string;
+  r2Key: string;
+  expiresInSeconds: number;
+}
+export interface ConfirmUploadResponse {
+  fileId: string;
+  r2Key: string;
+  name: string;
+  message: string;
+}
+export interface R2IndexResponse {
+  fileId: string;
+  chunks: number;
+  message: string;
+}
+export interface R2DownloadUrlResponse {
+  downloadUrl: string;
+  expiresInSeconds: number;
+}
+
 // ---------------------- existing types and API functions ----------------------
 export interface HealthResponse {
   status: string;
@@ -416,3 +437,62 @@ export const indexPathWithProgress = async (
     } catch {}
   }
 };
+
+export const presignUpload = (payload: {
+  fileName: string;
+  mimeType: string;
+  fileSizeBytes: number;
+}) =>
+  apiFetch<PresignUploadResponse>("/api/v1/upload/presign", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+export const confirmUpload = (payload: {
+  r2Key: string;
+  fileName: string;
+  mimeType: string;
+  fileSizeBytes: number;
+}) =>
+  apiFetch<ConfirmUploadResponse>("/api/v1/upload/confirm", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+export const getR2DownloadUrl = (fileId: string) =>
+  apiFetch<R2DownloadUrlResponse>(`/api/v1/upload/${fileId}/download-url`);
+export const indexR2File = (fileId: string) =>
+  apiFetch<R2IndexResponse>("/api/v1/index/r2", {
+    method: "POST",
+    body: JSON.stringify({ fileId }),
+  });
+/**
+ * Upload a file directly to R2 using a presigned PUT URL.
+ * This goes browser → R2 directly (skips the server).
+ */
+export async function uploadFileToR2(
+  presignedUrl: string,
+  file: File,
+  onProgress?: (percent: number) => void,
+): Promise<void> {
+  return new Promise<void>((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.upload.addEventListener("progress", (e) => {
+      if (e.lengthComputable && onProgress) {
+        onProgress(Math.round((e.loaded / e.total) * 100));
+      }
+    });
+    xhr.addEventListener("load", () => {
+      if (xhr.status >= 200 && xhr.status < 300) {
+        resolve();
+      } else {
+        reject(new Error(`R2 upload failed with status ${xhr.status}`));
+      }
+    });
+    xhr.addEventListener("error", () =>
+      reject(new Error("R2 upload network error")),
+    );
+    xhr.addEventListener("abort", () => reject(new Error("R2 upload aborted")));
+    xhr.open("PUT", presignedUrl);
+    xhr.setRequestHeader("Content-Type", file.type);
+    xhr.send(file);
+  });
+}
