@@ -26,7 +26,6 @@ const STAGE_LABELS: Record<UploadStage, string> = {
   presigning: "Preparing upload...",
   uploading: "Uploading to cloud...",
   confirming: "Registering file...",
-  indexing: "Indexing document...",
   done: "Done!",
   error: "Upload failed",
 };
