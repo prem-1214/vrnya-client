@@ -18,6 +18,7 @@ import {
   getDocumentById,
   summarizeDocument,
   chatWithDocument,
+  getR2DownloadUrl,
   BASE_URL,
 } from "../api/client";
 import "./DocumentViewerPage.css";
@@ -125,6 +126,7 @@ const DocumentViewerPage: React.FC = () => {
 
   const [sidebarWidth, setSidebarWidth] = useState(400);
   const [isResizing, setIsResizing] = useState(false);
+  const [pdfUrl, setPdfUrl] = useState<string | null>(null);
 
   // Ref attached to the highlighted chunk — used for scrolling
   const highlightRef = useRef<HTMLElement>(null);
@@ -135,9 +137,27 @@ const DocumentViewerPage: React.FC = () => {
       setIsLoading(true);
       try {
         const response = await getDocumentById(id);
-        setDocument(response.document);
-      } catch (err: any) {
-        setError(err.message || "Failed to load document");
+        const doc = response.document as {
+          id: string;
+          extension: string;
+          storage_type?: string;
+          r2_key?: string;
+          [key: string]: unknown;
+        };
+        setDocument(doc);
+
+        // For R2-stored PDFs, pre-fetch a presigned download URL
+        if (doc.extension === ".pdf" && doc.storage_type === "r2") {
+          try {
+            const { downloadUrl } = await getR2DownloadUrl(id);
+            setPdfUrl(downloadUrl);
+          } catch {
+            // non-fatal: iframe will just show empty
+          }
+        }
+      } catch (err: unknown) {
+        const message = err instanceof Error ? err.message : "Failed to load document";
+        setError(message);
       } finally {
         setIsLoading(false);
       }
@@ -241,9 +261,15 @@ const DocumentViewerPage: React.FC = () => {
     if (!document) return null;
 
     if (document.extension === ".pdf") {
+      // For R2-stored PDFs, use a presigned direct URL (avoids server stream redirect)
+      const pdfSrc =
+        document.storage_type === "r2" && document.r2_key
+          ? null // handled below with pdfUrl state
+          : `${BASE_URL}/api/v1/documents/${document.id}/stream`;
+
       return (
         <iframe
-          src={`${BASE_URL}/api/v1/documents/${document.id}/stream`}
+          src={pdfSrc ?? pdfUrl ?? undefined}
           style={{ width: "100%", height: "100%", border: "none" }}
           title="PDF Viewer"
         />
