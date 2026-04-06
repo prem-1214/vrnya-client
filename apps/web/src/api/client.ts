@@ -125,17 +125,74 @@ export interface AllowedIndexPathsResponse {
   paths: AllowedIndexPath[];
 }
 
+// In-memory token store — never persisted to localStorage
+let _accessToken: string | null = null;
+
+// Singleton refresh promise — shared across ALL callers:
+// AuthContext session restore + apiFetch 401 handler.
+// Guarantees only ONE refresh HTTP request fires at any time.
+let _refreshInFlight: Promise<{ accessToken: string }> | null = null;
+
+export const tokenStore = {
+  get: () => _accessToken,
+  set: (token: string | null) => {
+    _accessToken = token;
+  },
+  clear: () => {
+    _accessToken = null;
+  },
+};
+
+// Call this instead of authApi.refresh() directly.
+// Safe to call concurrently — returns the same promise to all callers.
+export async function singletonRefresh(): Promise<{ accessToken: string }> {
+  if (_refreshInFlight) return _refreshInFlight;
+
+  _refreshInFlight = fetch(`${BASE_URL}/api/v1/auth/refresh`, {
+    method: "POST",
+    credentials: "include",
+  })
+    .then(async (res) => {
+      if (!res.ok) throw new Error("Refresh failed");
+      return res.json() as Promise<{ accessToken: string }>;
+    })
+    .finally(() => {
+      _refreshInFlight = null;
+    });
+
+  return _refreshInFlight;
+}
+
 async function apiFetch<T>(
   endpoint: string,
   options?: RequestInit,
 ): Promise<T> {
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+    ...(options?.headers as Record<string, string>),
+  };
+
+  if (_accessToken) {
+    headers["Authorization"] = `Bearer ${_accessToken}`;
+  }
+
   const res = await fetch(`${BASE_URL}${endpoint}`, {
     ...options,
-    headers: {
-      "Content-Type": "application/json",
-      ...options?.headers,
-    },
+    headers,
+    credentials: "include", // needed so HttpOnly refresh cookie is sent
   });
+
+  // Silent refresh on 401 — try once before failing
+  if (res.status === 401 && !endpoint.includes("/auth/")) {
+    const refreshed = await attemptSilentRefresh();
+    if (refreshed) {
+      // Retry original request with new token
+      return apiFetch<T>(endpoint, options);
+    }
+    // Refresh failed — clear token, let the app handle redirect
+    tokenStore.clear();
+    throw new Error("Session expired. Please log in again.");
+  }
 
   if (!res.ok) {
     const error = await res.json().catch(() => ({ error: "Unknown error" }));
@@ -143,6 +200,16 @@ async function apiFetch<T>(
   }
 
   return res.json();
+}
+
+async function attemptSilentRefresh(): Promise<boolean> {
+  try {
+    const data = await singletonRefresh();
+    tokenStore.set(data.accessToken);
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 export const healthCheck = () => apiFetch<HealthResponse>("/health");
@@ -496,3 +563,50 @@ export async function uploadFileToR2(
     xhr.send(file);
   });
 }
+
+// ----------------------- Auth API -----------------------
+
+export interface AuthUser {
+  id: string;
+  email: string;
+  displayName: string | null;
+  avatarUrl: string | null;
+  emailVerified: boolean;
+}
+
+export const authApi = {
+  register: (payload: {
+    email: string;
+    password: string;
+    displayName?: string;
+  }) =>
+    apiFetch<{ accessToken: string; user: AuthUser }>("/api/v1/auth/register", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
+
+  login: (payload: { email: string; password: string }) =>
+    apiFetch<{ accessToken: string; user: AuthUser }>("/api/v1/auth/login", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
+
+  refresh: (): Promise<{ accessToken: string }> =>
+    fetch(`${BASE_URL}/api/v1/auth/refresh`, {
+      method: "POST",
+      credentials: "include",
+    }).then((r) => {
+      if (!r.ok) throw new Error("Refresh failed");
+      return r.json();
+    }),
+
+  logout: () =>
+    fetch(`${BASE_URL}/api/v1/auth/logout`, {
+      method: "POST",
+      credentials: "include",
+    }),
+
+  me: () => apiFetch<{ user: AuthUser }>("/api/v1/auth/me"),
+
+  googleSignInUrl: () => `${BASE_URL}/api/v1/auth/google`,
+};
