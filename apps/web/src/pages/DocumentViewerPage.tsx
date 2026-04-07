@@ -13,6 +13,7 @@ import {
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { motion, AnimatePresence } from "framer-motion";
+import * as docx from "docx-preview";
 
 import {
   getDocumentById,
@@ -128,6 +129,10 @@ const DocumentViewerPage: React.FC = () => {
   const [isResizing, setIsResizing] = useState(false);
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
 
+  const [docxBuffer, setDocxBuffer] = useState<ArrayBuffer | null>(null);
+  const [isDocxLoading, setIsDocxLoading] = useState(false);
+  const docxContainerRef = useRef<HTMLDivElement>(null);
+
   // Ref attached to the highlighted chunk — used for scrolling
   const highlightRef = useRef<HTMLElement>(null);
 
@@ -155,8 +160,27 @@ const DocumentViewerPage: React.FC = () => {
             // non-fatal: iframe will just show empty
           }
         }
+
+        // For R2-stored DOCX, fetch and prepare buffer for docx-preview
+        if (
+          (doc.extension === ".docx" || doc.extension === ".doc") &&
+          doc.storage_type === "r2"
+        ) {
+          setIsDocxLoading(true);
+          try {
+            const { downloadUrl } = await getR2DownloadUrl(id);
+            const res = await fetch(downloadUrl);
+            const arrayBuffer = await res.arrayBuffer();
+            setDocxBuffer(arrayBuffer);
+          } catch {
+            // fallback to plain text if conversion fails
+          } finally {
+            setIsDocxLoading(false);
+          }
+        }
       } catch (err: unknown) {
-        const message = err instanceof Error ? err.message : "Failed to load document";
+        const message =
+          err instanceof Error ? err.message : "Failed to load document";
         setError(message);
       } finally {
         setIsLoading(false);
@@ -255,6 +279,26 @@ const DocumentViewerPage: React.FC = () => {
     setIsResizing(true);
   }, []);
 
+  // Render the DOCX file when buffer and container are ready
+  useEffect(() => {
+    if (docxBuffer && docxContainerRef.current) {
+      docx.renderAsync(docxBuffer, docxContainerRef.current, undefined, {
+        className: "docx",
+        inWrapper: true,
+        ignoreWidth: false,
+        ignoreHeight: false,
+        ignoreFonts: false,
+        breakPages: true,
+        ignoreLastRenderedPageBreak: true,
+        experimental: true,
+        renderHeaders: true,
+        renderFooters: true,
+        renderFootnotes: true,
+        renderEndnotes: true
+      });
+    }
+  }, [docxBuffer]);
+
   // ─── Render helpers ──────────────────────────────────────────────────────
 
   function renderDocumentContent() {
@@ -295,6 +339,31 @@ const DocumentViewerPage: React.FC = () => {
             {document.content}
           </ReactMarkdown>
         </div>
+      );
+    }
+
+    if (document.extension === ".docx" || document.extension === ".doc") {
+      if (document.storage_type === "r2" && isDocxLoading) {
+        return (
+          <div className="doc-viewer-loading" style={{ height: "100%", display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <Loader2 size={32} className="spin accent-text" />
+            <p style={{ marginLeft: "1rem" }}>Rendering document...</p>
+          </div>
+        );
+      }
+
+      return (
+        <div
+          ref={docxContainerRef}
+          className="docx-rendered-container"
+          style={{
+            maxWidth: "900px",
+            margin: "0 auto",
+            backgroundColor: "white",
+            minHeight: "100%",
+            color: "black"
+          }}
+        />
       );
     }
 
