@@ -14,7 +14,7 @@ import {
 const Sidebar: React.FC = () => {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const { user } = useAuth();
-  
+
   const navItems = [
     { to: "/", icon: MessageSquare, label: "Chat" },
     { to: "/search", icon: Search, label: "Search" },
@@ -23,25 +23,25 @@ const Sidebar: React.FC = () => {
     { to: "/settings", icon: Settings, label: "Settings" },
   ];
 
-  const displayName = user?.displayName || user?.email?.split('@')[0] || "User";
+  const displayName = user?.displayName || user?.email?.split("@")[0] || "User";
   const initial = displayName.charAt(0).toUpperCase();
 
   return (
     <aside
-      className={`glass h-full flex flex-col border-r border-[var(--glass-border)] py-4 px-2 bg-[linear-gradient(180deg,rgba(255,255,255,0.03),rgba(255,255,255,0))] transition-[width] duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${
-        isCollapsed ? "w-[72px]" : "w-[260px]"
+      className={`glass h-full flex flex-col border-r border-(--glass-border) bg-[linear-gradient(180deg,rgba(255,255,255,0.03),rgba(255,255,255,0))] transition-[width] duration-300 ease-in-out ${
+        isCollapsed ? "w-18" : "w-64"
       }`}
     >
-      <nav className=" flex flex-col gap-7 flex-1">
+      <nav className=" flex flex-col flex-1 ">
         {navItems.map((item) => (
           <NavLink
             key={item.to}
             to={item.to}
             className={({ isActive }) =>
-              `flex items-center overflow-hidden whitespace-nowrap no-underline rounded-xl transition-all duration-200 ease-in-out font-medium text-sm hover:bg-[var(--color-bg-hover)] hover:text-[var(--color-text-primary)] ${
+              `min-h-12 flex items-center overflow-hidden whitespace-nowrap no-underline rounded-xl transition-all duration-200 ease-in-out font-medium text-sm hover:bg-(--color-bg-hover) hover:text-(--color-text-primary) ${
                 isActive
-                  ? "bg-[var(--color-accent-subtle)] text-[var(--color-accent)] shadow-[inset_0_0_0_1px_rgba(90,169,255,0.18)] [&>svg]:drop-shadow-[0_0_5px_var(--color-accent-glow)]"
-                  : "text-[var(--color-text-secondary)]"
+                  ? "bg-(--color-accent-subtle) text-(--color-accent) shadow-[inset_0_0_0_1px_rgba(90,169,255,0.18)] [&>svg]:drop-shadow-[0_0_5px_var(--color-accent-glow)]"
+                  : "text-(--color-text-secondary)"
               } ${isCollapsed ? "justify-center py-4 px-0" : "gap-4 p-4"}`
             }
           >
@@ -50,9 +50,9 @@ const Sidebar: React.FC = () => {
           </NavLink>
         ))}
       </nav>
-      <div className="mt-auto flex flex-col gap-4 border-t border-[var(--glass-border)] p-4">
+      <div className="mt-auto flex flex-col gap-4 border-t border-(--glass-border) p-4">
         <button
-          className="flex w-full cursor-pointer items-center justify-center rounded-xl border border-[var(--glass-border)] bg-transparent p-2 text-[var(--color-text-secondary)] transition-all duration-200 ease-in-out hover:bg-[var(--color-bg-hover)] hover:text-[var(--color-text-primary)]"
+          className="min-h-12 flex w-full cursor-pointer items-center justify-center rounded-xl border border-(--glass-border) bg-transparent p-2 text-(--color-text-secondary) transition-all duration-200 ease-in-out hover:bg-(--color-bg-hover) hover:text-(--color-text-primary)"
           onClick={() => setIsCollapsed(!isCollapsed)}
           title={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
         >
@@ -61,15 +61,15 @@ const Sidebar: React.FC = () => {
         <div
           className={`flex items-center overflow-hidden whitespace-nowrap ${isCollapsed ? "justify-center" : "gap-4"}`}
         >
-          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[linear-gradient(135deg,var(--color-accent),var(--color-accent-hover))] text-[var(--color-bg-primary)] text-sm font-bold shadow-[0_4px_12px_rgba(59,130,246,0.2)]">
+          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[linear-gradient(135deg,var(--color-accent),var(--color-accent-hover))] text-(--color-bg-primary) text-sm font-bold shadow-[0_4px_12px_rgba(59,130,246,0.2)]">
             {initial}
           </div>
           {!isCollapsed && (
             <div className="flex flex-col">
-              <span className="text-sm font-semibold text-[var(--color-text-primary)]">
+              <span className="text-sm font-semibold text-(--color-text-primary)">
                 {displayName}
               </span>
-              <span className="text-xs text-[var(--color-text-muted)] w-36 overflow-hidden text-ellipsis">
+              <span className="text-xs text-(--color-text-muted) w-36 overflow-hidden text-ellipsis">
                 {user?.email || "Local User"}
               </span>
             </div>

@@ -20,16 +20,14 @@ const AppContext = createContext<AppContextType | undefined>(undefined);
 const THEME_STORAGE_KEY = "secondbrain-theme";
 
 function getInitialTheme(): ThemeMode {
-  if (typeof window === "undefined") return "dark";
+  if (typeof window === "undefined") return "light";
 
   const storedTheme = window.localStorage.getItem(THEME_STORAGE_KEY);
   if (storedTheme === "light" || storedTheme === "dark") {
     return storedTheme;
   }
 
-  return window.matchMedia("(prefers-color-scheme: dark)").matches
-    ? "dark"
-    : "light";
+  return "light";
 }
 
 export const AppProvider: React.FC<{ children: ReactNode }> = ({
