@@ -322,10 +322,7 @@ body.is-resizing * {
   pointer-events: none !important;
 }
 
-
-
 /* ----------------------------------------------------------------------------------- */
-
 
 /* Add this to DocumentViewerPage.css */
 
@@ -340,4 +337,16 @@ body.is-resizing * {
 @keyframes chunk-pulse {
   0%   { background: rgba(255, 200, 0, 0.55); }
   100% { background: rgba(255, 200, 0, 0.2); }
+}
+
+/* FIX DOCX-PREVIEW OVERFLOW */
+.docx-rendered-container .docx-wrapper {
+  background: transparent !important;
+  padding: 0 !important;
+  display: block !important;
+  overflow-x: auto;
+}
+
+.docx-rendered-container .docx-wrapper > section.docx {
+  margin: 0 auto !important;
 }
