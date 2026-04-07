@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Save, Server, Loader2, Key } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAppContext } from "../context/AppContext";
-import { BASE_URL } from "../api/client";
+import { BASE_URL, tokenStore } from "../api/client";
 
 const API_URL = `${BASE_URL}/api/v1`;
 
@@ -17,7 +17,9 @@ const SettingsPage: React.FC = () => {
   const [groqKey, setGroqKey] = useState("");
 
   const [geminiModel, setGeminiModel] = useState("gemini-2.5-flash");
-  const [geminiEmbedModel, setGeminiEmbedModel] = useState("gemini-embedding-001");
+  const [geminiEmbedModel, setGeminiEmbedModel] = useState(
+    "gemini-embedding-001",
+  );
   const [groqModel, setGroqModel] = useState("llama3-70b-8192");
   const [openRouterKey, setOpenRouterKey] = useState("");
   const [openRouterModel, setOpenRouterModel] = useState(
@@ -41,14 +43,21 @@ const SettingsPage: React.FC = () => {
   const loadSettings = async () => {
     try {
       setIsLoading(true);
-      const res = await fetch(`${API_URL}/config`);
+      const res = await fetch(`${API_URL}/config`, {
+        headers: {
+          ...(tokenStore.get()
+            ? { Authorization: `Bearer ${tokenStore.get()}` }
+            : {}),
+        },
+      });
       if (res.ok) {
         const data = await res.json();
         if (data.llm_provider) setProvider(data.llm_provider);
         if (data.gemini_api_key) setGeminiKey(data.gemini_api_key);
         if (data.groq_api_key) setGroqKey(data.groq_api_key);
         if (data.gemini_chat_model) setGeminiModel(data.gemini_chat_model);
-        if (data.gemini_embed_model) setGeminiEmbedModel(data.gemini_embed_model);
+        if (data.gemini_embed_model)
+          setGeminiEmbedModel(data.gemini_embed_model);
         if (data.groq_chat_model) setGroqModel(data.groq_chat_model);
         if (data.openrouter_api_key) setOpenRouterKey(data.openrouter_api_key);
         if (data.openrouter_chat_model)
@@ -85,7 +94,12 @@ const SettingsPage: React.FC = () => {
 
       const res = await fetch(`${API_URL}/config`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          ...(tokenStore.get()
+            ? { Authorization: `Bearer ${tokenStore.get()}` }
+            : {}),
+        },
         body: JSON.stringify(updates),
       });
 

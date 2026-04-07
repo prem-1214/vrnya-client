@@ -232,6 +232,7 @@ export async function sendMessageStream(
     method: "POST",
     headers: {
       "Content-Type": "application/json",
+      ...(tokenStore.get() ? { Authorization: `Bearer ${tokenStore.get()}` } : {}),
     },
     body: JSON.stringify({ message }),
     signal,
@@ -282,6 +283,9 @@ export const sendVoiceMessage = (audioBlob: Blob) => {
 
   return fetch(`${BASE_URL}/api/v1/voice`, {
     method: "POST",
+    headers: {
+      ...(tokenStore.get() ? { Authorization: `Bearer ${tokenStore.get()}` } : {}),
+    },
     body: formData,
   }).then(async (res) => {
     if (!res.ok) {
@@ -426,6 +430,7 @@ export const indexAllPathsWithProgress = async (
     method: "POST",
     headers: {
       "Content-Type": "application/json",
+      ...(tokenStore.get() ? { Authorization: `Bearer ${tokenStore.get()}` } : {}),
     },
   });
   if (!response.ok || !response.body) {
@@ -473,7 +478,10 @@ export const indexPathWithProgress = async (
 ): Promise<void> => {
   const response = await fetch(`${BASE_URL}/api/v1/index/progress`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      "Content-Type": "application/json",
+      ...(tokenStore.get() ? { Authorization: `Bearer ${tokenStore.get()}` } : {}),
+    },
     body: JSON.stringify({ path: targetPath }),
   });
   if (!response.ok || !response.body) {
