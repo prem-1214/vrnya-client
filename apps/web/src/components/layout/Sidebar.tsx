@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { NavLink } from "react-router-dom";
+import { useAuth } from "../../context/AuthContext";
 import {
   MessageSquare,
   Search,
@@ -12,6 +13,8 @@ import {
 
 const Sidebar: React.FC = () => {
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const { user } = useAuth();
+  
   const navItems = [
     { to: "/", icon: MessageSquare, label: "Chat" },
     { to: "/search", icon: Search, label: "Search" },
@@ -19,6 +22,9 @@ const Sidebar: React.FC = () => {
     { to: "/files", icon: Files, label: "Files" },
     { to: "/settings", icon: Settings, label: "Settings" },
   ];
+
+  const displayName = user?.displayName || user?.email?.split('@')[0] || "User";
+  const initial = displayName.charAt(0).toUpperCase();
 
   return (
     <aside
@@ -56,15 +62,15 @@ const Sidebar: React.FC = () => {
           className={`flex items-center overflow-hidden whitespace-nowrap ${isCollapsed ? "justify-center" : "gap-4"}`}
         >
           <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[linear-gradient(135deg,var(--color-accent),var(--color-accent-hover))] text-[var(--color-bg-primary)] text-sm font-bold shadow-[0_4px_12px_rgba(59,130,246,0.2)]">
-            P
+            {initial}
           </div>
           {!isCollapsed && (
             <div className="flex flex-col">
               <span className="text-sm font-semibold text-[var(--color-text-primary)]">
-                Premr
+                {displayName}
               </span>
-              <span className="text-xs text-[var(--color-text-muted)]">
-                Local Admin
+              <span className="text-xs text-[var(--color-text-muted)] w-36 overflow-hidden text-ellipsis">
+                {user?.email || "Local User"}
               </span>
             </div>
           )}
