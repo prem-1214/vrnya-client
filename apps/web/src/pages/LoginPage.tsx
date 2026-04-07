@@ -63,8 +63,8 @@ const LoginPage: React.FC = () => {
       >
         {/* Logo / Brand */}
         <div className="login-brand">
-          <div className="login-brand-icon">🧠</div>
-          <h1 className="login-brand-name">Second Brain</h1>
+          {/* <div className="login-brand-icon">🧠</div> */}
+          <h1 className="login-brand-name">Vrnya</h1>
           <p className="login-brand-tagline">Your AI-powered knowledge base</p>
         </div>
 

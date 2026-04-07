@@ -20,7 +20,7 @@ const TitleBar: React.FC = () => {
     <div className="glass drag-region z-[1000] flex h-[40px] w-full items-center justify-between border-b border-[var(--glass-border)] bg-[var(--titlebar-bg)] px-4">
       <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.05em] text-[var(--color-text-secondary)]">
         <div className="h-2 w-2 rounded-full bg-[var(--color-accent)] shadow-[0_0_8px_var(--color-accent)]" />
-        <span>SecondBrain</span>
+        <span>Vrnya</span>
       </div>
       <div className="flex h-full no-drag">
         <button

@@ -150,7 +150,7 @@ const SettingsPage: React.FC = () => {
               <div>
                 <h3>LLM Provider</h3>
                 <p>
-                  Choose which AI brain powers your SecondBrain application.
+                  Choose which AI brain powers your Vrnya.
                 </p>
               </div>
             </div>
