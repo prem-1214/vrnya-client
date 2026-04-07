@@ -403,6 +403,19 @@ export const summarizeDocument = (fileId: string, force = false) =>
     body: JSON.stringify({ force }),
   });
 
+export interface UploadedFile {
+  id: string;
+  name: string;
+  extension: string;
+  size: number;
+  storage_type: 'r2' | 'local';
+  indexed_at: string | null;
+  chunk_count: number;
+}
+
+export const listUploadedFiles = () =>
+  apiFetch<{ files: UploadedFile[] }>('/api/v1/documents');
+
 export const chatWithDocument = (fileId: string, question: string) =>
   apiFetch<{ text: string; path?: string }>(
     `/api/v1/documents/${fileId}/chat`,
