@@ -63,7 +63,7 @@ const SettingsPage: React.FC = () => {
   const [geminiKey, setGeminiKey] = useState("");
   const [groqKey, setGroqKey] = useState("");
 
-  const [geminiModel, setGeminiModel] = useState("gemini-2.5-flash");
+  const [geminiModel, setGeminiModel] = useState("gemini-2.5-flash-lite");
   const [geminiEmbedModel, setGeminiEmbedModel] = useState(
     "gemini-embedding-001",
   );
