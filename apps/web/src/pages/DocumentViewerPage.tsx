@@ -357,11 +357,8 @@ const DocumentViewerPage: React.FC = () => {
           ref={docxContainerRef}
           className="docx-rendered-container"
           style={{
-            maxWidth: "900px",
-            margin: "0 auto",
-            backgroundColor: "white",
+            maxWidth: "100%",
             minHeight: "100%",
-            color: "black"
           }}
         />
       );
