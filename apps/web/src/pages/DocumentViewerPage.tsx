@@ -124,6 +124,13 @@ const DocumentViewerPage: React.FC = () => {
   >([]);
   const [chatInput, setChatInput] = useState("");
   const [isChatting, setIsChatting] = useState(false);
+  const chatEndRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (activeTab === "chat") {
+      chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [chatMessages, isChatting, activeTab]);
 
   const [sidebarWidth, setSidebarWidth] = useState(400);
   const [isResizing, setIsResizing] = useState(false);
@@ -599,6 +606,7 @@ const DocumentViewerPage: React.FC = () => {
                       <Loader2 size={14} className="spin" /> Thinking...
                     </div>
                   )}
+                  <div ref={chatEndRef} />
                 </div>
                 <form className="chat-input-form" onSubmit={handleSendMessage}>
                   <input
