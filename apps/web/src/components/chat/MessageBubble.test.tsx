@@ -81,7 +81,7 @@ describe("MessageBubble — sources rendering", () => {
       />,
     );
     fireEvent.click(screen.getByTitle("Preview"));
-    expect(onOpenPreview).toHaveBeenCalledWith("C:\\Users\\Prem\\notes.txt");
+    expect(onOpenPreview).toHaveBeenCalledWith(SOURCE);
   });
 
   it("renders multiple source cards", () => {

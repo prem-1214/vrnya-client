@@ -2,14 +2,14 @@ import React, { useEffect, useMemo, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { motion } from "framer-motion";
-import type { Message } from "../../hooks/useChat";
+import type { AgentSource, Message } from "../../hooks/useChat";
 import MessageSourceList from "./MessageSourceList";
 import { openPathInShell, showPathInFolder } from "../../platform/shell";
 import "./MessageBubble.css";
 
 interface MessageBubbleProps {
   message: Message;
-  onOpenPreview?: (path: string) => void;
+  onOpenPreview?: (target: AgentSource | { path: string }) => void;
 }
 
 const MessageBubble: React.FC<MessageBubbleProps> = ({
@@ -62,14 +62,19 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
   const displayContent = shouldAnimate ? visibleContent : fullDisplayContent;
   const revealComplete = displayContent.length >= fullDisplayContent.length;
 
-  const handleOpen = async (path: string) => {
+  const handleOpen = async (target: AgentSource | { path: string } | string) => {
+    const previewTarget =
+      typeof target === "string" ? { path: target } : target;
+
     if (onOpenPreview) {
-      onOpenPreview(path);
+      onOpenPreview(previewTarget);
       return;
     }
     try {
-      const error = await openPathInShell(path);
-      if (error) alert(`Could not open file: ${error}\nPath: ${path}`);
+      const error = await openPathInShell(previewTarget.path);
+      if (error) {
+        alert(`Could not open file: ${error}\nPath: ${previewTarget.path}`);
+      }
     } catch (err) {
       alert(`Error calling openPath: ${err}`);
     }
@@ -121,7 +126,7 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
               <div className="message-actions">
                 <button
                   className="action-btn"
-                  onClick={() => handleOpen(actionPath)}
+                  onClick={() => handleOpen({ path: actionPath })}
                 >
                   Preview
                 </button>

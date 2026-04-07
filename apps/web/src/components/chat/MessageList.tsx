@@ -1,12 +1,12 @@
 import React, { useRef, useEffect } from "react";
 import MessageBubble from "./MessageBubble";
-import type { Message } from "../../hooks/useChat";
+import type { AgentSource, Message } from "../../hooks/useChat";
 import "./MessageList.css";
 
 interface MessageListProps {
   messages: Message[];
   isTyping: boolean;
-  onOpenPreview?: (path: string) => void;
+  onOpenPreview?: (target: AgentSource | { path: string }) => void;
 }
 
 const MessageList: React.FC<MessageListProps> = ({

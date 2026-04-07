@@ -2,10 +2,14 @@ import { useState, useCallback, useRef } from "react";
 import { sendMessageStream } from "../api/client";
 
 export interface AgentSource {
+  id?: string;
   name?: string;
   path: string;
   content?: string;
   similarity?: number;
+  extension?: string;
+  storage_type?: "r2" | "local";
+  r2_key?: string;
 }
 
 // Matches AgentResult from server/src/agent/index.ts

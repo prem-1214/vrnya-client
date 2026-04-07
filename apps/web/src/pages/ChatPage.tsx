@@ -2,12 +2,14 @@ import React, { useState, useRef, useCallback, useEffect } from "react";
 import MessageList from "../components/chat/MessageList";
 import ChatInput from "../components/chat/ChatInput";
 import ChatPreviewPanel from "../components/chat/ChatPreviewPanel";
-import { useChat } from "../hooks/useChat";
+import { useChat, type AgentSource } from "../hooks/useChat";
 import "./ChatPage.css";
 
 const ChatPage: React.FC = () => {
   const { messages, isTyping, send, sendVoice, error } = useChat();
-  const [previewPath, setPreviewPath] = useState<string | null>(null);
+  const [previewTarget, setPreviewTarget] = useState<
+    AgentSource | { path: string } | null
+  >(null);
   const [previewWidth, setPreviewWidth] = useState(400);
   const isResizing = useRef(false);
 
@@ -60,7 +62,7 @@ const ChatPage: React.FC = () => {
           <MessageList
             messages={messages}
             isTyping={isTyping}
-            onOpenPreview={setPreviewPath}
+            onOpenPreview={setPreviewTarget}
           />
 
           <ChatInput
@@ -73,7 +75,7 @@ const ChatPage: React.FC = () => {
           />
         </div>
 
-        {previewPath && (
+        {previewTarget && (
           <div
             className="chat-resizer"
             onMouseDown={startResizing}
@@ -82,8 +84,8 @@ const ChatPage: React.FC = () => {
         )}
 
         <ChatPreviewPanel
-          path={previewPath}
-          onClose={() => setPreviewPath(null)}
+          target={previewTarget}
+          onClose={() => setPreviewTarget(null)}
           width={previewWidth}
         />
       </div>

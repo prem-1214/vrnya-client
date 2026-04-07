@@ -6,7 +6,7 @@ import { showPathInFolder } from "../../platform/shell";
 
 interface MessageSourceListProps {
   sources: AgentSource[];
-  onOpenPreview: (path: string) => void;
+  onOpenPreview: (source: AgentSource) => void;
 }
 
 function getFileName(path: string): string {
@@ -65,7 +65,7 @@ const MessageSourceList: React.FC<MessageSourceListProps> = ({
                   type="button"
                   className="message-source-btn"
                   title="Preview"
-                  onClick={() => onOpenPreview(source.path)}
+                  onClick={() => onOpenPreview(source)}
                 >
                   <ExternalLink size={12} />
                 </button>

@@ -1,19 +1,39 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { AlertCircle, ExternalLink, File, FolderOpen, Loader2, X } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { BASE_URL, readFile } from "../../api/client";
+import * as docx from "docx-preview";
+import {
+  BASE_URL,
+  getDocumentById,
+  getR2DownloadUrl,
+  readFile,
+  searchFiles,
+  tokenStore,
+} from "../../api/client";
+import type { AgentSource } from "../../hooks/useChat";
 import {
   isDesktopShell,
   openPathInShell,
   showPathInFolder,
 } from "../../platform/shell";
+import "../../pages/DocumentViewerPage.css";
 import "./ChatPreviewPanel.css";
 
 interface ChatPreviewPanelProps {
-  path: string | null;
+  target: AgentSource | { path: string } | null;
   onClose: () => void;
   width?: number;
+}
+
+interface ResolvedDocument {
+  id: string;
+  name: string;
+  path: string;
+  content: string;
+  extension: string;
+  storage_type?: "r2" | "local";
+  r2_key?: string;
 }
 
 function getExtension(filePath: string): string {
@@ -49,32 +69,85 @@ const TEXT_EXTENSIONS = new Set([
   ".env",
 ]);
 
+const DOCX_EXTENSIONS = new Set([".doc", ".docx"]);
+
 function getErrorMessage(error: unknown, fallback: string): string {
   return error instanceof Error ? error.message : fallback;
 }
 
-const ChatPreviewPanel: React.FC<ChatPreviewPanelProps> = ({ path, onClose, width }) => {
+function normalizePath(filePath: string): string {
+  return filePath.replace(/\//g, "\\").toLowerCase();
+}
+
+function getFileName(path: string): string {
+  return path.split(/[/\\]/).pop() || path;
+}
+
+function isAgentSource(
+  target: AgentSource | { path: string } | null,
+): target is AgentSource {
+  return Boolean(
+    target &&
+      ("id" in target ||
+        "name" in target ||
+        "similarity" in target ||
+        "extension" in target ||
+        "storage_type" in target),
+  );
+}
+
+async function resolveDocumentId(target: AgentSource): Promise<string | null> {
+  if (target.id) return target.id;
+
+  const exactPath = normalizePath(target.path);
+  const candidateQueries = Array.from(
+    new Set([target.name, getFileName(target.path)].filter(Boolean) as string[]),
+  );
+
+  for (const query of candidateQueries) {
+    try {
+      const response = await searchFiles(query);
+      const match = response.results.find(
+        (result) => result.id && result.path && normalizePath(result.path) === exactPath,
+      );
+      if (match?.id) return match.id;
+    } catch {
+      // Fall back to plain file preview if document lookup fails.
+    }
+  }
+
+  return null;
+}
+
+const ChatPreviewPanel: React.FC<ChatPreviewPanelProps> = ({ target, onClose, width }) => {
   const [content, setContent] = useState<string>("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [document, setDocument] = useState<ResolvedDocument | null>(null);
+  const [pdfUrl, setPdfUrl] = useState<string | null>(null);
+  const [docxBuffer, setDocxBuffer] = useState<ArrayBuffer | null>(null);
+  const docxContainerRef = useRef<HTMLDivElement>(null);
 
-  const extension = useMemo(() => (path ? getExtension(path) : ""), [path]);
-  const fileName = useMemo(() => (path ? path.split(/[/\\]/).pop() || path : ""), [path]);
+  const path = target?.path ?? null;
+  const source = isAgentSource(target) ? target : null;
+  const extension = useMemo(() => {
+    if (document?.extension) return document.extension.toLowerCase();
+    if (source?.extension) return source.extension.toLowerCase();
+    return path ? getExtension(path) : "";
+  }, [document?.extension, path, source?.extension]);
+  const fileName = useMemo(() => (path ? getFileName(path) : ""), [path]);
   const canPreviewAsText = extension ? TEXT_EXTENSIONS.has(extension) : true;
   const isMarkdown = MARKDOWN_EXTENSIONS.has(extension);
   const isPdf = extension === ".pdf";
+  const isDocx = DOCX_EXTENSIONS.has(extension);
   const canUseNativeShell = isDesktopShell();
 
   useEffect(() => {
     if (!path) {
       setContent("");
-      setError(null);
-      setIsLoading(false);
-      return;
-    }
-
-    if (!canPreviewAsText || isPdf) {
-      setContent("");
+      setDocument(null);
+      setPdfUrl(null);
+      setDocxBuffer(null);
       setError(null);
       setIsLoading(false);
       return;
@@ -85,7 +158,87 @@ const ChatPreviewPanel: React.FC<ChatPreviewPanelProps> = ({ path, onClose, widt
     const load = async () => {
       setIsLoading(true);
       setError(null);
+      setContent("");
+      setDocument(null);
+      setPdfUrl(null);
+      setDocxBuffer(null);
+
       try {
+        let resolvedDocument: ResolvedDocument | null = null;
+
+        if (source) {
+          const documentId = await resolveDocumentId(source);
+          if (documentId) {
+            const response = await getDocumentById(documentId);
+            resolvedDocument = response.document as ResolvedDocument;
+          }
+        }
+
+        if (!active) return;
+
+        if (resolvedDocument) {
+          setDocument(resolvedDocument);
+
+          if (resolvedDocument.extension.toLowerCase() === ".pdf") {
+            if (resolvedDocument.storage_type === "r2") {
+              const { downloadUrl } = await getR2DownloadUrl(resolvedDocument.id);
+              if (!active) return;
+              setPdfUrl(downloadUrl);
+            } else {
+              const response = await fetch(
+                `${BASE_URL}/api/v1/documents/${resolvedDocument.id}/stream`,
+                {
+                  credentials: "include",
+                  headers: tokenStore.get()
+                    ? { Authorization: `Bearer ${tokenStore.get()}` }
+                    : undefined,
+                },
+              );
+              if (!response.ok) {
+                throw new Error("Failed to load document preview");
+              }
+              const blob = await response.blob();
+              if (!active) return;
+              setPdfUrl(URL.createObjectURL(blob));
+            }
+            return;
+          }
+
+          if (DOCX_EXTENSIONS.has(resolvedDocument.extension.toLowerCase())) {
+            if (resolvedDocument.storage_type === "r2") {
+              const { downloadUrl } = await getR2DownloadUrl(resolvedDocument.id);
+              const res = await fetch(downloadUrl);
+              const arrayBuffer = await res.arrayBuffer();
+              if (!active) return;
+              setDocxBuffer(arrayBuffer);
+            } else {
+              const response = await fetch(
+                `${BASE_URL}/api/v1/documents/${resolvedDocument.id}/stream`,
+                {
+                  credentials: "include",
+                  headers: tokenStore.get()
+                    ? { Authorization: `Bearer ${tokenStore.get()}` }
+                    : undefined,
+                },
+              );
+              if (!response.ok) {
+                throw new Error("Failed to load document preview");
+              }
+              const arrayBuffer = await response.arrayBuffer();
+              if (!active) return;
+              setDocxBuffer(arrayBuffer);
+            }
+            return;
+          }
+
+          setContent(resolvedDocument.content ?? "");
+          return;
+        }
+
+        if (!canPreviewAsText || isPdf || isDocx) {
+          return;
+        }
+
         const response = await readFile(path);
         if (!active) return;
         setContent(response.content);
@@ -93,6 +246,9 @@ const ChatPreviewPanel: React.FC<ChatPreviewPanelProps> = ({ path, onClose, widt
         if (!active) return;
         setError(getErrorMessage(error, "Failed to load preview"));
         setContent("");
+        setDocument(null);
+        setPdfUrl(null);
+        setDocxBuffer(null);
       } finally {
         if (active) {
           setIsLoading(false);
@@ -105,7 +261,35 @@ const ChatPreviewPanel: React.FC<ChatPreviewPanelProps> = ({ path, onClose, widt
     return () => {
       active = false;
     };
-  }, [path, canPreviewAsText, isPdf]);
+  }, [path, canPreviewAsText, isDocx, isPdf, source]);
+
+  useEffect(() => {
+    if (!docxBuffer || !docxContainerRef.current) return;
+
+    docxContainerRef.current.innerHTML = "";
+    void docx.renderAsync(docxBuffer, docxContainerRef.current, undefined, {
+      className: "docx",
+      inWrapper: true,
+      ignoreWidth: false,
+      ignoreHeight: false,
+      ignoreFonts: false,
+      breakPages: true,
+      ignoreLastRenderedPageBreak: true,
+      experimental: true,
+      renderHeaders: true,
+      renderFooters: true,
+      renderFootnotes: true,
+      renderEndnotes: true,
+    });
+  }, [docxBuffer]);
+
+  useEffect(() => {
+    return () => {
+      if (pdfUrl?.startsWith("blob:")) {
+        URL.revokeObjectURL(pdfUrl);
+      }
+    };
+  }, [pdfUrl]);
 
   const handleOpenInSystem = async () => {
     if (!path) return;
@@ -192,12 +376,26 @@ const ChatPreviewPanel: React.FC<ChatPreviewPanelProps> = ({ path, onClose, widt
             {!isLoading && !error && isPdf && path && (
               <iframe
                 className="chat-preview-pdf"
-                src={`${BASE_URL}/api/v1/filesystem/stream?path=${encodeURIComponent(path)}`}
+                src={pdfUrl ?? undefined}
                 title="PDF Preview"
               />
             )}
 
-            {!isLoading && !error && !canPreviewAsText && !isPdf && (
+            {!isLoading && !error && isDocx && (
+              docxBuffer ? (
+                <div
+                  ref={docxContainerRef}
+                  className="chat-preview-docx docx-rendered-container"
+                />
+              ) : (
+                <div className="chat-preview-empty">
+                  <File size={22} />
+                  <p>This DOCX file could not be rendered inline.</p>
+                </div>
+              )
+            )}
+
+            {!isLoading && !error && !canPreviewAsText && !isPdf && !isDocx && (
               <div className="chat-preview-empty">
                 <File size={22} />
                 <p>This file type does not have an inline preview yet.</p>
