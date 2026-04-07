@@ -10,6 +10,53 @@ function getErrorMessage(error: unknown, fallback: string): string {
   return error instanceof Error ? error.message : fallback;
 }
 
+interface InputFieldProps extends React.InputHTMLAttributes<HTMLInputElement> {
+  label: string;
+  helpText?: React.ReactNode;
+}
+
+const InputField: React.FC<InputFieldProps> = ({
+  label,
+  helpText,
+  className = "",
+  ...props
+}) => (
+  <div className="flex flex-col gap-2">
+    <label className="block text-sm font-semibold text-(--color-text-primary)">
+      {label}
+    </label>
+    <input
+      className={`min-h-8 w-full  border border-(--color-border) text-(--color-text-primary) px-4 py-3 rounded-xl outline-none focus:border-(--color-accent) transition-colors text-sm placeholder:text-(--color-text-muted) ${className}`}
+      {...props}
+    />
+    {helpText && (
+      <small className="block text-xs text-(--color-text-muted) mt-2 font-medium">
+        {helpText}
+      </small>
+    )}
+  </div>
+);
+
+interface ProviderSectionProps {
+  title: string;
+  icon: React.ElementType;
+  children: React.ReactNode;
+}
+
+const ProviderSection: React.FC<ProviderSectionProps> = ({
+  title,
+  icon: Icon,
+  children,
+}) => (
+  <div className="flex flex-col gap-5 ">
+    <h4 className="flex items-center gap-2 text-(--color-text-primary) font-bold text-base">
+      <Icon size={18} className="text-(--color-accent)" />
+      {title} Configuration
+    </h4>
+    {children}
+  </div>
+);
+
 const SettingsPage: React.FC = () => {
   const { refreshConfig } = useAppContext();
   const [provider, setProvider] = useState("ollama");
@@ -140,8 +187,8 @@ const SettingsPage: React.FC = () => {
       <div className="index-container">
         {isLoading ? (
           <div className="empty-state glass">
-            <Loader2 className="spin" size={24} />
-            <span>Loading settings...</span>
+            <Loader2 className="animate-spin text-(--color-accent)" size={32} />
+            <span className="font-medium">Loading settings...</span>
           </div>
         ) : (
           <div className="index-card glass">
@@ -150,450 +197,160 @@ const SettingsPage: React.FC = () => {
               <div>
                 <h3>LLM Provider</h3>
                 <p>
-                  Choose which AI brain powers your Vrnya.
+                  Choose which AI brain powers your Second Brain experience.
                 </p>
               </div>
             </div>
 
-            <div style={{ padding: "1rem" }}>
-              <div style={{ marginBottom: "1.5rem" }}>
-                <label
-                  style={{
-                    display: "block",
-                    marginBottom: "0.5rem",
-                    fontWeight: "bold",
-                  }}
-                >
+            <div className="flex flex-col gap-8 mt-2">
+              <div className="h-auto flex flex-col gap-2">
+                <label className="block text-sm font-semibold text-(--color-text-primary) mb-4 pb-6">
                   Active Provider
                 </label>
                 <select
                   value={provider}
                   onChange={(e) => setProvider(e.target.value)}
-                  style={{
-                    width: "100%",
-                    padding: "0.8rem",
-                    borderRadius: "8px",
-                    border: "1px solid rgba(255,255,255,0.1)",
-                    background: "rgba(0,0,0,0.2)",
-                    color: "white",
-                  }}
+                  className="w-full border border-(--color-border) text-(--color-text-primary) min-h-8 rounded-xl outline-none focus:border-(--color-accent) transition-colors text-sm font-medium cursor-pointer shadow-sm"
                 >
-                  <option
-                    value="ollama"
-                    style={{ background: "#1a1a2e", color: "white" }}
-                  >
-                    Ollama (Local / Free)
-                  </option>
-                  <option
-                    value="gemini"
-                    style={{ background: "#1a1a2e", color: "white" }}
-                  >
-                    Google Gemini (Cloud)
-                  </option>
-                  <option
-                    value="groq"
-                    style={{ background: "#1a1a2e", color: "white" }}
-                  >
-                    Groq (Cloud / Fast)
-                  </option>
-                  <option
-                    value="openrouter"
-                    style={{ background: "#1a1a2e", color: "white" }}
-                  >
-                    OpenRouter (Any LLM)
-                  </option>
+                  <option value="ollama">Ollama (Local / Free)</option>
+                  <option value="gemini">Google Gemini (Cloud)</option>
+                  <option value="groq">Groq (Cloud / Fast)</option>
+                  <option value="openrouter">OpenRouter (Any LLM)</option>
                 </select>
               </div>
 
               {provider === "gemini" && (
-                <div
-                  style={{
-                    marginTop: "1rem",
-                    padding: "1rem",
-                    background: "rgba(255,255,255,0.05)",
-                    borderRadius: "8px",
-                  }}
-                >
-                  <h4
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "0.5rem",
-                      marginBottom: "1rem",
-                    }}
-                  >
-                    <Key size={16} /> Gemini Configuration
-                  </h4>
-                  <div style={{ marginBottom: "1rem" }}>
-                    <label
-                      style={{
-                        display: "block",
-                        marginBottom: "0.5rem",
-                        fontSize: "0.9rem",
-                      }}
-                    >
-                      API Key
-                    </label>
-                    <input
-                      type="text"
-                      placeholder="AIzaSy..."
-                      value={geminiKey}
-                      onChange={(e) => setGeminiKey(e.target.value)}
-                      style={{
-                        width: "100%",
-                        padding: "0.6rem",
-                        borderRadius: "6px",
-                        background: "rgba(0,0,0,0.3)",
-                        border: "1px solid rgba(255,255,255,0.1)",
-                        color: "white",
-                      }}
-                    />
-                    <small style={{ color: "rgba(255,255,255,0.5)" }}>
-                      Get your key from Google AI Studio. (Leave masked string
-                      if unchanged)
-                    </small>
-                  </div>
-                  <div style={{ marginBottom: "1rem" }}>
-                    <label
-                      style={{
-                        display: "block",
-                        marginBottom: "0.5rem",
-                        fontSize: "0.9rem",
-                      }}
-                    >
-                      Chat Model
-                    </label>
-                    <input
-                      type="text"
+                <ProviderSection title="Gemini" icon={Key}>
+                  <InputField
+                    label="API Key"
+                    placeholder="AIzaSy..."
+                    value={geminiKey}
+                    onChange={(e) => setGeminiKey(e.target.value)}
+                    helpText="Get your key from Google AI Studio. (Leave masked string if unchanged)"
+                  />
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    <InputField
+                      label="Chat Model"
                       value={geminiModel}
                       onChange={(e) => setGeminiModel(e.target.value)}
-                      style={{
-                        width: "100%",
-                        padding: "0.6rem",
-                        borderRadius: "6px",
-                        background: "rgba(0,0,0,0.3)",
-                        border: "1px solid rgba(255,255,255,0.1)",
-                        color: "white",
-                      }}
                     />
-                  </div>
-                  <div>
-                    <label
-                      style={{
-                        display: "block",
-                        marginBottom: "0.5rem",
-                        fontSize: "0.9rem",
-                      }}
-                    >
-                      Embedding Model
-                    </label>
-                    <input
-                      type="text"
+                    <InputField
+                      label="Embedding Model"
                       value={geminiEmbedModel}
                       onChange={(e) => setGeminiEmbedModel(e.target.value)}
-                      style={{
-                        width: "100%",
-                        padding: "0.6rem",
-                        borderRadius: "6px",
-                        background: "rgba(0,0,0,0.3)",
-                        border: "1px solid rgba(255,255,255,0.1)",
-                        color: "white",
-                      }}
                     />
                   </div>
-                </div>
+                </ProviderSection>
               )}
 
               {provider === "groq" && (
-                <div
-                  style={{
-                    marginTop: "1rem",
-                    padding: "1rem",
-                    background: "rgba(255,255,255,0.05)",
-                    borderRadius: "8px",
-                  }}
-                >
-                  <h4
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "0.5rem",
-                      marginBottom: "1rem",
-                    }}
-                  >
-                    <Key size={16} /> Groq Configuration
-                  </h4>
-                  <div style={{ marginBottom: "1rem" }}>
-                    <label
-                      style={{
-                        display: "block",
-                        marginBottom: "0.5rem",
-                        fontSize: "0.9rem",
-                      }}
-                    >
-                      API Key
-                    </label>
-                    <input
-                      type="text"
-                      placeholder="gsk_..."
-                      value={groqKey}
-                      onChange={(e) => setGroqKey(e.target.value)}
-                      style={{
-                        width: "100%",
-                        padding: "0.6rem",
-                        borderRadius: "6px",
-                        background: "rgba(0,0,0,0.3)",
-                        border: "1px solid rgba(255,255,255,0.1)",
-                        color: "white",
-                      }}
-                    />
-                    <small style={{ color: "rgba(255,255,255,0.5)" }}>
-                      Get your key from Groq Console. (Leave masked string if
-                      unchanged)
-                    </small>
-                  </div>
-                  <div style={{ marginBottom: "1rem" }}>
-                    <label
-                      style={{
-                        display: "block",
-                        marginBottom: "0.5rem",
-                        fontSize: "0.9rem",
-                      }}
-                    >
-                      Chat Model
-                    </label>
-                    <input
-                      type="text"
-                      value={groqModel}
-                      onChange={(e) => setGroqModel(e.target.value)}
-                      style={{
-                        width: "100%",
-                        padding: "0.6rem",
-                        borderRadius: "6px",
-                        background: "rgba(0,0,0,0.3)",
-                        border: "1px solid rgba(255,255,255,0.1)",
-                        color: "white",
-                      }}
-                    />
-                  </div>
-                </div>
+                <ProviderSection title="Groq" icon={Key}>
+                  <InputField
+                    label="API Key"
+                    placeholder="gsk_..."
+                    value={groqKey}
+                    onChange={(e) => setGroqKey(e.target.value)}
+                    helpText="Get your key from Groq Console. (Leave masked string if unchanged)"
+                  />
+                  <InputField
+                    label="Chat Model"
+                    value={groqModel}
+                    onChange={(e) => setGroqModel(e.target.value)}
+                  />
+                </ProviderSection>
               )}
 
               {provider === "ollama" && (
-                <div
-                  style={{
-                    marginTop: "1rem",
-                    padding: "1rem",
-                    background: "rgba(255,255,255,0.05)",
-                    borderRadius: "8px",
-                  }}
-                >
-                  <h4
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "0.5rem",
-                      marginBottom: "1rem",
-                    }}
-                  >
-                    <Server size={16} /> Ollama Configuration
-                  </h4>
-                  <div style={{ marginBottom: "1rem" }}>
-                    <label
-                      style={{
-                        display: "block",
-                        marginBottom: "0.5rem",
-                        fontSize: "0.9rem",
-                      }}
-                    >
-                      Ollama Server URL
-                    </label>
-                    <input
-                      type="text"
-                      value={ollamaUrl}
-                      onChange={(e) => setOllamaUrl(e.target.value)}
-                      style={{
-                        width: "100%",
-                        padding: "0.6rem",
-                        borderRadius: "6px",
-                        background: "rgba(0,0,0,0.3)",
-                        border: "1px solid rgba(255,255,255,0.1)",
-                        color: "white",
-                      }}
-                    />
-                  </div>
-                  <div style={{ marginBottom: "1rem" }}>
-                    <label
-                      style={{
-                        display: "block",
-                        marginBottom: "0.5rem",
-                        fontSize: "0.9rem",
-                      }}
-                    >
-                      Chat Model
-                    </label>
-                    <input
-                      type="text"
+                <ProviderSection title="Ollama" icon={Server}>
+                  <InputField
+                    label="Ollama Server URL"
+                    value={ollamaUrl}
+                    onChange={(e) => setOllamaUrl(e.target.value)}
+                    className="font-mono"
+                  />
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    <InputField
+                      label="Chat Model"
                       value={ollamaChatModel}
                       onChange={(e) => setOllamaChatModel(e.target.value)}
-                      style={{
-                        width: "100%",
-                        padding: "0.6rem",
-                        borderRadius: "6px",
-                        background: "rgba(0,0,0,0.3)",
-                        border: "1px solid rgba(255,255,255,0.1)",
-                        color: "white",
-                      }}
+                      className="font-mono"
+                      helpText={
+                        <>
+                          E.g.{" "}
+                          <code className="bg-(--inline-code-bg) px-1 rounded">
+                            llama3.2
+                          </code>
+                        </>
+                      }
                     />
-                    <small style={{ color: "rgba(255,255,255,0.5)" }}>
-                      Example: `llama3.2`, `qwen2.5`, or any local Ollama chat
-                      model you have pulled.
-                    </small>
-                  </div>
-                  <div>
-                    <label
-                      style={{
-                        display: "block",
-                        marginBottom: "0.5rem",
-                        fontSize: "0.9rem",
-                      }}
-                    >
-                      Embedding Model
-                    </label>
-                    <input
-                      type="text"
+                    <InputField
+                      label="Embedding Model"
                       value={ollamaEmbedModel}
                       onChange={(e) => setOllamaEmbedModel(e.target.value)}
-                      style={{
-                        width: "100%",
-                        padding: "0.6rem",
-                        borderRadius: "6px",
-                        background: "rgba(0,0,0,0.3)",
-                        border: "1px solid rgba(255,255,255,0.1)",
-                        color: "white",
-                      }}
+                      className="font-mono"
+                      helpText={
+                        <>
+                          E.g.{" "}
+                          <code className="bg-(--inline-code-bg) px-1 rounded">
+                            nomic-embed-text
+                          </code>
+                        </>
+                      }
                     />
-                    <small style={{ color: "rgba(255,255,255,0.5)" }}>
-                      Example: `nomic-embed-text` or another embedding model
-                      available in your Ollama instance.
-                    </small>
                   </div>
-                </div>
+                </ProviderSection>
               )}
 
               {provider === "openrouter" && (
-                <div
-                  style={{
-                    marginTop: "1rem",
-                    padding: "1rem",
-                    background: "rgba(255,255,255,0.05)",
-                    borderRadius: "8px",
-                  }}
-                >
-                  <h4
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "0.5rem",
-                      marginBottom: "1rem",
-                    }}
-                  >
-                    <Key size={16} /> OpenRouter Configuration
-                  </h4>
-                  <div style={{ marginBottom: "1rem" }}>
-                    <label
-                      style={{
-                        display: "block",
-                        marginBottom: "0.5rem",
-                        fontSize: "0.9rem",
-                      }}
-                    >
-                      API Key
-                    </label>
-                    <input
-                      type="text"
-                      placeholder="sk-or-v1-..."
-                      value={openRouterKey}
-                      onChange={(e) => setOpenRouterKey(e.target.value)}
-                      style={{
-                        width: "100%",
-                        padding: "0.6rem",
-                        borderRadius: "6px",
-                        background: "rgba(0,0,0,0.3)",
-                        border: "1px solid rgba(255,255,255,0.1)",
-                        color: "white",
-                      }}
-                    />
-                    <small style={{ color: "rgba(255,255,255,0.5)" }}>
-                      Get your key from openrouter.ai. (Leave masked string if
-                      unchanged)
-                    </small>
-                  </div>
-                  <div>
-                    <label
-                      style={{
-                        display: "block",
-                        marginBottom: "0.5rem",
-                        fontSize: "0.9rem",
-                      }}
-                    >
-                      Chat Model
-                    </label>
-                    <input
-                      type="text"
-                      value={openRouterModel}
-                      onChange={(e) => setOpenRouterModel(e.target.value)}
-                      style={{
-                        width: "100%",
-                        padding: "0.6rem",
-                        borderRadius: "6px",
-                        background: "rgba(0,0,0,0.3)",
-                        border: "1px solid rgba(255,255,255,0.1)",
-                        color: "white",
-                      }}
-                    />
-                  </div>
-                </div>
+                <ProviderSection title="OpenRouter" icon={Key}>
+                  <InputField
+                    label="API Key"
+                    placeholder="sk-or-v1-..."
+                    value={openRouterKey}
+                    onChange={(e) => setOpenRouterKey(e.target.value)}
+                    helpText="Get your key from openrouter.ai"
+                  />
+                  <InputField
+                    label="Chat Model"
+                    value={openRouterModel}
+                    onChange={(e) => setOpenRouterModel(e.target.value)}
+                  />
+                </ProviderSection>
               )}
 
-              <div
-                style={{
-                  marginTop: "2rem",
-                  display: "flex",
-                  justifyContent: "flex-end",
-                }}
-              >
+              <div className="mt-4 pt-6 border-t border-(--color-border-subtle) flex items-center justify-between">
+                <div className="flex-1">
+                  <AnimatePresence>
+                    {message && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, scale: 0.95 }}
+                        className={`text-sm font-medium px-4 py-2 rounded-lg inline-flex items-center border ${
+                          message.type === "success"
+                            ? "bg-[rgba(52,211,153,0.1)] text-(--color-success) border-[rgba(52,211,153,0.2)]"
+                            : "bg-[rgba(248,113,113,0.1)] text-(--color-error) border-[rgba(248,113,113,0.2)]"
+                        }`}
+                      >
+                        {message.text}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+
                 <button
-                  className="index-btn active"
                   onClick={handleSave}
                   disabled={isSaving}
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "0.5rem",
-                  }}
+                  className="min-h-12 min-w-28 flex items-center justify-center gap-2 bg-[linear-gradient(135deg,var(--color-accent),var(--color-accent-hover))] hover:shadow-[0_4px_15px_rgba(37,99,235,0.3)] text-white rounded-xl font-semibold transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-70 disabled:hover:scale-100 disabled:cursor-not-allowed"
                 >
                   {isSaving ? (
-                    <Loader2 className="spin" size={18} />
+                    <Loader2 className="animate-spin" size={18} />
                   ) : (
                     <Save size={18} />
                   )}
-                  <span>{isSaving ? "Saving..." : "Save Settings"}</span>
+                  <span>{isSaving ? "Saving..." : "Save"}</span>
                 </button>
               </div>
-
-              <AnimatePresence>
-                {message && (
-                  <motion.div
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: "auto" }}
-                    className={`status-box ${message.type === "success" ? "success" : "error"} glass`}
-                    style={{ marginTop: "1.5rem" }}
-                  >
-                    <span>{message.text}</span>
-                  </motion.div>
-                )}
-              </AnimatePresence>
             </div>
           </div>
         )}
