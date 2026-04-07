@@ -18,7 +18,7 @@
 .login-card {
   width: 100%;
   max-width: 420px;
-  border-radius: var(--radius-lg);
+  border-radius: 28px;
   padding: var(--space-2xl) var(--space-xl);
   box-shadow: var(--shadow-lg);
   display: flex;
@@ -54,7 +54,7 @@
 .login-mode-toggle {
   display: flex;
   background: var(--color-bg-surface);
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-full);
   padding: 3px;
   border: 1px solid var(--color-border);
 }
@@ -64,7 +64,7 @@
   padding: var(--space-sm);
   border: none;
   background: none;
-  border-radius: calc(var(--radius-sm) - 2px);
+  border-radius: var(--radius-full);
   font-size: var(--text-sm);
   font-weight: 500;
   color: var(--color-text-muted);
@@ -88,7 +88,7 @@
   padding: var(--space-sm) var(--space-md);
   background: var(--color-bg-surface);
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-full);
   font-size: var(--text-sm);
   font-weight: 500;
   color: var(--color-text-primary);
@@ -158,7 +158,7 @@
   padding: var(--space-sm) var(--space-md) var(--space-sm) 38px;
   background: var(--color-bg-surface);
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-full);
   font-size: var(--text-sm);
   color: var(--color-text-primary);
   font-family: var(--font-sans);
@@ -206,7 +206,7 @@
   background: var(--color-accent);
   color: #fff;
   border: none;
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-full);
   font-size: var(--text-sm);
   font-weight: 600;
   cursor: pointer;
