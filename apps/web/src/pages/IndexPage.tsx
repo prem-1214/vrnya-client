@@ -22,6 +22,7 @@ import {
 } from "../api/client";
 import type { AllowedIndexPath, IndexResponse } from "../api/client";
 import { motion, AnimatePresence } from "framer-motion";
+import { useR2Upload, type UploadStage } from "../hooks/useR2Upload";
 import {
   canPickFilePath,
   canPickFolderPath,
@@ -29,7 +30,25 @@ import {
   pickFolderPath,
 } from "../platform/shell";
 import "./IndexPage.css";
-import R2UploadModal from "../components/upload/R2UploadModal";
+
+const ACCEPTED_TYPES = [
+  "application/pdf",
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  "text/plain",
+  "text/markdown",
+  "text/csv",
+  "application/json",
+  "text/html",
+].join(",");
+
+const STAGE_LABELS: Record<UploadStage, string> = {
+  idle: "",
+  presigning: "Preparing upload...",
+  uploading: "Uploading to cloud...",
+  confirming: "Registering file...",
+  done: "Done!",
+  error: "Upload failed",
+};
 
 function getErrorMessage(error: unknown, fallback: string): string {
   return error instanceof Error ? error.message : fallback;
@@ -55,7 +74,33 @@ const IndexPage: React.FC = () => {
     failed: number;
   } | null>(null);
 
-  const [showUploadModal, setShowUploadModal] = useState(false);
+  const { state: uploadState, upload, reset: resetUpload } = useR2Upload();
+  const [dragOver, setDragOver] = useState(false);
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
+
+  const handleFile = React.useCallback(
+    (file: File) => {
+      upload(file).then(() => {
+        // success is handled in the UI state hook implicitly
+      });
+    },
+    [upload],
+  );
+
+  const handleDrop = React.useCallback(
+    (e: React.DragEvent<HTMLDivElement>) => {
+      e.preventDefault();
+      setDragOver(false);
+      const file = e.dataTransfer.files[0];
+      if (file) handleFile(file);
+    },
+    [handleFile],
+  );
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) handleFile(file);
+  };
 
   const resetFeedback = () => {
     setStatus("idle");
@@ -240,6 +285,7 @@ const IndexPage: React.FC = () => {
       </header>
 
       <div className="index-container">
+        {/* === TEMPORARILY DISABLED FOR TWITTER ===
         <div className="index-card glass">
           <div className="card-header">
             <HardDrive size={24} className="accent-text" />
@@ -526,8 +572,106 @@ const IndexPage: React.FC = () => {
             )}
           </div>
         </div>
+        */}
+
+        {/* Polished Inline Upload to Cloud Dropzone */}
+        <AnimatePresence mode="wait">
+          {uploadState.stage === "idle" ? (
+            <motion.div
+              key="dropzone"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className={`upload-dropzone glass ${dragOver ? "drag-active" : ""}`}
+              onDragOver={(e) => {
+                e.preventDefault();
+                setDragOver(true);
+              }}
+              onDragLeave={() => setDragOver(false)}
+              onDrop={handleDrop}
+              onClick={() => fileInputRef.current?.click()}
+              style={{ cursor: "pointer" }}
+            >
+              <div className="dropzone-icon-container">
+                <CloudUpload size={54} className="accent-text" />
+              </div>
+              <div className="dropzone-text">
+                <h3>Cloud Vault</h3>
+                <p>Drag & drop your knowledge documents here to securely vault them, or click to browse.</p>
+                <div style={{ marginTop: "8px", fontSize: "14px", color: "var(--color-text-muted)" }}>
+                   PDF, DOCX, TXT, MD, CSV, JSON, HTML — max 50MB
+                </div>
+              </div>
+              <button className="r2-upload-trigger-btn large-btn" style={{ pointerEvents: 'none' }}>
+                <CloudUpload size={22} />
+                <span>Select Files</span>
+              </button>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept={ACCEPTED_TYPES}
+                style={{ display: "none" }}
+                onChange={handleInputChange}
+              />
+            </motion.div>
+          ) : uploadState.stage === "done" ? (
+            <motion.div
+              key="done"
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="upload-dropzone glass success-state"
+              style={{ borderColor: "rgba(52, 211, 153, 0.4)", background: "rgba(52, 211, 153, 0.05)" }}
+            >
+              <CheckCircle size={64} style={{ color: "var(--color-success)", marginBottom: "16px" }} />
+              <div className="dropzone-text">
+                <h3>Upload Complete!</h3>
+                <p><strong>{uploadState.fileName}</strong> has been vaulted successfully.</p>
+              </div>
+              <button className="r2-upload-trigger-btn large-btn" onClick={resetUpload} style={{ marginTop: "24px" }}>
+                Vault Another File
+              </button>
+            </motion.div>
+          ) : uploadState.stage === "error" ? (
+            <motion.div
+              key="error"
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="upload-dropzone glass error-state"
+              style={{ borderColor: "rgba(248, 113, 113, 0.4)", background: "rgba(248, 113, 113, 0.05)" }}
+            >
+              <AlertCircle size={64} style={{ color: "var(--color-error)", marginBottom: "16px" }} />
+              <div className="dropzone-text">
+                <h3>Upload Failed</h3>
+                <p>{uploadState.error}</p>
+              </div>
+              <button className="r2-upload-trigger-btn large-btn" onClick={resetUpload} style={{ marginTop: "24px", background: "var(--color-bg-surface)", color: "var(--color-text-primary)" }}>
+                Try Again
+              </button>
+            </motion.div>
+          ) : (
+            <motion.div
+              key="progress"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="upload-dropzone glass uploading-state"
+            >
+              <Loader2 size={48} className="accent-text spin" style={{ marginBottom: "16px" }} />
+              <div className="dropzone-text">
+                <h3>{STAGE_LABELS[uploadState.stage]}</h3>
+                <p style={{ fontFamily: "var(--font-mono)", opacity: 0.8 }}>{uploadState.fileName}</p>
+              </div>
+              {uploadState.stage === "uploading" && (
+                <div style={{ width: "100%", maxWidth: "400px", height: "8px", background: "var(--color-border-subtle)", borderRadius: "4px", marginTop: "24px", overflow: "hidden", position: "relative" }}>
+                   <div style={{ height: "100%", background: "var(--color-accent)", width: `${uploadState.progress}%`, transition: "width 0.3s ease" }} />
+                   <span style={{ position: "absolute", right: "0", top: "-20px", fontSize: "12px", color: "var(--color-text-muted)" }}>{uploadState.progress}%</span>
+                </div>
+              )}
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         <div className="index-tips">
+          {/*
           <h4>Indexing Notes</h4>
           <ul>
             <li>
@@ -543,17 +687,7 @@ const IndexPage: React.FC = () => {
               already covers them.
             </li>
           </ul>
-          <AnimatePresence>
-            {showUploadModal && (
-              <R2UploadModal
-                onClose={() => setShowUploadModal(false)}
-                onSuccess={(fileId, fileName) => {
-                  console.log(`Uploaded & indexed: ${fileName} (${fileId})`);
-                  // optionally show a toast or refresh document list
-                }}
-              />
-            )}
-          </AnimatePresence>
+          */}
         </div>
       </div>
     </div>

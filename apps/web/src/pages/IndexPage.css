@@ -349,3 +349,93 @@
   color: #fff;
   border-color: var(--color-accent);
 }
+
+/* --- Cloud Vault Dropzone Styles --- */
+.upload-dropzone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 60px var(--space-xl);
+  border-radius: var(--radius-lg);
+  background: var(--color-bg-surface);
+  border: 2px dashed var(--color-accent);
+  background-color: var(--panel-soft-bg);
+  gap: var(--space-lg);
+  min-height: 400px;
+  max-width: 700px;
+  margin: var(--space-2xl) auto 0;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.upload-dropzone::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: radial-gradient(circle at center, rgba(108, 99, 255, 0.08) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.upload-dropzone:hover,
+.upload-dropzone.drag-active {
+  border-color: var(--color-accent-hover);
+  box-shadow: var(--shadow-lg), 0 0 40px rgba(108, 99, 255, 0.15);
+  transform: translateY(-2px);
+}
+
+.dropzone-icon-container {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  background: var(--color-accent-subtle);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: var(--space-xs);
+  box-shadow: inset 0 0 20px rgba(108, 99, 255, 0.2), 0 0 0 8px rgba(108, 99, 255, 0.05);
+  transition: transform 0.3s ease;
+}
+
+.upload-dropzone:hover .dropzone-icon-container {
+  transform: scale(1.05);
+}
+
+.dropzone-text h3 {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  margin-bottom: var(--space-sm);
+  letter-spacing: -0.5px;
+}
+
+.dropzone-text p {
+  font-size: 16px;
+  color: var(--color-text-secondary);
+  max-width: 480px;
+  line-height: 1.6;
+  margin: 0 auto;
+}
+
+.r2-upload-trigger-btn.large-btn {
+  padding: 16px 36px;
+  font-size: 16px;
+  border-radius: 100px;
+  background: var(--color-accent);
+  color: #fff;
+  box-shadow: 0 4px 14px rgba(108, 99, 255, 0.4);
+  margin-top: var(--space-md);
+  border: none;
+  font-weight: 600;
+}
+
+.r2-upload-trigger-btn.large-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(108, 99, 255, 0.5);
+  background: var(--color-accent-hover);
+}
