@@ -1,77 +1,47 @@
 @import "tailwindcss";
 
-@theme {
-  --color-secondary-fixed: #e1e0ff;
-  --color-surface-container-low: #f3f4f5;
-  --color-background: #f8f9fa;
-  --color-tertiary-fixed-dim: #ffb783;
-  --color-tertiary: #904900;
-  --color-on-primary-container: #fffbff;
-  --color-surface-bright: #f8f9fa;
-  --color-primary-container: #6063ee;
-  --color-inverse-on-surface: #f0f1f2;
-  --color-tertiary-fixed: #ffdcc5;
-  --color-primary-fixed: #e1e0ff;
-  --color-on-error-container: #93000a;
-  --color-surface-variant: #e1e3e4;
-  --color-on-primary-fixed: #07006c;
-  --color-on-surface: #191c1d;
-  --color-surface: #f8f9fa;
-  --color-error: #ba1a1a;
-  --color-surface-container-highest: #e1e3e4;
-  --color-on-secondary-fixed-variant: #404178;
-  --color-on-background: #191c1d;
-  --color-surface-dim: #d9dadb;
-  --color-secondary: #575992;
-  --color-on-surface-variant: #464554;
-  --color-primary-fixed-dim: #c0c1ff;
-  --color-on-tertiary-fixed: #301400;
-  --color-on-primary: #ffffff;
-  --color-on-error: #ffffff;
-  --color-primary: #4648d4;
-  --color-error-container: #ffdad6;
-  --color-surface-tint: #494bd6;
-  --color-on-primary-fixed-variant: #2f2ebe;
-  --color-on-secondary: #ffffff;
-  --color-inverse-primary: #c0c1ff;
-  --color-surface-container: #edeeef;
-  --color-secondary-container: #bdbefe;
-  --color-on-tertiary-fixed-variant: #703700;
-  --color-on-secondary-container: #494b83;
-  --color-surface-container-high: #e7e8e9;
-  --color-surface-container-lowest: #ffffff;
-  --color-tertiary-container: #b55d00;
-  --color-outline: #767586;
-  --color-on-secondary-fixed: #13144a;
-  --color-on-tertiary-container: #fffbff;
-  --color-on-tertiary: #ffffff;
-  --color-outline-variant: #c7c4d7;
-  --color-inverse-surface: #2e3132;
-  --color-secondary-fixed-dim: #c0c1ff;
+:root {
+  --color-accent: #6366f1;
+  --color-text-primary: #10213b;
+  --color-text-secondary: #42546f;
+  --color-text-muted: #73839a;
+  --color-border: rgba(16, 33, 59, 0.1);
+  --color-bg: #f8fbff;
+  
+  --shadow-sm: 0 12px 28px rgba(40, 62, 97, 0.08);
+  --shadow-md: 0 18px 45px rgba(40, 62, 97, 0.12);
+  
+  --glass-bg: rgba(255, 255, 255, 0.96);
+  --glass-border: rgba(255, 255, 255, 0.4);
+  --glass-blur: blur(6px);
 
-  --font-headline: "Manrope";
-  --font-body: "Manrope";
-  --font-label: "Manrope";
+  --font-sans: "Inter", system-ui, -apple-system, sans-serif;
+  
+  --app-background:
+    radial-gradient(circle at top left, rgba(99, 102, 241, 0.08), transparent 30%),
+    radial-gradient(circle at bottom right, rgba(14, 165, 233, 0.05), transparent 28%),
+    linear-gradient(180deg, #f8fbff 0%, #eaf1f9 100%);
 }
 
-.mesh-gradient {
-  background-color: #f8f9fa;
-  background-image:
-    radial-gradient(at 0% 0%, hsla(231, 100%, 95%, 1) 0, transparent 50%),
-    radial-gradient(at 100% 0%, hsla(180, 100%, 96%, 1) 0, transparent 50%),
-    radial-gradient(at 100% 100%, hsla(250, 100%, 97%, 1) 0, transparent 50%),
-    radial-gradient(at 0% 100%, hsla(210, 100%, 95%, 1) 0, transparent 50%);
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
 }
 
-.aura-glow {
-  position: absolute;
-  width: 600px;
-  height: 600px;
-  background: radial-gradient(circle, rgba(99, 102, 241, 0.08) 0%, rgba(99, 102, 241, 0) 70%);
-  z-index: -1;
-  filter: blur(60px);
+html,
+body,
+#root {
+  height: 100%;
+  width: 100%;
+  background: var(--app-background);
+  color: var(--color-text-primary);
+  font-family: var(--font-sans);
 }
 
-.material-symbols-outlined {
-  font-variation-settings: "FILL" 0, "wght" 400, "GRAD" 0, "opsz" 24;
+.glass {
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border);
 }
