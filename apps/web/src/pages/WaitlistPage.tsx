@@ -78,12 +78,12 @@ const WaitlistPage: React.FC = () => {
           <a href="#features">Preview</a>
           <a href="#features">Chat</a>
         </nav>
-        <div className="waitlist-nav__actions">
+        {/* <div className="waitlist-nav__actions">
           <Link className="waitlist-nav__login" to="/login">
             <LogIn size={16} />
             Login
           </Link>
-        </div>
+        </div> */}
       </header>
 
       <div className="waitlist-container">
@@ -174,9 +174,9 @@ const WaitlistPage: React.FC = () => {
               )}
             </form>
 
-            <div className="waitlist-onboarding__footer">
+            {/* <div className="waitlist-onboarding__footer">
               <Link to="/login">Existing user? Login</Link>
-            </div>
+            </div> */}
           </div>
         </section>
 
