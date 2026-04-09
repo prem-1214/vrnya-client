@@ -57,6 +57,13 @@ export interface PresignUploadResponse {
   r2Key: string;
   expiresInSeconds: number;
 }
+export type Profession = "student" | "working_professional" | "startup";
+
+export interface WaitlistSignupResponse {
+  success: boolean;
+  alreadyJoined: boolean;
+  message: string;
+}
 export interface ConfirmUploadResponse {
   fileId: string;
   r2Key: string;
@@ -226,6 +233,19 @@ async function attemptSilentRefresh(): Promise<boolean> {
 }
 
 export const healthCheck = () => apiFetch<HealthResponse>("/health");
+
+export const joinWaitlist = (payload: {
+  email: string;
+  name?: string;
+  company?: string;
+  useCase?: string;
+  profession?: Profession;
+  source?: string;
+}) =>
+  apiFetch<WaitlistSignupResponse>("/api/v1/waitlist", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
 
 export const getConfig = () =>
   apiFetch<Record<string, string>>("/api/v1/config");
