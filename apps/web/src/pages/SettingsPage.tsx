@@ -73,7 +73,7 @@ const SettingsPage: React.FC = () => {
     "llama-3.3-70b-versatile",
   );
   const [ollamaUrl, setOllamaUrl] = useState("http://localhost:11434");
-  const [ollamaChatModel, setOllamaChatModel] = useState("llama3.2");
+  const [ollamaChatModel, setOllamaChatModel] = useState("llama3.2:3b");
   const [ollamaEmbedModel, setOllamaEmbedModel] = useState("nomic-embed-text");
 
   const [isLoading, setIsLoading] = useState(true);
@@ -278,7 +278,7 @@ const SettingsPage: React.FC = () => {
                         <>
                           E.g.{" "}
                           <code className="bg-(--inline-code-bg) px-1 rounded">
-                            llama3.2
+                            llama3.2:3b
                           </code>
                         </>
                       }

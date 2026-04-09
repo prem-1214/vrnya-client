@@ -11,6 +11,7 @@ import DocumentViewerPage from "./pages/DocumentViewerPage";
 import SettingsPage from "./pages/SettingsPage";
 import LoginPage from "./pages/LoginPage";
 import AuthCallbackPage from "./pages/AuthCallbackPage";
+import WaitlistPage from "./pages/WaitlistPage";
 import { Loader2 } from "lucide-react";
 import { type ReactNode } from "react";
 
@@ -38,7 +39,7 @@ function ProtectedRoute({ children }: { children: ReactNode }) {
     );
   }
 
-  return isAuthenticated ? <>{children}</> : <Navigate to="/login" replace />;
+  return isAuthenticated ? <>{children}</> : <Navigate to="/waitlist" replace />;
 }
 
 function App() {
@@ -48,6 +49,7 @@ function App() {
         <BrowserRouter>
           <Routes>
             {/* Public routes */}
+            <Route path="/waitlist" element={<WaitlistPage />} />
             <Route path="/login" element={<LoginPage />} />
             <Route path="/auth/callback" element={<AuthCallbackPage />} />
 

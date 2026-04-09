@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { NavLink } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import {
   MessageSquare,
@@ -9,11 +9,14 @@ import {
   ChevronLeft,
   ChevronRight,
   Settings,
+  LogOut,
 } from "lucide-react";
 
 const Sidebar: React.FC = () => {
   const [isCollapsed, setIsCollapsed] = useState(false);
-  const { user } = useAuth();
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const navigate = useNavigate();
+  const { user, logout } = useAuth();
 
   const navItems = [
     { to: "/", icon: MessageSquare, label: "Chat" },
@@ -25,6 +28,18 @@ const Sidebar: React.FC = () => {
 
   const displayName = user?.displayName || user?.email?.split("@")[0] || "User";
   const initial = displayName.charAt(0).toUpperCase();
+
+  const handleLogout = async () => {
+    if (isLoggingOut) return;
+
+    try {
+      setIsLoggingOut(true);
+      await logout();
+      navigate("/waitlist", { replace: true });
+    } finally {
+      setIsLoggingOut(false);
+    }
+  };
 
   return (
     <aside
@@ -58,6 +73,20 @@ const Sidebar: React.FC = () => {
         >
           {isCollapsed ? <ChevronRight size={20} /> : <ChevronLeft size={20} />}
         </button>
+        <button
+          className={`min-h-12 flex w-full cursor-pointer items-center rounded-xl border border-(--glass-border) bg-transparent text-(--color-text-secondary) transition-all duration-200 ease-in-out hover:bg-(--color-bg-hover) hover:text-(--color-text-primary) ${
+            isCollapsed ? "justify-center p-2" : "gap-4 p-4"
+          }`}
+          disabled={isLoggingOut}
+          onClick={handleLogout}
+          title="Logout"
+        >
+          <LogOut size={20} className="shrink-0" />
+          {!isCollapsed && (
+            <span>{isLoggingOut ? "Logging out..." : "Logout"}</span>
+          )}
+        </button>
+
         <div
           className={`flex items-center overflow-hidden whitespace-nowrap ${isCollapsed ? "justify-center" : "gap-4"}`}
         >

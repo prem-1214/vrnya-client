@@ -73,6 +73,19 @@ export interface R2DownloadUrlResponse {
   expiresInSeconds: number;
 }
 
+export interface ChatResponse {
+  conversationId: string;
+  answer: any;
+}
+
+export interface ChatStreamEvent {
+  type: "conversation" | "status" | "answer" | "done" | "error";
+  text?: string;
+  answer?: any;
+  error?: string;
+  conversationId?: string;
+}
+
 // ---------------------- existing types and API functions ----------------------
 export interface HealthResponse {
   status: string;
@@ -217,14 +230,15 @@ export const healthCheck = () => apiFetch<HealthResponse>("/health");
 export const getConfig = () =>
   apiFetch<Record<string, string>>("/api/v1/config");
 
-export const sendMessage = (message: string) =>
+export const sendMessage = (message: string, conversationId?: string | null) =>
   apiFetch<ChatResponse>("/api/v1/chat", {
     method: "POST",
-    body: JSON.stringify({ message }),
+    body: JSON.stringify({ message, conversationId }),
   });
 
 export async function sendMessageStream(
   message: string,
+  conversationId: string | null | undefined,
   onEvent: (event: ChatStreamEvent) => void,
   signal?: AbortSignal,
 ): Promise<void> {
@@ -232,9 +246,11 @@ export async function sendMessageStream(
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      ...(tokenStore.get() ? { Authorization: `Bearer ${tokenStore.get()}` } : {}),
+      ...(tokenStore.get()
+        ? { Authorization: `Bearer ${tokenStore.get()}` }
+        : {}),
     },
-    body: JSON.stringify({ message }),
+    body: JSON.stringify({ message, conversationId }),
     signal,
   });
 
@@ -284,7 +300,9 @@ export const sendVoiceMessage = (audioBlob: Blob) => {
   return fetch(`${BASE_URL}/api/v1/voice`, {
     method: "POST",
     headers: {
-      ...(tokenStore.get() ? { Authorization: `Bearer ${tokenStore.get()}` } : {}),
+      ...(tokenStore.get()
+        ? { Authorization: `Bearer ${tokenStore.get()}` }
+        : {}),
     },
     body: formData,
   }).then(async (res) => {
@@ -408,13 +426,13 @@ export interface UploadedFile {
   name: string;
   extension: string;
   size: number;
-  storage_type: 'r2' | 'local';
+  storage_type: "r2" | "local";
   indexed_at: string | null;
   chunk_count: number;
 }
 
 export const listUploadedFiles = () =>
-  apiFetch<{ files: UploadedFile[] }>('/api/v1/documents');
+  apiFetch<{ files: UploadedFile[] }>("/api/v1/documents");
 
 export const chatWithDocument = (fileId: string, question: string) =>
   apiFetch<{ text: string; path?: string }>(
@@ -443,7 +461,9 @@ export const indexAllPathsWithProgress = async (
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      ...(tokenStore.get() ? { Authorization: `Bearer ${tokenStore.get()}` } : {}),
+      ...(tokenStore.get()
+        ? { Authorization: `Bearer ${tokenStore.get()}` }
+        : {}),
     },
   });
   if (!response.ok || !response.body) {
@@ -493,7 +513,9 @@ export const indexPathWithProgress = async (
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      ...(tokenStore.get() ? { Authorization: `Bearer ${tokenStore.get()}` } : {}),
+      ...(tokenStore.get()
+        ? { Authorization: `Bearer ${tokenStore.get()}` }
+        : {}),
     },
     body: JSON.stringify({ path: targetPath }),
   });
@@ -631,3 +653,5 @@ export const authApi = {
 
   googleSignInUrl: () => `${BASE_URL}/api/v1/auth/google`,
 };
+
+// -------------------------------- memory ----------------------------
