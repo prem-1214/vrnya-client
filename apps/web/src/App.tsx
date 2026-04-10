@@ -62,6 +62,7 @@ function App() {
               }
             >
               <Route path="/" element={<ChatPage />} />
+              <Route path="/chat/:id" element={<ChatPage />} />
               <Route path="/search" element={<SearchPage />} />
               <Route path="/index" element={<IndexPage />} />
               <Route path="/files" element={<FilesPage />} />

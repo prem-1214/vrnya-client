@@ -1,6 +1,7 @@
 import { useState } from "react";
-import { NavLink, useNavigate } from "react-router-dom";
+import { NavLink, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
+import ConversationHistory from "../chat/ConversationHistory";
 import {
   MessageSquare,
   Search,
@@ -16,7 +17,14 @@ const Sidebar: React.FC = () => {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
   const { user, logout } = useAuth();
+
+  // Extract conversation ID from URL if on a chat route
+  const pathParts = location.pathname.split("/");
+  const activeConversationId = (location.pathname === "/" || location.pathname.startsWith("/chat/")) 
+    ? (pathParts[2] || null) 
+    : null;
 
   const navItems = [
     { to: "/", icon: MessageSquare, label: "Chat" },
@@ -47,24 +55,44 @@ const Sidebar: React.FC = () => {
         isCollapsed ? "w-18" : "w-64"
       }`}
     >
-      <nav className=" flex flex-col flex-1 ">
-        {navItems.map((item) => (
-          <NavLink
-            key={item.to}
-            to={item.to}
-            className={({ isActive }) =>
-              `min-h-12 flex items-center overflow-hidden whitespace-nowrap no-underline rounded-xl transition-all duration-200 ease-in-out font-medium text-sm hover:bg-(--color-bg-hover) hover:text-(--color-text-primary) ${
-                isActive
-                  ? "bg-(--color-accent-subtle) text-(--color-accent) shadow-[inset_0_0_0_1px_rgba(90,169,255,0.18)] [&>svg]:drop-shadow-[0_0_5px_var(--color-accent-glow)]"
-                  : "text-(--color-text-secondary)"
-              } ${isCollapsed ? "justify-center py-4 px-0" : "gap-4 p-4"}`
-            }
-          >
-            <item.icon size={20} className="shrink-0" />
-            {!isCollapsed && <span>{item.label}</span>}
-          </NavLink>
-        ))}
+      <nav className=" flex flex-col flex-1 min-h-0">
+        <div className="flex flex-col gap-1 p-2">
+          {navItems.map((item) => (
+            <NavLink
+              key={item.to}
+              to={item.to}
+              className={({ isActive }) =>
+                `min-h-12 flex items-center overflow-hidden whitespace-nowrap no-underline rounded-xl transition-all duration-200 ease-in-out font-medium text-sm hover:bg-(--color-bg-hover) hover:text-(--color-text-primary) ${
+                  isActive
+                    ? "bg-(--color-accent-subtle) text-(--color-accent) shadow-[inset_0_0_0_1px_rgba(90,169,255,0.18)] [&>svg]:drop-shadow-[0_0_5px_var(--color-accent-glow)]"
+                    : "text-(--color-text-secondary)"
+                } ${isCollapsed ? "justify-center py-4 px-0" : "gap-4 p-4"}`
+              }
+            >
+              <item.icon size={20} className="shrink-0" />
+              {!isCollapsed && <span>{item.label}</span>}
+            </NavLink>
+          ))}
+        </div>
+
+        {!isCollapsed && (
+          <div className="flex-1 flex flex-col min-h-0 border-t border-(--glass-border) mt-2">
+            <div className="px-4 py-3 flex items-center justify-between">
+              <span className="text-[10px] font-bold uppercase tracking-widest text-(--color-text-muted)">
+                History
+              </span>
+            </div>
+            <div className="flex-1 min-h-0">
+              <ConversationHistory
+                activeId={activeConversationId}
+                onSelect={(id) => navigate(`/chat/${id}`)}
+                onNewChat={() => navigate("/")}
+              />
+            </div>
+          </div>
+        )}
       </nav>
+
       <div className="mt-auto flex flex-col gap-4 border-t border-(--glass-border) p-4">
         <button
           className="min-h-12 flex w-full cursor-pointer items-center justify-center rounded-xl border border-(--glass-border) bg-transparent p-2 text-(--color-text-secondary) transition-all duration-200 ease-in-out hover:bg-(--color-bg-hover) hover:text-(--color-text-primary)"

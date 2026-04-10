@@ -1,3 +1,5 @@
+import type { Message } from "../hooks/useChat";
+
 export const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:4000";
 
 // ---------------------- updated types for new filesystem module ----------------------
@@ -104,7 +106,7 @@ export interface ChatResponse {
 }
 
 export interface ChatStreamEvent {
-  type: "status" | "answer" | "done" | "error";
+  type: "conversation" | "status" | "answer" | "done" | "error";
   text?: string;
   answer?: any;
   error?: string;
@@ -675,3 +677,53 @@ export const authApi = {
 };
 
 // -------------------------------- memory ----------------------------
+
+export type MemoryType =
+  | "user_profile"
+  | "user_preference"
+  | "project_context"
+  | "working_goal"
+  | "important_decision";
+
+export interface MemoryItem {
+  id: string;
+  memory_type: MemoryType;
+  memory_key: string;
+  memory_value: string;
+  confidence: number;
+  created_at: string;
+  updated_at: string;
+  last_accessed_at: string | null;
+}
+
+export interface Conversation {
+  id: string;
+  title: string;
+  summary: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export const listMemories = () =>
+  apiFetch<MemoryItem[]>("/api/v1/memory");
+
+export const deleteMemory = (id: string) =>
+  apiFetch<{ success: boolean }>(`/api/v1/memory/${id}`, {
+    method: "DELETE",
+  });
+
+export const clearAllMemories = () =>
+  apiFetch<{ success: boolean }>("/api/v1/memory", {
+    method: "DELETE",
+  });
+
+export const listConversations = () =>
+  apiFetch<Conversation[]>("/api/v1/conversations");
+
+export const listMessages = (conversationId: string) =>
+  apiFetch<Message[]>(`/api/v1/conversations/${conversationId}/messages`);
+
+export const deleteConversation = (id: string) =>
+  apiFetch<{ success: boolean }>(`/api/v1/conversations/${id}`, {
+    method: "DELETE",
+  });

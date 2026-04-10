@@ -1,5 +1,5 @@
 import { useState, useCallback, useRef } from "react";
-import { sendMessageStream } from "../api/client";
+import { sendMessageStream, listMessages } from "../api/client";
 
 export interface AgentSource {
   id?: string;
@@ -26,6 +26,8 @@ export interface Message {
   sources?: AgentSource[];
   actionPath?: string;
   timestamp: Date;
+  created_at?: string;
+  updated_at?: string;
 }
 
 interface FormattedResponse {
@@ -244,6 +246,25 @@ export const useChat = () => {
     setConversationId(null);
   }, []);
 
+  const loadHistory = useCallback(async (id: string) => {
+    try {
+      setIsTyping(true);
+      setError(null);
+      const history = await listMessages(id);
+      setMessages(
+        history.map((msg) => ({
+          ...msg,
+          timestamp: new Date(msg.created_at || Date.now()),
+        })),
+      );
+      setConversationId(id);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Failed to load history");
+    } finally {
+      setIsTyping(false);
+    }
+  }, []);
+
   return {
     messages,
     isTyping,
@@ -253,6 +274,7 @@ export const useChat = () => {
     sendVoice,
     stop,
     clearMessages,
+    loadHistory,
     setConversationId,
   };
 };

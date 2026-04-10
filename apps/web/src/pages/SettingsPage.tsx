@@ -2,7 +2,9 @@ import React, { useState, useEffect } from "react";
 import { Save, Server, Loader2, Key } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAppContext } from "../context/AppContext";
-import { BASE_URL, tokenStore } from "../api/client";
+import { BASE_URL, tokenStore, listMemories, deleteMemory, clearAllMemories, type MemoryItem } from "../api/client";
+import MemorySettingsSection from "../components/settings/MemorySettingsSection";
+import MemoryList from "../components/settings/MemoryList";
 
 const API_URL = `${BASE_URL}/api/v1`;
 
@@ -76,6 +78,13 @@ const SettingsPage: React.FC = () => {
   const [ollamaChatModel, setOllamaChatModel] = useState("llama3.2:3b");
   const [ollamaEmbedModel, setOllamaEmbedModel] = useState("nomic-embed-text");
 
+  const [enableMemory, setEnableMemory] = useState(true);
+  const [enableLongTermMemory, setEnableLongTermMemory] = useState(true);
+  const [memories, setMemories] = useState<MemoryItem[]>([]);
+  const [isMemoriesLoading, setIsMemoriesLoading] = useState(false);
+  const [memoryError, setMemoryError] = useState<string | null>(null);
+  const [isClearingMemories, setIsClearingMemories] = useState(false);
+
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [message, setMessage] = useState<{
@@ -85,7 +94,21 @@ const SettingsPage: React.FC = () => {
 
   useEffect(() => {
     loadSettings();
+    loadMemories();
   }, []);
+
+  const loadMemories = async () => {
+    try {
+      setIsMemoriesLoading(true);
+      setMemoryError(null);
+      const data = await listMemories();
+      setMemories(data);
+    } catch (error) {
+      setMemoryError(getErrorMessage(error, "Failed to load memories."));
+    } finally {
+      setIsMemoriesLoading(false);
+    }
+  };
 
   const loadSettings = async () => {
     try {
@@ -113,6 +136,9 @@ const SettingsPage: React.FC = () => {
         if (data.ollama_chat_model) setOllamaChatModel(data.ollama_chat_model);
         if (data.ollama_embed_model)
           setOllamaEmbedModel(data.ollama_embed_model);
+        
+        if (data.enable_memory !== undefined) setEnableMemory(data.enable_memory === "true");
+        if (data.enable_long_term_memory !== undefined) setEnableLongTermMemory(data.enable_long_term_memory === "true");
       }
     } catch (error) {
       console.error("Failed to load settings:", error);
@@ -137,6 +163,8 @@ const SettingsPage: React.FC = () => {
         ollama_url: ollamaUrl,
         ollama_chat_model: ollamaChatModel,
         ollama_embed_model: ollamaEmbedModel,
+        enable_memory: String(enableMemory),
+        enable_long_term_memory: String(enableLongTermMemory),
       };
 
       const res = await fetch(`${API_URL}/config`, {
@@ -173,6 +201,31 @@ const SettingsPage: React.FC = () => {
     }
   };
 
+  const handleDeleteMemory = async (id: string) => {
+    try {
+      await deleteMemory(id);
+      setMemories((prev) => prev.filter((m) => m.id !== id));
+    } catch (error) {
+      console.error("Failed to delete memory:", error);
+      alert("Failed to delete memory");
+    }
+  };
+
+  const handleClearAllMemories = async () => {
+    if (confirm("Are you sure you want to clear ALL memories? This cannot be undone.")) {
+      try {
+        setIsClearingMemories(true);
+        await clearAllMemories();
+        setMemories([]);
+      } catch (error) {
+        console.error("Failed to clear memories:", error);
+        alert("Failed to clear memories");
+      } finally {
+        setIsClearingMemories(false);
+      }
+    }
+  };
+
   return (
     <div className="index-page">
       <header className="page-header glass">
@@ -191,7 +244,8 @@ const SettingsPage: React.FC = () => {
             <span className="font-medium">Loading settings...</span>
           </div>
         ) : (
-          <div className="index-card glass">
+          <>
+            <div className="index-card glass">
             <div className="card-header">
               <Server size={24} className="accent-text" />
               <div>
@@ -353,6 +407,29 @@ const SettingsPage: React.FC = () => {
               </div>
             </div>
           </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
+            <div className="index-card glass">
+              <MemorySettingsSection
+                enableMemory={enableMemory}
+                enableLongTermMemory={enableLongTermMemory}
+                onToggleMemory={setEnableMemory}
+                onToggleLongTermMemory={setEnableLongTermMemory}
+                onClearAll={handleClearAllMemories}
+                isClearing={isClearingMemories}
+              />
+            </div>
+
+            <div className="index-card glass">
+              <MemoryList
+                memories={memories}
+                isLoading={isMemoriesLoading}
+                error={memoryError}
+                onDeleteMemory={handleDeleteMemory}
+              />
+            </div>
+          </div>
+        </>
         )}
       </div>
     </div>
