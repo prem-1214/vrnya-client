@@ -268,8 +268,8 @@ const SettingsPage: React.FC = () => {
                 >
                   <option value="ollama">Ollama (Local / Free)</option>
                   <option value="gemini">Google Gemini (Cloud)</option>
-                  {/* <option value="groq">Groq (Cloud / Fast)</option> */}
-                  {/* <option value="openrouter">OpenRouter (Any LLM)</option> */}
+                  <option value="groq">Groq (Cloud)</option>
+                  <option value="openrouter">OpenRouter</option>
                 </select>
               </div>
 
