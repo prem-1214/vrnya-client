@@ -108,11 +108,38 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
         </div>
 
         <div className="message-content prose">
-          <ReactMarkdown remarkPlugins={[remarkGfm]}>
-            {displayContent}
-          </ReactMarkdown>
-          {shouldAnimate && !revealComplete && (
-            <span className="message-cursor" aria-hidden="true" />
+          {message.fileDetails ? (
+            <div className="generated-file-card">
+              <strong style={{ display: "block", marginBottom: 10 }}>📄 {message.fileDetails.filename}</strong>
+              <pre
+                style={{
+                  maxHeight: 200,
+                  overflow: "auto",
+                  padding: 10,
+                  borderRadius: 6,
+                  fontSize: 12,
+                  marginBottom: 10,
+                  background: "var(--panel-strong-bg)"
+                }}
+              >
+                {message.fileDetails.preview}
+              </pre>
+              <button 
+                className="action-btn"
+                onClick={() => window.open(message.fileDetails!.url)}
+              >
+                Download File
+              </button>
+            </div>
+          ) : (
+            <>
+              <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                {displayContent}
+              </ReactMarkdown>
+              {shouldAnimate && !revealComplete && (
+                <span className="message-cursor" aria-hidden="true" />
+              )}
+            </>
           )}
         </div>
 

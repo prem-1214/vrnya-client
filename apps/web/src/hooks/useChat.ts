@@ -28,6 +28,11 @@ export interface Message {
   timestamp: Date;
   created_at?: string;
   updated_at?: string;
+  fileDetails?: {
+    filename: string;
+    preview: string;
+    url: string;
+  };
 }
 
 interface FormattedResponse {
@@ -240,6 +245,45 @@ export const useChat = () => {
     [],
   );
 
+  const generateAndInjectFile = useCallback(
+    async (prompt: string, performGenerate: (p: string) => Promise<any>) => {
+      const userMessage = createMessage("user", `/generate ${prompt}`);
+      const assistantMessage = createMessage("assistant", "Generating file...");
+      setMessages((prev) => [...prev, userMessage, assistantMessage]);
+      setIsTyping(true);
+
+      try {
+        const res = await performGenerate(prompt);
+        setMessages((prev) =>
+          prev.map((msg) =>
+            msg.id === assistantMessage.id
+              ? {
+                  ...msg,
+                  content: "File generated successfully.",
+                  fileDetails: {
+                    filename: res.filename,
+                    preview: res.preview,
+                    url: res.url,
+                  },
+                }
+              : msg
+          )
+        );
+      } catch (err) {
+        setMessages((prev) =>
+          prev.map((msg) =>
+            msg.id === assistantMessage.id
+              ? { ...msg, content: "Generation failed." }
+              : msg
+          )
+        );
+      } finally {
+        setIsTyping(false);
+      }
+    },
+    []
+  );
+
   const clearMessages = useCallback(() => {
     setMessages([]);
     setError(null);
@@ -272,6 +316,7 @@ export const useChat = () => {
     conversationId,
     send,
     sendVoice,
+    generateAndInjectFile,
     stop,
     clearMessages,
     loadHistory,

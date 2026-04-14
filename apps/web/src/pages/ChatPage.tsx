@@ -10,7 +10,7 @@ import "./ChatPage.css";
 const ChatPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { messages, isTyping, send, sendVoice, error, loadHistory, clearMessages, conversationId } = useChat();
+  const { messages, isTyping, send, sendVoice, generateAndInjectFile, error, loadHistory, clearMessages, conversationId } = useChat();
   const [previewTarget, setPreviewTarget] = useState<
     AgentSource | { path: string } | null
   >(null);
@@ -96,6 +96,7 @@ const ChatPage: React.FC = () => {
             onVoiceResult={({ transcript, agentResponse }) =>
               sendVoice(transcript, agentResponse)
             }
+            onGenerate={generateAndInjectFile}
             onStop={stop}
             disabled={isTyping}
           />

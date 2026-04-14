@@ -704,8 +704,7 @@ export interface Conversation {
   updated_at: string;
 }
 
-export const listMemories = () =>
-  apiFetch<MemoryItem[]>("/api/v1/memory");
+export const listMemories = () => apiFetch<MemoryItem[]>("/api/v1/memory");
 
 export const deleteMemory = (id: string) =>
   apiFetch<{ success: boolean }>(`/api/v1/memory/${id}`, {
@@ -726,4 +725,10 @@ export const listMessages = (conversationId: string) =>
 export const deleteConversation = (id: string) =>
   apiFetch<{ success: boolean }>(`/api/v1/conversations/${id}`, {
     method: "DELETE",
+  });
+
+export const generateFile = (prompt: string) =>
+  apiFetch<{ fileId: string; filename: string; mimeType: string; url: string; preview: string }>("/api/v1/generate", {
+    method: "POST",
+    body: JSON.stringify({ prompt }),
   });

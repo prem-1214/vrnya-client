@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { Send, Hash, Loader2, Square } from "lucide-react";
 import VoiceRecorder from "./VoiceRecorder";
-import { sendVoiceMessage } from "../../api/client";
+import { sendVoiceMessage, generateFile } from "../../api/client";
 import "./ChatInput.css";
 
 interface VoiceResult {
@@ -13,6 +13,7 @@ interface ChatInputProps {
   onSend: (message: string) => void;
   // Called when voice completes — bypasses the agent call since it already ran
   onVoiceResult?: (result: VoiceResult) => void;
+  onGenerate?: (prompt: string, performGenerate: (p: string) => Promise<any>) => void;
   onStop?: () => void;
   disabled: boolean;
 }
@@ -20,6 +21,7 @@ interface ChatInputProps {
 const ChatInput: React.FC<ChatInputProps> = ({
   onSend,
   onVoiceResult,
+  onGenerate,
   onStop,
   disabled,
 }) => {
@@ -36,7 +38,13 @@ const ChatInput: React.FC<ChatInputProps> = ({
 
   const handleSend = () => {
     if (input.trim() && !disabled) {
-      onSend(input.trim());
+      if (input.trim().startsWith("/generate ")) {
+        if (onGenerate) {
+          onGenerate(input.replace("/generate", "").trim(), generateFile);
+        }
+      } else {
+        onSend(input.trim());
+      }
       setInput("");
     }
   };
