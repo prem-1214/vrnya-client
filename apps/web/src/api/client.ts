@@ -596,6 +596,10 @@ export const indexR2File = (fileId: string) =>
     method: "POST",
     body: JSON.stringify({ fileId }),
   });
+export const deleteUploadedFile = (fileId: string) =>
+  apiFetch<{ message: string }>(`/api/v1/upload/${fileId}`, {
+    method: "DELETE",
+  });
 /**
  * Upload a file directly to R2 using a presigned PUT URL.
  * This goes browser → R2 directly (skips the server).

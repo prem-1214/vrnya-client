@@ -8,11 +8,13 @@ import {
   AlertTriangle,
   HelpCircle,
   RefreshCw,
+  Trash2,
 } from "lucide-react";
 import {
   listUploadedFiles,
   type UploadedFile,
   indexR2File,
+  deleteUploadedFile,
 } from "../api/client";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -55,13 +57,28 @@ const UploadedFilesPanel: React.FC = () => {
     } catch (err: unknown) {
       const message =
         err instanceof Error ? err.message : "Failed to trigger re-index";
-      alert(message); // Could use a toast instead
+      alert(message);
     } finally {
       setIndexingIds((prev) => {
         const next = new Set(prev);
         next.delete(fileId);
         return next;
       });
+    }
+  };
+
+  const handleDelete = async (e: React.MouseEvent, fileId: string) => {
+    e.stopPropagation();
+    if (!window.confirm("Are you sure you want to permanently delete this document and its indexed data? This cannot be undone.")) {
+      return;
+    }
+
+    try {
+      await deleteUploadedFile(fileId);
+      setFiles((prev) => prev.filter((f) => f.id !== fileId));
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Failed to delete file";
+      alert(message);
     }
   };
 
@@ -197,26 +214,47 @@ const UploadedFilesPanel: React.FC = () => {
                     {renderBadge(file)}
                   </div>
 
-                  <div className="col-actions" style={{ display: "flex", justifyContent: "flex-end" }}>
-                    {(file.chunk_count === 0 || !file.indexed_at) && (
+                    <div className="col-actions" style={{ display: "flex", justifyContent: "flex-end", gap: "8px" }}>
+                      {(file.chunk_count === 0 || !file.indexed_at) && (
+                        <button
+                          className="ai-action-btn"
+                          onClick={(e) => handleReindex(e, file.id)}
+                          disabled={indexingIds.has(file.id)}
+                          style={{
+                            background: "transparent",
+                            border: "1px solid var(--color-border)",
+                            color: "var(--color-text-secondary)",
+                            cursor: "pointer",
+                            padding: "4px 8px",
+                            borderRadius: "4px",
+                            fontSize: "12px",
+                          }}
+                        >
+                          Re-index
+                        </button>
+                      )}
                       <button
-                        className="ai-action-btn"
-                        onClick={(e) => handleReindex(e, file.id)}
-                        disabled={indexingIds.has(file.id)}
+                        className="delete-btn"
+                        onClick={(e) => handleDelete(e, file.id)}
+                        title="Delete Document"
                         style={{
                           background: "transparent",
-                          border: "1px solid var(--color-border)",
-                          color: "var(--color-text-secondary)",
+                          border: "none",
+                          color: "var(--color-text-muted)",
                           cursor: "pointer",
-                          padding: "4px 8px",
+                          padding: "4px",
                           borderRadius: "4px",
-                          fontSize: "12px",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          transition: "color 0.2s, background 0.2s",
                         }}
+                        onMouseEnter={(e) => (e.currentTarget.style.color = "var(--color-error)")}
+                        onMouseLeave={(e) => (e.currentTarget.style.color = "var(--color-text-muted)")}
                       >
-                        Re-index
+                        <Trash2 size={16} />
                       </button>
-                    )}
-                  </div>
+                    </div>
                 </motion.div>
               ))}
             </motion.div>
