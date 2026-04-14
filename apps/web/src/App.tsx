@@ -50,7 +50,7 @@ function App() {
           <Routes>
             {/* Public routes */}
             <Route path="/waitlist" element={<WaitlistPage />} />
-            <Route path="/login" element={<LoginPage />} />
+            {/* <Route path="/login" element={<LoginPage />} /> */}
             <Route path="/auth/callback" element={<AuthCallbackPage />} />
 
             {/* Protected routes */}

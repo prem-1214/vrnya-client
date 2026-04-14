@@ -17,7 +17,7 @@
 
 .login-card {
   width: 100%;
-  max-width: 420px;
+  max-width: 480px;
   border-radius: 28px;
   padding: var(--space-2xl) var(--space-xl);
   box-shadow: var(--shadow-lg);
@@ -38,7 +38,7 @@
 }
 
 .login-brand-name {
-  font-size: var(--text-xl);
+  font-size: 2.5rem;
   font-weight: 700;
   color: var(--color-text-primary);
   margin: 0;
