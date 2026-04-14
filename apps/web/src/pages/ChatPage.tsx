@@ -3,6 +3,7 @@ import MessageList from "../components/chat/MessageList";
 import ChatInput from "../components/chat/ChatInput";
 import ChatPreviewPanel from "../components/chat/ChatPreviewPanel";
 import { useChat, type AgentSource } from "../hooks/useChat";
+import { useSpeech } from "../hooks/useSpeech";
 import { useParams, useNavigate } from "react-router-dom";
 import MemoryStatusChip from "../components/chat/MemoryStatusChip";
 import "./ChatPage.css";
@@ -11,11 +12,36 @@ const ChatPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { messages, isTyping, send, sendVoice, generateAndInjectFile, error, loadHistory, clearMessages, conversationId } = useChat();
+  const { speak, stop: stopSpeech } = useSpeech();
+  const [isAutoSpeakEnabled, setIsAutoSpeakEnabled] = useState(() => {
+    return localStorage.getItem("vrnya_auto_speak") === "true";
+  });
   const [previewTarget, setPreviewTarget] = useState<
     AgentSource | { path: string } | null
   >(null);
   const [previewWidth, setPreviewWidth] = useState(400);
   const isResizing = useRef(false);
+
+  useEffect(() => {
+    localStorage.setItem("vrnya_auto_speak", String(isAutoSpeakEnabled));
+  }, [isAutoSpeakEnabled]);
+
+  // Auto-speak new assistant messages
+  const lastProcessedMessageId = useRef<string | null>(null);
+  useEffect(() => {
+    if (!isAutoSpeakEnabled) return;
+    
+    const lastMessage = messages[messages.length - 1];
+    if (
+      lastMessage && 
+      lastMessage.role === "assistant" && 
+      !isTyping && 
+      lastMessage.id !== lastProcessedMessageId.current
+    ) {
+      speak(lastMessage.content);
+      lastProcessedMessageId.current = lastMessage.id;
+    }
+  }, [messages, isTyping, isAutoSpeakEnabled, speak]);
 
   useEffect(() => {
     if (id) {
@@ -97,7 +123,12 @@ const ChatPage: React.FC = () => {
               sendVoice(transcript, agentResponse)
             }
             onGenerate={generateAndInjectFile}
-            onStop={stop}
+            onStop={() => {
+              stop();
+              stopSpeech();
+            }}
+            isAutoSpeakEnabled={isAutoSpeakEnabled}
+            onToggleAutoSpeak={() => setIsAutoSpeakEnabled(!isAutoSpeakEnabled)}
             disabled={isTyping}
           />
         </div>

@@ -59,6 +59,23 @@
   color: var(--color-text-muted);
 }
 
+.message-audio-btn {
+  opacity: 0.6;
+  transition: all 0.2s ease;
+}
+
+.message-audio-btn:hover {
+  opacity: 1;
+  background: var(--glass-bg);
+  transform: scale(1.1);
+}
+
+.message-audio-btn.active {
+  opacity: 1;
+  color: var(--color-accent) !important;
+  filter: drop-shadow(0 0 4px var(--color-accent));
+}
+
 .message-content {
   font-size: var(--text-sm);
   white-space: pre-wrap;

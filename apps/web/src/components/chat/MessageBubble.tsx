@@ -5,17 +5,22 @@ import { motion } from "framer-motion";
 import type { AgentSource, Message } from "../../hooks/useChat";
 import MessageSourceList from "./MessageSourceList";
 import { openPathInShell, showPathInFolder } from "../../platform/shell";
+import { Volume2, VolumeX } from "lucide-react";
+import { useSpeech } from "../../hooks/useSpeech";
 import "./MessageBubble.css";
 
 interface MessageBubbleProps {
   message: Message;
   onOpenPreview?: (target: AgentSource | { path: string }) => void;
+  isAutoSpeaking?: boolean;
 }
 
 const MessageBubble: React.FC<MessageBubbleProps> = ({
   message,
   onOpenPreview,
+  isAutoSpeaking = false,
 }) => {
+  const { speak, stop, isSpeaking } = useSpeech();
   const isUser = message.role === "user";
 
   // Sources and action path now come from structured message fields,
@@ -99,12 +104,35 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
       <div className={`message-bubble ${isUser ? "user" : "assistant"} glass`}>
         <div className="message-header">
           <span className="message-role">{isUser ? "You" : "Assistant"}</span>
-          <span className="message-time">
-            {message.timestamp.toLocaleTimeString([], {
-              hour: "2-digit",
-              minute: "2-digit",
-            })}
-          </span>
+          <div className="flex items-center gap-2">
+            {!isUser && revealComplete && (
+              <button
+                className={`message-audio-btn ${isSpeaking ? "active" : ""}`}
+                onClick={() => (isSpeaking ? stop() : speak(fullDisplayContent))}
+                title={isSpeaking ? "Stop reading" : "Read aloud"}
+                style={{
+                  background: "transparent",
+                  border: "none",
+                  color: isSpeaking ? "var(--accent)" : "var(--color-text-muted)",
+                  cursor: "pointer",
+                  padding: "2px",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  borderRadius: "4px",
+                  transition: "all 0.2s"
+                }}
+              >
+                {isSpeaking ? <VolumeX size={14} /> : <Volume2 size={14} />}
+              </button>
+            )}
+            <span className="message-time">
+              {message.timestamp.toLocaleTimeString([], {
+                hour: "2-digit",
+                minute: "2-digit",
+              })}
+            </span>
+          </div>
         </div>
 
         <div className="message-content prose">

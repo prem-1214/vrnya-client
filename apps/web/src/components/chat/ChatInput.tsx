@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import { Send, Hash, Loader2, Square } from "lucide-react";
+import { Send, Hash, Loader2, Square, Volume2, VolumeX } from "lucide-react";
 import VoiceRecorder from "./VoiceRecorder";
 import { sendVoiceMessage, generateFile } from "../../api/client";
 import "./ChatInput.css";
@@ -15,6 +15,8 @@ interface ChatInputProps {
   onVoiceResult?: (result: VoiceResult) => void;
   onGenerate?: (prompt: string, performGenerate: (p: string) => Promise<any>) => void;
   onStop?: () => void;
+  isAutoSpeakEnabled?: boolean;
+  onToggleAutoSpeak?: () => void;
   disabled: boolean;
 }
 
@@ -23,6 +25,8 @@ const ChatInput: React.FC<ChatInputProps> = ({
   onVoiceResult,
   onGenerate,
   onStop,
+  isAutoSpeakEnabled = false,
+  onToggleAutoSpeak,
   disabled,
 }) => {
   const [input, setInput] = useState("");
@@ -101,6 +105,25 @@ const ChatInput: React.FC<ChatInputProps> = ({
             onRecordingComplete={handleVoiceRecording}
             disabled={disabled || isProcessingVoice}
           />
+          <button
+            className={`auto-speak-toggle ${isAutoSpeakEnabled ? "active" : ""}`}
+            onClick={onToggleAutoSpeak}
+            title={isAutoSpeakEnabled ? "Disable auto-speak" : "Enable auto-speak"}
+            style={{
+              background: "transparent",
+              border: "none",
+              color: isAutoSpeakEnabled ? "var(--accent)" : "var(--color-text-muted)",
+              cursor: "pointer",
+              padding: "4px",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              borderRadius: "4px",
+              transition: "all 0.2s"
+            }}
+          >
+            {isAutoSpeakEnabled ? <Volume2 size={18} /> : <VolumeX size={18} />}
+          </button>
           {disabled && onStop ? (
             <button
               className="stop-button"
