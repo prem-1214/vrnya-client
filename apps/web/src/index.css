@@ -1,6 +1,7 @@
 @import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap");
 @import "tailwindcss";
 
+
 :root {
   --space-xs: 4px;
   --space-sm: 8px;
@@ -61,11 +62,20 @@
   --shadow-sm: 0 10px 30px rgba(0, 0, 0, 0.18);
   --shadow-md: 0 18px 45px rgba(0, 0, 0, 0.26);
   --shadow-lg: 0 28px 70px rgba(0, 0, 0, 0.34);
-  --shadow-accent: 0 0 0 1px rgba(90, 169, 255, 0.18), 0 18px 40px rgba(90, 169, 255, 0.18);
+  --shadow-accent:
+    0 0 0 1px rgba(90, 169, 255, 0.18), 0 18px 40px rgba(90, 169, 255, 0.18);
 
   --app-background:
-    radial-gradient(circle at top left, rgba(90, 169, 255, 0.12), transparent 32%),
-    radial-gradient(circle at bottom right, rgba(16, 185, 129, 0.08), transparent 28%),
+    radial-gradient(
+      circle at top left,
+      rgba(90, 169, 255, 0.12),
+      transparent 32%
+    ),
+    radial-gradient(
+      circle at bottom right,
+      rgba(16, 185, 129, 0.08),
+      transparent 28%
+    ),
     linear-gradient(180deg, #0b1424 0%, #08101c 100%);
   --titlebar-bg: rgba(8, 15, 27, 0.62);
   --statusbar-bg: rgba(8, 15, 27, 0.58);
@@ -107,11 +117,20 @@
   --shadow-sm: 0 12px 28px rgba(40, 62, 97, 0.08);
   --shadow-md: 0 18px 45px rgba(40, 62, 97, 0.12);
   --shadow-lg: 0 28px 70px rgba(40, 62, 97, 0.16);
-  --shadow-accent: 0 0 0 1px rgba(37, 99, 235, 0.12), 0 16px 36px rgba(37, 99, 235, 0.18);
+  --shadow-accent:
+    0 0 0 1px rgba(37, 99, 235, 0.12), 0 16px 36px rgba(37, 99, 235, 0.18);
 
   --app-background:
-    radial-gradient(circle at top left, rgba(37, 99, 235, 0.12), transparent 30%),
-    radial-gradient(circle at bottom right, rgba(14, 165, 233, 0.08), transparent 28%),
+    radial-gradient(
+      circle at top left,
+      rgba(37, 99, 235, 0.12),
+      transparent 30%
+    ),
+    radial-gradient(
+      circle at bottom right,
+      rgba(14, 165, 233, 0.08),
+      transparent 28%
+    ),
     linear-gradient(180deg, #f8fbff 0%, #eaf1f9 100%);
   --titlebar-bg: rgba(255, 255, 255, 0.82);
   --statusbar-bg: rgba(255, 255, 255, 0.78);
@@ -123,23 +142,25 @@
   --message-user-text: #ffffff;
 }
 
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
+@layer base {
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
 
-html,
-body,
-#root {
-  height: 100%;
-  width: 100%;
-  overflow: hidden;
-  background: var(--app-background);
-  color: var(--color-text-primary);
-  font-family: var(--font-sans);
+  html,
+  body,
+  #root {
+    height: 100%;
+    width: 100%;
+    overflow: hidden;
+    background: var(--app-background);
+    color: var(--color-text-primary);
+    font-family: var(--font-sans);
+  }
 }
 
 ::-webkit-scrollbar {
