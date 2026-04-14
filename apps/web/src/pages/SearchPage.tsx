@@ -155,7 +155,7 @@ const SearchPage: React.FC = () => {
             {results.length > 0 ? (
               results.map((result: SearchResult, idx: number) => (
                 <motion.div
-                  key={result.id}
+                  key={`${result.id}-${idx}`}
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: idx * 0.05 }}
