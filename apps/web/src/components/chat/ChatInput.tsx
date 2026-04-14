@@ -49,25 +49,21 @@ const ChatInput: React.FC<ChatInputProps> = ({
     }
   };
 
-  const handleVoiceRecording = async (blob: Blob) => {
-    setIsProcessingVoice(true);
-    try {
-      const response = await sendVoiceMessage(blob);
-      // Voice endpoint already ran the agent — do NOT call onSend(transcript)
-      // as that would trigger a second agent call with the same input.
-      // Instead, pass the full result up so the parent can inject it directly
-      // into message state.
-      if (onVoiceResult) {
-        onVoiceResult({
-          transcript: response.transcript,
-          agentResponse: response.agentResponse,
-        });
+  const handleVoiceRecording = async (transcript: string) => {
+    if (!transcript.trim()) return;
+    
+    // Check for generation intent in voice
+    const lowerTranscript = transcript.toLowerCase();
+    if (lowerTranscript.startsWith("generate ") || lowerTranscript.startsWith("make a file ")) {
+      const prompt = transcript.replace(/^(generate|make a file)\s+/i, "").trim();
+      if (onGenerate) {
+        onGenerate(prompt, generateFile);
+        return;
       }
-    } catch (err) {
-      console.error("Voice processing failed:", err);
-    } finally {
-      setIsProcessingVoice(false);
     }
+
+    // Normal voice input -> Send immediately (Instant Mode)
+    onSend(transcript);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {

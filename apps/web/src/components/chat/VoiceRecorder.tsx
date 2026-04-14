@@ -3,7 +3,7 @@ import { Mic, Square } from "lucide-react";
 import "./VoiceRecorder.css";
 
 interface VoiceRecorderProps {
-  onRecordingComplete: (blob: Blob) => void;
+  onRecordingComplete: (transcript: string) => void;
   disabled?: boolean;
 }
 
@@ -12,45 +12,69 @@ const VoiceRecorder: React.FC<VoiceRecorderProps> = ({
   disabled = false,
 }) => {
   const [isRecording, setIsRecording] = useState(false);
-  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
-  const chunksRef = useRef<Blob[]>([]);
-
-  const startRecording = useCallback(async () => {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const mediaRecorder = new MediaRecorder(stream, {
-        mimeType: "audio/webm",
-      });
-
-      mediaRecorderRef.current = mediaRecorder;
-      chunksRef.current = [];
-
-      mediaRecorder.ondataavailable = (e) => {
-        if (e.data.size > 0) {
-          chunksRef.current.push(e.data);
-        }
-      };
-
-      mediaRecorder.onstop = () => {
-        const blob = new Blob(chunksRef.current, { type: "audio/webm" });
-        onRecordingComplete(blob);
-        stream.getTracks().forEach((track) => track.stop());
-      };
-
-      mediaRecorder.start();
-      setIsRecording(true);
-    } catch (err) {
-      console.error("Failed to start recording:", err);
-      alert("Microphone access denied or not available.");
-    }
-  }, [onRecordingComplete]);
+  const isRecordingRef = useRef(false);
+  const recognitionRef = useRef<any>(null);
+  const silenceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const stopRecording = useCallback(() => {
-    if (mediaRecorderRef.current && isRecording) {
-      mediaRecorderRef.current.stop();
+    if (recognitionRef.current && isRecordingRef.current) {
+      recognitionRef.current.stop();
       setIsRecording(false);
+      isRecordingRef.current = false;
+      if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
     }
-  }, [isRecording]);
+  }, []);
+
+  const startRecording = useCallback(() => {
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    
+    if (!SpeechRecognition) {
+      alert("Browser speech recognition is not supported in this browser.");
+      return;
+    }
+
+    try {
+      const recognition = new SpeechRecognition();
+      recognition.continuous = false; 
+      recognition.interimResults = true;
+      recognition.lang = "en-US";
+
+      let fullTranscript = "";
+
+      recognition.onresult = (event: any) => {
+        fullTranscript = Array.from(event.results)
+          .map((res: any) => res[0].transcript)
+          .join("");
+
+        if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
+        silenceTimerRef.current = setTimeout(() => {
+          stopRecording();
+        }, 2000); 
+      };
+
+      recognition.onspeechend = () => {
+        setTimeout(() => stopRecording(), 300);
+      };
+
+      recognition.onend = () => {
+        if (fullTranscript.trim()) {
+          onRecordingComplete(fullTranscript.trim());
+        }
+        setIsRecording(false);
+        isRecordingRef.current = false;
+        if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
+      };
+
+      recognitionRef.current = recognition;
+      recognition.start();
+      setIsRecording(true);
+      isRecordingRef.current = true;
+    } catch (err) {
+      console.error("Failed to start speech recognition:", err);
+      setIsRecording(false);
+      isRecordingRef.current = false;
+    }
+  }, [onRecordingComplete, stopRecording]);
 
   return (
     <button
