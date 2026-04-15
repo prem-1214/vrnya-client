@@ -87,27 +87,27 @@ const UploadedFilesPanel: React.FC = () => {
 
     if (isIndexing) {
       return (
-        <span className="index-badge">
-          <Loader2 size={12} className="spin" /> Indexing...
+        <span className="flex items-center gap-1 rounded-xl border border-(--color-border) bg-(--color-bg-hover) px-2.5 py-1 text-[11px] font-semibold">
+          <Loader2 size={12} className="animate-spin" /> Indexing...
         </span>
       );
     }
 
     if (file.chunk_count > 0) {
       return (
-        <span className="index-badge indexed">
+        <span className="flex items-center gap-1 rounded-xl border border-green-500/20 bg-green-500/10 px-2.5 py-1 text-[11px] font-semibold text-green-500">
           <CheckCircle2 size={12} /> Indexed
         </span>
       );
     } else if (file.indexed_at) {
       return (
-        <span className="index-badge failed">
+        <span className="flex items-center gap-1 rounded-xl border border-amber-500/20 bg-amber-500/10 px-2.5 py-1 text-[11px] font-semibold text-amber-500">
           <AlertTriangle size={12} /> Failed
         </span>
       );
     } else {
       return (
-        <span className="index-badge not-indexed">
+        <span className="flex items-center gap-1 rounded-xl border border-gray-400/20 bg-gray-400/10 px-2.5 py-1 text-[11px] font-semibold text-gray-400">
           <HelpCircle size={12} /> Not Indexed
         </span>
       );
@@ -123,39 +123,33 @@ const UploadedFilesPanel: React.FC = () => {
   };
 
   return (
-    <div className="uploaded-files-list">
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "flex-end",
-          marginBottom: "var(--space-md)",
-        }}
-      >
+    <div className="flex flex-1 flex-col overflow-hidden">
+      <div className="mb-4 flex justify-end">
         <button
-          className="refresh-btn"
+          className="cursor-pointer rounded-sm border border-(--color-border) bg-(--color-bg-surface) p-2 text-(--color-text-muted) shadow-(--shadow-sm) transition-all duration-300 hover:bg-(--color-bg-hover) hover:text-(--color-text-primary)"
           onClick={fetchFiles}
           disabled={isLoading}
         >
-          <RefreshCw size={16} className={isLoading ? "spin" : ""} />
+          <RefreshCw size={16} className={isLoading ? "animate-spin" : ""} />
         </button>
       </div>
 
-      <div className="files-grid-header" style={{ gridTemplateColumns: "1fr 120px 80px" }}>
-        <span className="col-name">Name</span>
-        <span className="col-status">Index Status</span>
-        <span className="col-actions">Actions</span>
+      <div className="grid grid-cols-[minmax(0,1fr)_120px_80px] px-4 pb-1 text-[10px] font-bold tracking-widest text-(--color-text-muted) uppercase">
+        <span>Name</span>
+        <span className="text-right">Index Status</span>
+        <span className="text-right">Actions</span>
       </div>
 
-      <div className="files-list">
+      <div className="flex-1 overflow-y-auto rounded-lg border border-(--glass-border) bg-(--color-bg-surface) shadow-(--shadow-md)">
         <AnimatePresence mode="wait">
           {isLoading ? (
             <motion.div
               key="loading"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              className="files-loading"
+              className="flex h-full flex-col items-center justify-center gap-4 text-(--color-text-secondary)"
             >
-              <Loader2 size={32} className="spin accent-text" />
+              <Loader2 size={32} className="animate-spin text-(--color-accent)" />
               <p>Loading uploaded files...</p>
             </motion.div>
           ) : error ? (
@@ -163,19 +157,23 @@ const UploadedFilesPanel: React.FC = () => {
               key="error"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              className="files-error"
+              className="flex h-full flex-col items-center justify-center gap-4 text-(--color-text-secondary)"
             >
               <AlertCircle size={32} />
               <p>{error}</p>
-              <button onClick={fetchFiles}>Try Again</button>
+              <button
+                className="cursor-pointer rounded-md border-0 bg-(--color-error) px-6 py-2 text-white"
+                onClick={fetchFiles}
+              >
+                Try Again
+              </button>
             </motion.div>
           ) : files.length === 0 ? (
             <motion.div
               key="empty"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              className="files-error"
-              style={{ color: "var(--color-text-muted)" }}
+              className="flex h-full flex-col items-center justify-center gap-4 text-(--color-text-muted)"
             >
               <p>No uploaded files found.</p>
             </motion.div>
@@ -184,7 +182,7 @@ const UploadedFilesPanel: React.FC = () => {
               key="list"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              className="files-grid"
+              className="flex flex-col"
             >
               {files.map((file, idx) => (
                 <motion.div
@@ -192,69 +190,44 @@ const UploadedFilesPanel: React.FC = () => {
                   initial={{ opacity: 0, x: -10 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: idx * 0.02 }}
-                  className="file-item selectable"
+                  className="grid cursor-pointer grid-cols-[minmax(0,1fr)_120px_80px] items-center border-b border-(--glass-border) bg-(--color-bg-surface) p-4 text-sm transition-colors duration-200 last:border-b-0 hover:bg-(--color-bg-hover)"
                   onClick={() => navigate(`/document/${file.id}`)}
-                  style={{ gridTemplateColumns: "1fr 120px 80px", cursor: "pointer" }}
                 >
-                  <div
-                    className="file-info col-name"
-                    style={{ flex: 1, minWidth: 0 }}
-                  >
-                    <File size={18} className="file-icon" />
-                    <div style={{ display: "flex", flexDirection: "column", gap: "2px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                      <span style={{ fontWeight: 500, overflow: "hidden", textOverflow: "ellipsis" }}>{file.name}</span>
-                      <span className="file-meta">
+                  <div className="flex min-w-0 flex-1 items-center gap-4">
+                    <File size={18} className="text-(--color-text-muted)" />
+                    <div className="flex min-w-0 flex-col gap-0.5">
+                      <span className="overflow-hidden text-ellipsis font-medium">
+                        {file.name}
+                      </span>
+                      <span className="flex items-center gap-2 text-[11px] text-(--color-text-muted)">
                         {formatSize(file.size)} &bull; {file.extension || 'Unknown'}
                         {file.indexed_at && ` • ${new Date(file.indexed_at).toLocaleDateString()}`}
                       </span>
                     </div>
                   </div>
 
-                  <div className="col-status" style={{ display: "flex", alignItems: "center" }}>
+                  <div className="flex items-center justify-end">
                     {renderBadge(file)}
                   </div>
 
-                    <div className="col-actions" style={{ display: "flex", justifyContent: "flex-end", gap: "8px" }}>
-                      {(file.chunk_count === 0 || !file.indexed_at) && (
-                        <button
-                          className="ai-action-btn"
-                          onClick={(e) => handleReindex(e, file.id)}
-                          disabled={indexingIds.has(file.id)}
-                          style={{
-                            background: "transparent",
-                            border: "1px solid var(--color-border)",
-                            color: "var(--color-text-secondary)",
-                            cursor: "pointer",
-                            padding: "4px 8px",
-                            borderRadius: "4px",
-                            fontSize: "12px",
-                          }}
-                        >
-                          Re-index
-                        </button>
-                      )}
+                  <div className="flex justify-end gap-2">
+                    {(file.chunk_count === 0 || !file.indexed_at) && (
                       <button
-                        className="delete-btn"
-                        onClick={(e) => handleDelete(e, file.id)}
-                        title="Delete Document"
-                        style={{
-                          background: "transparent",
-                          border: "none",
-                          color: "var(--color-text-muted)",
-                          cursor: "pointer",
-                          padding: "4px",
-                          borderRadius: "4px",
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          transition: "color 0.2s, background 0.2s",
-                        }}
-                        onMouseEnter={(e) => (e.currentTarget.style.color = "var(--color-error)")}
-                        onMouseLeave={(e) => (e.currentTarget.style.color = "var(--color-text-muted)")}
+                        className="cursor-pointer rounded border border-(--color-border) bg-transparent px-2 py-1 text-xs text-(--color-text-secondary)"
+                        onClick={(e) => handleReindex(e, file.id)}
+                        disabled={indexingIds.has(file.id)}
                       >
-                        <Trash2 size={16} />
+                        Re-index
                       </button>
-                    </div>
+                    )}
+                    <button
+                      className="flex cursor-pointer items-center justify-center rounded border-0 bg-transparent p-1 text-(--color-text-muted) transition-colors duration-200 hover:bg-(--color-bg-hover) hover:text-(--color-error)"
+                      onClick={(e) => handleDelete(e, file.id)}
+                      title="Delete Document"
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                  </div>
                 </motion.div>
               ))}
             </motion.div>

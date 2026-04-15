@@ -32,7 +32,6 @@ import {
   pickFilePath,
   pickFolderPath,
 } from "../platform/shell";
-import "./IndexPage.css";
 
 const ACCEPTED_TYPES = [
   "application/pdf",
@@ -279,15 +278,19 @@ const IndexPage: React.FC = () => {
   };
 
   return (
-    <div className="index-page">
-      <header className="page-header glass">
-        <div className="header-info">
-          <h1>Knowledge Index</h1>
-          <span>Manage the exact paths this app is allowed to index.</span>
+    <div className="flex h-full flex-col">
+      <header className="z-10 flex items-center justify-between border-b border-(--glass-border) bg-(--header-bg) px-8 py-4 [backdrop-filter:var(--glass-blur)] [-webkit-backdrop-filter:var(--glass-blur)]">
+        <div>
+          <h1 className="text-md font-bold text-(--color-text-primary)">
+            Knowledge Index
+          </h1>
+          <span className="text-xs text-(--color-text-muted)">
+            Manage the exact paths this app is allowed to index.
+          </span>
         </div>
       </header>
 
-      <div className="index-container">
+      <div className="mx-auto flex w-full max-w-[960px] flex-1 flex-col gap-12 overflow-y-auto p-12">
         {/* === TEMPORARILY DISABLED FOR TWITTER ===
         <div className="index-card glass">
           <div className="card-header">
@@ -579,24 +582,27 @@ const IndexPage: React.FC = () => {
 
         {/* Polished Cloud Dropzone — always visible */}
         <div
-          className={`upload-dropzone glass ${dragOver ? "drag-active" : ""}`}
+          className={`relative mx-auto mt-12 flex min-h-[400px] w-full max-w-[700px] cursor-pointer flex-col items-center justify-center gap-6 overflow-hidden rounded-lg border-2 border-dashed border-(--color-accent) bg-(--panel-soft-bg) px-8 py-[60px] text-center transition-all duration-300 before:pointer-events-none before:absolute before:inset-0 before:bg-[radial-gradient(circle_at_center,rgba(108,99,255,0.08)_0%,transparent_70%)] ${dragOver ? "translate-y-[-2px] border-(--color-accent-hover) shadow-[var(--shadow-lg),0_0_40px_rgba(108,99,255,0.15)]" : "hover:translate-y-[-2px] hover:border-(--color-accent-hover) hover:shadow-[var(--shadow-lg),0_0_40px_rgba(108,99,255,0.15)]"}`}
           onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
           onDragLeave={() => setDragOver(false)}
           onDrop={handleDrop}
           onClick={() => fileInputRef.current?.click()}
-          style={{ cursor: "pointer" }}
         >
-          <div className="dropzone-icon-container">
-            <CloudUpload size={54} className="accent-text" />
+          <div className="relative z-10 mb-1 flex h-[100px] w-[100px] items-center justify-center rounded-full bg-(--color-accent-subtle) shadow-[inset_0_0_20px_rgba(108,99,255,0.2),0_0_0_8px_rgba(108,99,255,0.05)] transition-transform duration-300">
+            <CloudUpload size={54} className="text-(--color-accent)" />
           </div>
-          <div className="dropzone-text">
-            <h3>Cloud Vault</h3>
-            <p>Drag &amp; drop files here to vault them, or click to browse.</p>
-            <div style={{ marginTop: "8px", fontSize: "14px", color: "var(--color-text-muted)" }}>
+          <div className="relative z-10">
+            <h3 className="mb-2 text-[28px] font-bold tracking-[-0.5px] text-(--color-text-primary)">
+              Cloud Vault
+            </h3>
+            <p className="mx-auto max-w-[480px] text-base leading-relaxed text-(--color-text-secondary)">
+              Drag &amp; drop files here to vault them, or click to browse.
+            </p>
+            <div className="mt-2 text-sm text-(--color-text-muted)">
               PDF, DOCX, TXT, MD, CSV, JSON, HTML — max 50MB per file
             </div>
           </div>
-          <button className="r2-upload-trigger-btn large-btn" style={{ pointerEvents: "none" }}>
+          <button className="relative z-10 mt-4 flex pointer-events-none items-center gap-1.5 rounded-full border-0 bg-(--color-accent) px-9 py-4 text-base font-semibold text-white shadow-[0_4px_14px_rgba(108,99,255,0.4)]">
             <CloudUpload size={22} />
             <span>Select Files</span>
           </button>
@@ -618,24 +624,16 @@ const IndexPage: React.FC = () => {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 10 }}
-              style={{ marginTop: "16px", display: "flex", flexDirection: "column", gap: "10px" }}
+              className="mt-4 flex flex-col gap-2.5"
             >
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "4px" }}>
-                <span style={{ fontSize: "14px", fontWeight: 600, color: "var(--color-text-secondary)" }}>
+              <div className="mb-1 flex items-center justify-between">
+                <span className="text-sm font-semibold text-(--color-text-secondary)">
                   Upload Queue ({uploadItems.length})
                 </span>
                 {hasCompleted && (
                   <button
                     onClick={clearCompleted}
-                    style={{
-                      fontSize: "12px",
-                      background: "transparent",
-                      border: "1px solid var(--color-border)",
-                      color: "var(--color-text-muted)",
-                      borderRadius: "6px",
-                      padding: "3px 10px",
-                      cursor: "pointer",
-                    }}
+                    className="cursor-pointer rounded-[6px] border border-(--color-border) bg-transparent px-2.5 py-[3px] text-xs text-(--color-text-muted)"
                   >
                     Clear Completed
                   </button>
@@ -649,62 +647,42 @@ const IndexPage: React.FC = () => {
                     initial={{ opacity: 0, scale: 0.97 }}
                     animate={{ opacity: 1, scale: 1 }}
                     exit={{ opacity: 0, scale: 0.95, height: 0, marginBottom: 0 }}
-                    className="glass"
-                    style={{
-                      borderRadius: "10px",
-                      padding: "12px 14px",
-                      display: "flex",
-                      flexDirection: "column",
-                      gap: "8px",
-                      borderLeft: item.stage === "error" ? "3px solid var(--color-error, #f87171)" :
-                                  item.stage === "done" ? "3px solid var(--color-success, #34d399)" :
-                                  "3px solid var(--color-accent, #6c63ff)",
-                    }}
+                    className={`flex flex-col gap-2 rounded-[10px] border border-(--glass-border) bg-(--glass-bg) px-3.5 py-3 [backdrop-filter:var(--glass-blur)] [-webkit-backdrop-filter:var(--glass-blur)] ${
+                      item.stage === "error"
+                        ? "border-l-[3px] border-l-(--color-error)"
+                        : item.stage === "done"
+                          ? "border-l-[3px] border-l-(--color-success)"
+                          : "border-l-[3px] border-l-(--color-accent)"
+                    }`}
                   >
                     {/* Row 1: filename + badge + dismiss */}
-                    <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <span style={{ fontWeight: 500, fontSize: "13px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", display: "block" }}>
+                    <div className="flex items-center gap-2.5">
+                      <div className="min-w-0 flex-1">
+                        <span className="block overflow-hidden text-ellipsis whitespace-nowrap text-[13px] font-medium">
                           {item.fileName}
                         </span>
                         {item.stage === "error" && item.error && (
-                          <span style={{ fontSize: "11px", color: "var(--color-error, #f87171)" }}>{item.error}</span>
+                          <span className="text-[11px] text-(--color-error)">{item.error}</span>
                         )}
                       </div>
-                      <span style={{
-                        fontSize: "11px",
-                        padding: "2px 8px",
-                        borderRadius: "20px",
-                        whiteSpace: "nowrap",
-                        background: item.stage === "done" ? "rgba(52, 211, 153, 0.15)" :
-                                    item.stage === "error" ? "rgba(248, 113, 113, 0.15)" :
-                                    "rgba(108, 99, 255, 0.15)",
-                        color: item.stage === "done" ? "var(--color-success, #34d399)" :
-                               item.stage === "error" ? "var(--color-error, #f87171)" :
-                               "var(--color-accent, #6c63ff)",
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "4px",
-                      }}>
+                      <span className={`flex items-center gap-1 whitespace-nowrap rounded-full px-2 py-0.5 text-[11px] ${
+                        item.stage === "done"
+                          ? "bg-[rgba(52,211,153,0.15)] text-(--color-success)"
+                          : item.stage === "error"
+                            ? "bg-[rgba(248,113,113,0.15)] text-(--color-error)"
+                            : "bg-[rgba(108,99,255,0.15)] text-(--color-accent)"
+                      }`}>
                         {item.stage === "done" ? <CheckCircle2 size={10} /> :
                          item.stage === "error" ? <AlertCircle size={10} /> :
                          item.stage === "indexing" ? <Sparkles size={10} /> :
-                         <Loader2 size={10} className="spin" />}
+                         <Loader2 size={10} className="animate-spin" />}
                         {STAGE_LABELS[item.stage]}
                       </span>
                       {(item.stage === "done" || item.stage === "error") && (
                         <button
                           onClick={() => dismissItem(item.id)}
                           title="Dismiss"
-                          style={{
-                            background: "transparent",
-                            border: "none",
-                            color: "var(--color-text-muted)",
-                            cursor: "pointer",
-                            padding: "2px",
-                            display: "flex",
-                            alignItems: "center",
-                          }}
+                          className="flex cursor-pointer items-center border-0 bg-transparent p-0.5 text-(--color-text-muted)"
                         >
                           <X size={14} />
                         </button>
@@ -713,24 +691,30 @@ const IndexPage: React.FC = () => {
 
                     {/* Row 2: Progress bars */}
                     {item.stage === "uploading" && (
-                      <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-                        <div style={{ display: "flex", justifyContent: "space-between", fontSize: "11px", color: "var(--color-text-muted)" }}>
+                      <div className="flex flex-col gap-1">
+                        <div className="flex justify-between text-[11px] text-(--color-text-muted)">
                           <span>Upload</span>
                           <span>{item.uploadProgress}%</span>
                         </div>
-                        <div style={{ height: "4px", background: "var(--color-border-subtle, rgba(255,255,255,0.08))", borderRadius: "2px", overflow: "hidden" }}>
-                          <div style={{ height: "100%", width: `${item.uploadProgress}%`, background: "var(--color-accent, #6c63ff)", transition: "width 0.3s ease" }} />
+                        <div className="h-1 overflow-hidden rounded-[2px] bg-(--color-border-subtle)">
+                          <div
+                            className="h-full bg-(--color-accent) transition-[width] duration-300 ease-in-out"
+                            style={{ width: `${item.uploadProgress}%` }}
+                          />
                         </div>
                       </div>
                     )}
                     {item.stage === "indexing" && (
-                      <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-                        <div style={{ display: "flex", justifyContent: "space-between", fontSize: "11px", color: "var(--color-text-muted)" }}>
+                      <div className="flex flex-col gap-1">
+                        <div className="flex justify-between text-[11px] text-(--color-text-muted)">
                           <span>Indexing</span>
                           <span>{item.indexProgress}%</span>
                         </div>
-                        <div style={{ height: "4px", background: "var(--color-border-subtle, rgba(255,255,255,0.08))", borderRadius: "2px", overflow: "hidden" }}>
-                          <div style={{ height: "100%", width: `${item.indexProgress}%`, background: "#a78bfa", transition: "width 0.5s ease" }} />
+                        <div className="h-1 overflow-hidden rounded-[2px] bg-(--color-border-subtle)">
+                          <div
+                            className="h-full bg-violet-400 transition-[width] duration-500 ease-in-out"
+                            style={{ width: `${item.indexProgress}%` }}
+                          />
                         </div>
                       </div>
                     )}

@@ -51,7 +51,7 @@ const Sidebar: React.FC = () => {
 
   return (
     <aside
-      className={`glass h-full flex flex-col rounded-xl border border-[var(--glass-border)] bg-[linear-gradient(180deg,rgba(255,255,255,0.03),rgba(255,255,255,0))] transition-[width] duration-300 ease-in-out ${
+      className={`glass h-full flex flex-col rounded-xl border border-(--glass-border) bg-[linear-gradient(180deg,rgba(255,255,255,0.03),rgba(255,255,255,0))] transition-[width] duration-300 ease-in-out ${
         isCollapsed ? "w-18" : "w-64"
       }`}
     >

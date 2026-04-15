@@ -17,7 +17,6 @@ import {
   openPathInShell,
   showPathInFolder,
 } from "../../platform/shell";
-import "../../pages/DocumentViewerPage.css";
 import "./ChatPreviewPanel.css";
 
 interface ChatPreviewPanelProps {

@@ -14,7 +14,6 @@ import {
 import { listDirectory, type FileSystemEntry } from "../api/client";
 import { motion, AnimatePresence } from "framer-motion";
 import { openPathInShell } from "../platform/shell";
-import "./FilesPage.css";
 
 import UploadedFilesPanel from "./UploadedFilesPanel";
 
@@ -109,21 +108,32 @@ const FilesPage: React.FC = () => {
       ? ["Root"]
       : ["Root", ...currentPath.split(/[\\/]/).filter(Boolean)];
 
+  const viewToggleBtnClass = (isActive: boolean) =>
+    `rounded-sm px-4 py-1.5 text-sm transition-all duration-200 ${
+      isActive
+        ? "bg-(--color-bg-hover) font-medium text-(--color-text-primary) shadow-(--shadow-sm)"
+        : "bg-transparent font-medium text-(--color-text-secondary)"
+    }`;
+
   return (
-    <div className="files-page">
-      <header className="page-header glass">
-        <div className="header-info">
-          <h1>File Explorer</h1>
-          <span>Browse and manage your local and uploaded files</span>
-          <div className="view-toggle">
+    <div className="flex h-full flex-col">
+      <header className="z-10 flex items-center justify-between border-b border-(--glass-border) bg-(--header-bg) px-8 py-4 [backdrop-filter:var(--glass-blur)] [-webkit-backdrop-filter:var(--glass-blur)]">
+        <div>
+          <h1 className="text-md font-bold text-(--color-text-primary)">
+            File Explorer
+          </h1>
+          <span className="text-xs text-(--color-text-muted)">
+            Browse and manage your local and uploaded files
+          </span>
+          <div className="mt-4 flex w-fit gap-1 rounded-md border border-(--color-border) bg-(--color-bg-surface) p-1">
             <button
-              className={`toggle-btn ${view === "local" ? "active" : ""}`}
+              className={viewToggleBtnClass(view === "local")}
               onClick={() => setView("local")}
             >
               Local Files
             </button>
             <button
-              className={`toggle-btn ${view === "uploaded" ? "active" : ""}`}
+              className={viewToggleBtnClass(view === "uploaded")}
               onClick={() => setView("uploaded")}
             >
               Uploaded Files
@@ -132,38 +142,28 @@ const FilesPage: React.FC = () => {
         </div>
         {view === "local" && (
           <button
-            className="refresh-btn"
+            className="cursor-pointer rounded-sm border border-(--color-border) bg-(--color-bg-surface) p-2 text-(--color-text-muted) shadow-(--shadow-sm) transition-all duration-300 hover:bg-(--color-bg-hover) hover:text-(--color-text-primary)"
             onClick={() => fetchFiles(currentPath)}
             disabled={isLoading}
           >
-            <RefreshCw size={16} className={isLoading ? "spin" : ""} />
+            <RefreshCw size={16} className={isLoading ? "animate-spin" : ""} />
           </button>
         )}
       </header>
 
-      <div className="files-container">
+      <div className="flex flex-1 flex-col gap-6 overflow-hidden p-8">
         {view === "local" ? (
           <>
-            <nav className="breadcrumb-nav glass">
+            <nav className="flex items-center gap-2 rounded-md border border-(--glass-border) bg-(--color-bg-surface) px-4 py-2 text-xs text-(--color-text-secondary) shadow-(--shadow-sm)">
               <Home
                 size={16}
-                className="selectable"
+                className="cursor-pointer transition-all duration-200 hover:bg-(--color-bg-hover) active:scale-98"
                 onClick={() => handleNavigate(null)}
               />
               <button
-                className="crumb-up selectable"
+                className="flex cursor-pointer items-center gap-1 border-0 bg-transparent p-0 font-inherit text-inherit transition-all duration-200 hover:bg-(--color-bg-hover) disabled:cursor-not-allowed disabled:opacity-60 active:scale-98"
                 onClick={handleGoUp}
                 disabled={currentPath === null}
-                style={{
-                  border: "none",
-                  background: "none",
-                  color: "inherit",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "4px",
-                  padding: 0,
-                  font: "inherit",
-                }}
               >
                 <ArrowUp size={16} />
                 Up
@@ -171,28 +171,35 @@ const FilesPage: React.FC = () => {
 
               {breadcrumbs.map((crumb, idx) => (
                 <React.Fragment key={idx}>
-                  {idx > 0 && <ChevronRight size={14} className="crumb-sep" />}
-                  <span className="crumb-item">{crumb}</span>
+                  {idx > 0 && (
+                    <ChevronRight size={14} className="opacity-30" />
+                  )}
+                  <span className="font-medium text-(--color-text-primary)">
+                    {crumb}
+                  </span>
                 </React.Fragment>
               ))}
             </nav>
 
-            <div className="files-grid-header">
-              <span className="col-name">Name</span>
-              <span className="col-actions">Actions</span>
-              <span className="col-type">Type</span>
+            <div className="grid grid-cols-[minmax(0,1fr)_100px_80px] px-4 pb-1 text-[10px] font-bold tracking-widest text-(--color-text-muted) uppercase">
+              <span>Name</span>
+              <span className="text-right">Actions</span>
+              <span className="text-right">Type</span>
             </div>
 
-            <div className="files-list">
+            <div className="flex-1 overflow-y-auto rounded-lg border border-(--glass-border) bg-(--color-bg-surface) shadow-(--shadow-md)">
               <AnimatePresence mode="wait">
                 {isLoading ? (
                   <motion.div
                     key="loading"
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
-                    className="files-loading"
+                    className="flex h-full flex-col items-center justify-center gap-4 text-(--color-text-secondary)"
                   >
-                    <Loader2 size={32} className="spin accent-text" />
+                    <Loader2
+                      size={32}
+                      className="animate-spin text-(--color-accent)"
+                    />
                     <p>Loading directory contents...</p>
                   </motion.div>
                 ) : error ? (
@@ -200,11 +207,14 @@ const FilesPage: React.FC = () => {
                     key="error"
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
-                    className="files-error"
+                    className="flex h-full flex-col items-center justify-center gap-4 text-(--color-text-secondary)"
                   >
                     <AlertCircle size={32} />
                     <p>{error}</p>
-                    <button onClick={() => fetchFiles(currentPath)}>
+                    <button
+                      className="cursor-pointer rounded-md border-0 bg-(--color-error) px-6 py-2 text-white"
+                      onClick={() => fetchFiles(currentPath)}
+                    >
                       Try Again
                     </button>
                   </motion.div>
@@ -213,7 +223,7 @@ const FilesPage: React.FC = () => {
                     key="list"
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
-                    className="files-grid"
+                    className="flex flex-col"
                   >
                     {items.map((item, idx) => (
                       <motion.div
@@ -221,66 +231,45 @@ const FilesPage: React.FC = () => {
                         initial={{ opacity: 0, x: -10 }}
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ delay: idx * 0.02 }}
-                        className="file-item selectable"
+                        className="grid grid-cols-[minmax(0,1fr)_100px_80px] items-center border-b border-(--glass-border) bg-(--color-bg-surface) p-4 text-sm transition-colors duration-200 last:border-b-0 hover:bg-(--color-bg-hover)"
                       >
                         <div
-                          className="file-info col-name"
+                          className="flex flex-1 cursor-pointer items-center gap-3"
                           onClick={() =>
                             item.type === "directory"
                               ? handleNavigate(item.path)
                               : handleOpenFile(item)
                           }
-                          style={{
-                            cursor: "pointer",
-                            display: "flex",
-                            alignItems: "center",
-                            gap: "12px",
-                            flex: 1,
-                          }}
                         >
                           {item.type === "directory" ? (
-                            <Folder size={18} className="folder-icon" />
+                            <Folder size={18} className="text-(--color-accent)" />
                           ) : (
-                            <File size={18} className="file-icon" />
+                            <File
+                              size={18}
+                              className="text-(--color-text-muted)"
+                            />
                           )}
                           <span>{item.name}</span>
                         </div>
 
-                        <div
-                          className="col-actions"
-                          style={{
-                            display: "flex",
-                            gap: "8px",
-                            justifyContent: "flex-end",
-                            flex: 1,
-                          }}
-                        >
+                        <div className="flex justify-end gap-2">
                           {item.type === "file" && item.id && (
                             <button
-                              className="ai-action-btn"
+                              className="flex cursor-pointer items-center gap-1 rounded border-0 bg-transparent px-2 py-1 text-(--color-accent)"
                               title="Ask AI about this file"
                               onClick={(e) => {
                                 e.stopPropagation();
                                 handleOpenFile(item);
                               }}
-                              style={{
-                                background: "transparent",
-                                border: "none",
-                                color: "var(--accent)",
-                                cursor: "pointer",
-                                padding: "4px 8px",
-                                display: "flex",
-                                alignItems: "center",
-                                gap: "4px",
-                                borderRadius: "4px",
-                              }}
                             >
                               <Sparkles size={16} />
-                              <span style={{ fontSize: "12px" }}>Analyze</span>
+                              <span className="text-xs">Analyze</span>
                             </button>
                           )}
                         </div>
-                        <span className="col-type">{item.type}</span>
+                        <span className="text-right text-[10px] text-(--color-text-muted) uppercase">
+                          {item.type}
+                        </span>
                       </motion.div>
                     ))}
                   </motion.div>

@@ -23,7 +23,6 @@ import {
   getR2DownloadUrl,
   BASE_URL,
 } from "../api/client";
-import "./DocumentViewerPage.css";
 
 // ─── Highlight helpers ────────────────────────────────────────────────────────
 
@@ -81,15 +80,22 @@ function HighlightedText({
   const parts = splitAtMatch(content, highlightText);
 
   if (!parts) {
-    return <pre className="raw-text-content">{content}</pre>;
+    return (
+      <pre className="m-0 whitespace-pre-wrap font-mono text-[0.9rem] leading-6 text-(--color-text-primary)">
+        {content}
+      </pre>
+    );
   }
 
   const [before, match, after] = parts;
 
   return (
-    <pre className="raw-text-content">
+    <pre className="m-0 whitespace-pre-wrap font-mono text-[0.9rem] leading-6 text-(--color-text-primary)">
       {before}
-      <mark ref={highlightRef} className="doc-chunk-highlight">
+      <mark
+        ref={highlightRef}
+        className="rounded-[2px] bg-amber-300/30 px-0 py-px"
+      >
         {match}
       </mark>
       {after}
@@ -144,6 +150,10 @@ const DocumentViewerPage: React.FC = () => {
 
   // Ref attached to the highlighted chunk — used for scrolling
   const highlightRef = useRef<HTMLElement>(null);
+  const secondaryBtnClass =
+    "inline-flex cursor-pointer items-center justify-center gap-2 rounded-md border border-(--color-border) bg-transparent px-5 py-2.5 text-[0.9rem] font-medium text-(--color-text-primary) transition-all duration-200 hover:bg-(--color-bg-hover) disabled:cursor-not-allowed disabled:opacity-50";
+  const primaryBtnClass =
+    "inline-flex cursor-pointer items-center justify-center gap-2 rounded-md border-0 bg-(--color-accent) px-5 py-2.5 text-[0.9rem] font-medium text-(--message-user-text) transition-all duration-200 hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50";
 
   useEffect(() => {
     if (!id) return;
@@ -288,7 +298,6 @@ const DocumentViewerPage: React.FC = () => {
       setIsResizing(false);
       window.document.body.style.cursor = "default";
       window.document.body.style.userSelect = "auto";
-      window.document.body.classList.remove("is-resizing");
     };
 
     if (isResizing) {
@@ -296,7 +305,6 @@ const DocumentViewerPage: React.FC = () => {
       window.addEventListener("mouseup", handleMouseUp);
       window.document.body.style.cursor = "col-resize";
       window.document.body.style.userSelect = "none";
-      window.document.body.classList.add("is-resizing");
     }
 
     return () => {
@@ -313,7 +321,7 @@ const DocumentViewerPage: React.FC = () => {
   // Render the DOCX file when buffer and container are ready
   useEffect(() => {
     if (docxBuffer && docxContainerRef.current) {
-      docx.renderAsync(docxBuffer, docxContainerRef.current, undefined, {
+      void docx.renderAsync(docxBuffer, docxContainerRef.current, undefined, {
         className: "docx",
         inWrapper: true,
         ignoreWidth: false,
@@ -327,6 +335,22 @@ const DocumentViewerPage: React.FC = () => {
         renderFootnotes: true,
         renderEndnotes: true
       });
+    }
+  }, [docxBuffer]);
+
+  useEffect(() => {
+    if (!docxContainerRef.current) return;
+    const wrapper = docxContainerRef.current.querySelector(".docx-wrapper") as
+      | HTMLElement
+      | null;
+    if (!wrapper) return;
+    wrapper.style.background = "transparent";
+    wrapper.style.padding = "0";
+    wrapper.style.display = "block";
+    wrapper.style.overflowX = "auto";
+    const section = wrapper.querySelector("section.docx") as HTMLElement | null;
+    if (section) {
+      section.style.margin = "0 auto";
     }
   }, [docxBuffer]);
 
@@ -406,15 +430,19 @@ const DocumentViewerPage: React.FC = () => {
       );
     }
 
-    return <pre className="raw-text-content">{document.content}</pre>;
+    return (
+      <pre className="m-0 whitespace-pre-wrap font-mono text-[0.9rem] leading-6 text-(--color-text-primary)">
+        {document.content}
+      </pre>
+    );
   }
 
   // ─── Loading / error states ──────────────────────────────────────────────
 
   if (isLoading) {
     return (
-      <div className="doc-viewer-loading">
-        <Loader2 size={32} className="spin accent-text" />
+      <div className="flex h-screen flex-col items-center justify-center gap-4 text-(--color-text-secondary)">
+        <Loader2 size={32} className="animate-spin text-(--color-accent)" />
         <p>Loading document context...</p>
       </div>
     );
@@ -422,11 +450,11 @@ const DocumentViewerPage: React.FC = () => {
 
   if (error || !document) {
     return (
-      <div className="doc-viewer-error">
+      <div className="flex h-screen flex-col items-center justify-center gap-4 text-(--color-text-secondary)">
         <AlertCircle size={32} />
-        <h2>Failed to open document</h2>
+        <h2 className="m-0 text-(--color-error)">Failed to open document</h2>
         <p>{error}</p>
-        <button className="btn-secondary" onClick={() => navigate(-1)}>
+        <button className={secondaryBtnClass} onClick={() => navigate(-1)}>
           Go Back
         </button>
       </div>
@@ -434,34 +462,29 @@ const DocumentViewerPage: React.FC = () => {
   }
 
   return (
-    <div className="doc-viewer-layout">
+    <div className="box-border flex h-screen gap-4 overflow-hidden bg-transparent p-4">
       {/* LEFT PANE: Document Content */}
-      <div className="doc-viewer-main glass">
-        <header className="doc-viewer-header">
-          <button className="back-btn" onClick={() => navigate(-1)}>
+      <div className="glass flex flex-2 flex-col overflow-hidden rounded-lg border border-(--color-border)">
+        <header className="flex items-center gap-4 border-b border-(--color-border) bg-(--panel-soft-bg) p-4">
+          <button
+            className="flex h-8 w-8 cursor-pointer items-center justify-center rounded border border-(--color-border) bg-transparent text-(--color-text-primary) transition-colors duration-200 hover:bg-(--color-bg-hover)"
+            onClick={() => navigate(-1)}
+          >
             <ArrowLeft size={18} />
           </button>
-          <div className="doc-viewer-title">
-            <File size={16} className="file-icon" />
-            <h2>{document.name}</h2>
-            <span className="doc-path">{document.path}</span>
+          <div className="min-w-0">
+            <h2 className="m-0 flex items-center gap-2 overflow-hidden text-ellipsis whitespace-nowrap text-base">
+              <File size={16} className="text-(--color-text-muted)" />
+              {document.name}
+            </h2>
+            <span className="block overflow-hidden text-ellipsis whitespace-nowrap text-xs text-(--color-text-secondary)">
+              {document.path}
+            </span>
           </div>
         </header>
 
         {document.isTruncated && document.extension !== ".pdf" && (
-          <div
-            className="truncation-warning"
-            style={{
-              background: "rgba(255, 170, 0, 0.1)",
-              borderBottom: "1px solid rgba(255, 170, 0, 0.3)",
-              padding: "0.75rem 1rem",
-              display: "flex",
-              alignItems: "center",
-              gap: "0.5rem",
-              color: "#ffaa00",
-              fontSize: "0.85rem",
-            }}
-          >
+          <div className="flex items-center gap-2 border-b border-amber-300/30 bg-amber-300/10 px-4 py-3 text-[0.85rem] text-amber-400">
             <AlertTriangle size={16} />
             <span>
               This document is very large (
@@ -476,24 +499,13 @@ const DocumentViewerPage: React.FC = () => {
         )}
 
         {highlightText && (
-          <div
-            style={{
-              background: "rgba(255, 200, 0, 0.08)",
-              borderBottom: "1px solid rgba(255, 200, 0, 0.2)",
-              padding: "0.5rem 1rem",
-              fontSize: "0.8rem",
-              color: "var(--color-text-secondary)",
-              display: "flex",
-              alignItems: "center",
-              gap: "6px",
-            }}
-          >
+          <div className="flex items-center gap-1.5 border-b border-amber-200/20 bg-amber-200/10 px-4 py-2 text-[0.8rem] text-(--color-text-secondary)">
             <span>↓ Scrolled to matching section</span>
           </div>
         )}
 
         <div
-          className="doc-content-area"
+          className="flex-1 overflow-y-auto bg-(--color-bg-surface) p-8"
           style={{ padding: document.extension === ".pdf" ? 0 : undefined }}
         >
           {renderDocumentContent()}
@@ -502,34 +514,48 @@ const DocumentViewerPage: React.FC = () => {
 
       {/* DRAG DIVIDER */}
       <div
-        className={`resizer ${isResizing ? "resizing" : ""}`}
+        className={`flex w-2.5 cursor-col-resize items-center justify-center rounded transition-colors duration-200 ${
+          isResizing ? "bg-(--color-bg-hover)" : "hover:bg-(--color-bg-hover)"
+        }`}
         onMouseDown={startResizing}
         data-testid="resizer"
       >
-        <div className="resizer-handle" />
+        <div
+          className={`h-8 w-1 rounded ${
+            isResizing ? "bg-(--color-accent)" : "bg-(--color-border)"
+          }`}
+        />
       </div>
 
       {/* RIGHT PANE: Intelligence Sidebar */}
       <div
-        className="doc-viewer-sidebar glass"
+        className="glass flex flex-col overflow-hidden rounded-lg border border-(--color-border)"
         style={{ width: `${sidebarWidth}px`, flex: "none" }}
       >
-        <div className="sidebar-tabs">
+        <div className="flex border-b border-(--color-border) bg-(--panel-soft-bg)">
           <button
-            className={`sidebar-tab ${activeTab === "summary" ? "active" : ""}`}
+            className={`flex flex-1 cursor-pointer items-center justify-center gap-2 border-0 border-b-2 px-4 py-4 font-medium transition-all duration-200 ${
+              activeTab === "summary"
+                ? "border-b-(--color-accent) bg-(--color-bg-hover) text-(--color-accent)"
+                : "border-b-transparent bg-transparent text-(--color-text-secondary) hover:bg-(--color-bg-hover) hover:text-(--color-text-primary)"
+            }`}
             onClick={() => setActiveTab("summary")}
           >
             <FileText size={14} /> Summary
           </button>
           <button
-            className={`sidebar-tab ${activeTab === "chat" ? "active" : ""}`}
+            className={`flex flex-1 cursor-pointer items-center justify-center gap-2 border-0 border-b-2 px-4 py-4 font-medium transition-all duration-200 ${
+              activeTab === "chat"
+                ? "border-b-(--color-accent) bg-(--color-bg-hover) text-(--color-accent)"
+                : "border-b-transparent bg-transparent text-(--color-text-secondary) hover:bg-(--color-bg-hover) hover:text-(--color-text-primary)"
+            }`}
             onClick={() => setActiveTab("chat")}
           >
             <MessageSquare size={14} /> Chat
           </button>
         </div>
 
-        <div className="sidebar-content">
+        <div className="relative flex flex-1 flex-col overflow-hidden">
           <AnimatePresence mode="wait">
             {activeTab === "summary" ? (
               <motion.div
@@ -537,13 +563,13 @@ const DocumentViewerPage: React.FC = () => {
                 initial={{ opacity: 0, x: -5 }}
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: 5 }}
-                className="sidebar-pane summary-pane"
+                className="absolute inset-0 flex flex-col overflow-y-auto p-4"
               >
                 {!summary && !isSummarizing && !summaryError && (
-                  <div className="sidebar-center">
+                  <div className="flex h-full flex-col items-center justify-center gap-4 text-center text-(--color-text-secondary)">
                     <p>Get a quick grasp of this document's contents.</p>
                     <button
-                      className="btn-primary"
+                      className={primaryBtnClass}
                       onClick={() => handleGenerateSummary(true)}
                     >
                       Generate Summary
@@ -551,16 +577,16 @@ const DocumentViewerPage: React.FC = () => {
                   </div>
                 )}
                 {isSummarizing && (
-                  <div className="sidebar-center">
-                    <Loader2 size={24} className="spin accent-text" />
+                  <div className="flex h-full flex-col items-center justify-center gap-4 text-center text-(--color-text-secondary)">
+                    <Loader2 size={24} className="animate-spin text-(--color-accent)" />
                     <p>Extracting key points...</p>
                   </div>
                 )}
                 {summaryError && (
-                  <div className="sidebar-center error">
+                  <div className="flex h-full flex-col items-center justify-center gap-4 text-center text-(--color-error)">
                     <p>{summaryError}</p>
                     <button
-                      className="btn-secondary"
+                      className={secondaryBtnClass}
                       onClick={() => handleGenerateSummary(true)}
                     >
                       Try Again
@@ -569,22 +595,16 @@ const DocumentViewerPage: React.FC = () => {
                 )}
                 {summary && (
                   <>
-                    <div
-                      style={{
-                        display: "flex",
-                        justifyContent: "flex-end",
-                        marginBottom: "0.5rem",
-                      }}
-                    >
+                    <div className="mb-2 flex justify-end">
                       <button
-                        className="btn-secondary"
+                        className={secondaryBtnClass}
                         onClick={() => handleGenerateSummary(true)}
                         disabled={isSummarizing}
                       >
                         Regenerate Summary
                       </button>
                     </div>
-                    <div className="summary-result markdown-body">
+                    <div className="markdown-body pb-4 pt-2 text-[0.95rem] leading-relaxed text-(--color-text-primary)">
                       <ReactMarkdown remarkPlugins={[remarkGfm]}>
                         {summary}
                       </ReactMarkdown>
@@ -598,16 +618,16 @@ const DocumentViewerPage: React.FC = () => {
                 initial={{ opacity: 0, x: 5 }}
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -5 }}
-                className="sidebar-pane chat-pane"
+                className="absolute inset-0 flex min-w-0 flex-col bg-[linear-gradient(180deg,rgba(255,255,255,0.03),transparent_18%),var(--color-bg-surface)]"
               >
-                <div className="chat-messages">
+                <div className="flex min-w-0 flex-1 flex-col gap-[1.1rem] overflow-x-hidden overflow-y-auto p-5 max-[900px]:p-4">
                   {isChatHistoryLoading ? (
-                    <div className="chat-empty">
-                      <Loader2 size={24} className="spin" />
+                    <div className="flex h-full min-h-[220px] flex-col items-center justify-center gap-3 rounded-[18px] border border-dashed border-(--color-border) bg-white/2 p-9 text-center text-[0.95rem] leading-relaxed text-(--color-text-secondary)">
+                      <Loader2 size={24} className="animate-spin" />
                       <p>Loading previous chat for this document...</p>
                     </div>
                   ) : chatMessages.length === 0 ? (
-                    <div className="chat-empty">
+                    <div className="flex h-full min-h-[220px] flex-col items-center justify-center gap-3 rounded-[18px] border border-dashed border-(--color-border) bg-white/2 p-9 text-center text-[0.95rem] leading-relaxed text-(--color-text-secondary)">
                       <MessageSquare size={24} />
                       <p>
                         Ask questions specifically about this file. Follow-up
@@ -619,7 +639,11 @@ const DocumentViewerPage: React.FC = () => {
                     chatMessages.map((msg, idx) => (
                       <div
                         key={idx}
-                        className={`chat-bubble ${msg.role} markdown-body`}
+                        className={`markdown-body relative min-w-0 max-w-[min(88%,720px)] overflow-wrap-anywhere rounded-2xl px-4 py-4 text-[0.93rem] leading-[1.7] shadow-[0_10px_26px_rgba(0,0,0,0.14)] before:mb-2 before:block before:text-[0.68rem] before:font-bold before:tracking-[0.08em] before:uppercase before:opacity-80 ${
+                          msg.role === "user"
+                            ? "self-end rounded-br-md bg-(--color-accent) text-(--message-user-text) shadow-[0_14px_34px_rgba(90,169,255,0.22)] before:content-['You'] before:text-white/80"
+                            : "self-start rounded-bl-md border border-(--color-border) bg-[linear-gradient(180deg,rgba(255,255,255,0.045),rgba(255,255,255,0.02)),var(--panel-strong-bg)] text-(--color-text-primary) [backdrop-filter:blur(10px)] before:content-['Assistant'] before:text-(--color-accent)"
+                        } [&_p+p]:mt-3 [&_ul]:my-3 [&_ul]:pl-5 [&_ol]:my-3 [&_ol]:pl-5 [&_li+li]:mt-1.5 [&_pre]:max-w-full [&_pre]:overflow-x-auto [&_pre]:whitespace-pre [&_code]:font-mono [&_code]:text-[0.9em] [&_blockquote]:my-3 [&_blockquote]:rounded-r-xl [&_blockquote]:border-l-[3px] [&_blockquote]:border-l-(--color-accent) [&_blockquote]:bg-white/3 [&_blockquote]:px-4 [&_blockquote]:py-3 [&_blockquote]:text-(--color-text-secondary) [&_table]:my-3 [&_table]:block [&_table]:max-w-full [&_table]:overflow-x-auto [&_th]:border [&_th]:border-(--color-border) [&_th]:px-3 [&_th]:py-2 [&_th]:text-left [&_td]:border [&_td]:border-(--color-border) [&_td]:px-3 [&_td]:py-2 [&_td]:text-left`}
                       >
                         {msg.role === "ai" ? (
                           <ReactMarkdown remarkPlugins={[remarkGfm]}>
@@ -632,25 +656,30 @@ const DocumentViewerPage: React.FC = () => {
                     ))
                   )}
                   {isChatting && (
-                    <div className="chat-bubble ai pending">
-                      <Loader2 size={14} className="spin" /> Thinking...
+                    <div className="markdown-body relative flex min-w-0 max-w-[min(88%,720px)] items-center gap-2 self-start rounded-2xl rounded-bl-md border border-(--color-border) bg-[linear-gradient(180deg,rgba(255,255,255,0.045),rgba(255,255,255,0.02)),var(--panel-strong-bg)] px-4 py-3 text-[0.93rem] italic leading-[1.7] text-(--color-text-secondary) shadow-[0_10px_26px_rgba(0,0,0,0.14)] [backdrop-filter:blur(10px)] before:mb-2 before:block before:text-[0.68rem] before:font-bold before:tracking-[0.08em] before:uppercase before:text-(--color-accent) before:opacity-80 before:content-['Assistant']">
+                      <Loader2 size={14} className="animate-spin" /> Thinking...
                     </div>
                   )}
                   <div ref={chatEndRef} />
                 </div>
-                <form className="chat-input-form" onSubmit={handleSendMessage}>
+                <form
+                  className="flex gap-2 border-t border-(--color-border) bg-[linear-gradient(180deg,rgba(255,255,255,0.03),transparent),var(--panel-soft-bg)] px-4 pb-4 pt-4"
+                  onSubmit={handleSendMessage}
+                >
                   <input
                     type="text"
                     placeholder="Ask about this file..."
                     value={chatInput}
                     onChange={(e) => setChatInput(e.target.value)}
                     disabled={isChatting || isChatHistoryLoading}
+                    className="flex-1 rounded-[14px] border border-(--color-border) bg-(--color-bg-secondary) px-4 py-3 text-[0.9rem] text-(--color-text-primary) outline-none transition-all duration-200 placeholder:text-(--color-text-muted) focus:border-(--color-accent) focus:bg-(--color-bg-surface) focus:shadow-[0_0_0_4px_var(--color-accent-subtle)]"
                   />
                   <button
                     type="submit"
                     disabled={
                       isChatting || isChatHistoryLoading || !chatInput.trim()
                     }
+                    className="flex h-10 w-10 cursor-pointer items-center justify-center rounded-full border-0 bg-(--color-accent) text-(--message-user-text) transition-all duration-150 hover:scale-105 hover:opacity-90 disabled:cursor-not-allowed disabled:grayscale disabled:opacity-50"
                   >
                     <Send size={14} />
                   </button>

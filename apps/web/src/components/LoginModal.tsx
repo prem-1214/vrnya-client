@@ -12,7 +12,6 @@ import {
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { authApi } from "../api/client";
-import "../pages/LoginPage.css";
 
 type AuthMode = "login" | "register";
 
@@ -51,23 +50,34 @@ const LoginModal: React.FC = () => {
     window.location.href = authApi.googleSignInUrl();
   };
 
+  const modeButtonClass = (isActive: boolean) =>
+    `flex-1 rounded-full border-0 px-2 py-2 text-sm font-medium transition-all duration-200 ${
+      isActive
+        ? "bg-(--color-accent) text-white shadow-[0_1px_6px_var(--color-accent-glow)]"
+        : "bg-transparent text-(--color-text-muted)"
+    }`;
+
   return (
     <motion.div
-      className="login-card glass"
+      className="flex w-full max-w-[480px] flex-col gap-4 rounded-[28px] border border-(--glass-border) bg-(--glass-bg) px-8 py-12 shadow-(--shadow-lg) [backdrop-filter:var(--glass-blur)] [-webkit-backdrop-filter:var(--glass-blur)]"
       initial={{ opacity: 0, y: 24 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3, ease: "easeOut" }}
     >
       {/* Logo / Brand */}
-      <div className="login-brand">
-        <h1 className="login-brand-name">Vrnya</h1>
-        <p className="login-brand-tagline">Your AI-powered knowledge base</p>
+      <div className="mb-1 text-center">
+        <h1 className="m-0 text-[2.5rem] font-bold text-(--color-text-primary)">
+          Vrnya
+        </h1>
+        <p className="mt-1 text-sm text-(--color-text-muted)">
+          Your AI-powered knowledge base
+        </p>
       </div>
 
       {/* Mode toggle */}
-      <div className="login-mode-toggle">
+      <div className="flex rounded-full border border-(--color-border) bg-(--color-bg-surface) p-[3px]">
         <button
-          className={`login-mode-btn ${mode === "login" ? "active" : ""}`}
+          className={modeButtonClass(mode === "login")}
           onClick={() => {
             setMode("login");
             setError(null);
@@ -77,7 +87,7 @@ const LoginModal: React.FC = () => {
           Sign In
         </button>
         <button
-          className={`login-mode-btn ${mode === "register" ? "active" : ""}`}
+          className={modeButtonClass(mode === "register")}
           onClick={() => {
             setMode("register");
             setError(null);
@@ -90,7 +100,7 @@ const LoginModal: React.FC = () => {
 
       {/* Google Sign In */}
       <button
-        className="login-google-btn"
+        className="flex w-full items-center justify-center gap-2 rounded-full border border-(--color-border) bg-(--color-bg-surface) px-4 py-2 text-sm font-medium text-(--color-text-primary) transition-all duration-200 hover:border-(--color-text-muted) hover:bg-(--color-bg-hover)"
         onClick={handleGoogleSignIn}
         type="button"
       >
@@ -115,12 +125,12 @@ const LoginModal: React.FC = () => {
         Continue with Google
       </button>
 
-      <div className="login-divider">
+      <div className="flex items-center gap-2 text-xs text-(--color-text-muted) before:h-px before:flex-1 before:bg-(--color-border) before:content-[''] after:h-px after:flex-1 after:bg-(--color-border) after:content-['']">
         <span>or</span>
       </div>
 
       {/* Form */}
-      <form className="login-form" onSubmit={handleSubmit}>
+      <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
         <AnimatePresence>
           {mode === "register" && (
             <motion.div
@@ -128,15 +138,20 @@ const LoginModal: React.FC = () => {
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: "auto" }}
               exit={{ opacity: 0, height: 0 }}
-              className="login-field"
+              className="flex flex-col gap-1.5 overflow-hidden"
             >
-              <label className="login-label">Display Name</label>
-              <div className="login-input-wrap">
-                <User size={16} className="login-input-icon" />
+              <label className="text-xs font-medium tracking-[0.05em] text-(--color-text-muted) uppercase">
+                Display Name
+              </label>
+              <div className="relative flex items-center">
+                <User
+                  size={16}
+                  className="pointer-events-none absolute left-3 text-(--color-text-muted)"
+                />
                 <input
                   id="displayName"
                   type="text"
-                  className="login-input"
+                  className="w-full rounded-full border border-(--color-border) bg-(--color-bg-surface) px-4 py-2 pl-[38px] font-sans text-sm text-(--color-text-primary) outline-none transition-colors duration-200 focus:border-(--color-accent) focus:shadow-[0_0_0_3px_var(--color-accent-subtle)]"
                   placeholder="Your name"
                   value={displayName}
                   onChange={(e) => setDisplayName(e.target.value)}
@@ -147,16 +162,22 @@ const LoginModal: React.FC = () => {
           )}
         </AnimatePresence>
 
-        <div className="login-field">
-          <label className="login-label" htmlFor="email">
+        <div className="flex flex-col gap-1.5 overflow-hidden">
+          <label
+            className="text-xs font-medium tracking-[0.05em] text-(--color-text-muted) uppercase"
+            htmlFor="email"
+          >
             Email
           </label>
-          <div className="login-input-wrap">
-            <Mail size={16} className="login-input-icon" />
+          <div className="relative flex items-center">
+            <Mail
+              size={16}
+              className="pointer-events-none absolute left-3 text-(--color-text-muted)"
+            />
             <input
               id="email"
               type="email"
-              className="login-input"
+              className="w-full rounded-full border border-(--color-border) bg-(--color-bg-surface) px-4 py-2 pl-[38px] font-sans text-sm text-(--color-text-primary) outline-none transition-colors duration-200 focus:border-(--color-accent) focus:shadow-[0_0_0_3px_var(--color-accent-subtle)]"
               placeholder="you@example.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
@@ -166,16 +187,22 @@ const LoginModal: React.FC = () => {
           </div>
         </div>
 
-        <div className="login-field">
-          <label className="login-label" htmlFor="password">
+        <div className="flex flex-col gap-1.5 overflow-hidden">
+          <label
+            className="text-xs font-medium tracking-[0.05em] text-(--color-text-muted) uppercase"
+            htmlFor="password"
+          >
             Password
           </label>
-          <div className="login-input-wrap">
-            <Lock size={16} className="login-input-icon" />
+          <div className="relative flex items-center">
+            <Lock
+              size={16}
+              className="pointer-events-none absolute left-3 text-(--color-text-muted)"
+            />
             <input
               id="password"
               type={showPassword ? "text" : "password"}
-              className="login-input"
+              className="w-full rounded-full border border-(--color-border) bg-(--color-bg-surface) px-4 py-2 pl-[38px] font-sans text-sm text-(--color-text-primary) outline-none transition-colors duration-200 focus:border-(--color-accent) focus:shadow-[0_0_0_3px_var(--color-accent-subtle)]"
               placeholder={
                 mode === "register" ? "Min 8 characters" : "Your password"
               }
@@ -188,7 +215,7 @@ const LoginModal: React.FC = () => {
             />
             <button
               type="button"
-              className="login-show-password"
+              className="absolute right-2.5 flex cursor-pointer border-0 bg-transparent p-1 text-(--color-text-muted) transition-colors duration-200 hover:text-(--color-text-primary)"
               onClick={() => setShowPassword((v) => !v)}
               tabIndex={-1}
             >
@@ -200,7 +227,7 @@ const LoginModal: React.FC = () => {
         <AnimatePresence>
           {error && (
             <motion.div
-              className="login-error"
+              className="flex items-center gap-1 rounded-sm border border-red-400/30 bg-red-400/10 px-4 py-2 text-sm text-(--color-error)"
               initial={{ opacity: 0, y: -6 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0 }}
@@ -213,12 +240,12 @@ const LoginModal: React.FC = () => {
 
         <button
           type="submit"
-          className="login-submit-btn"
+          className="flex min-h-10 w-full items-center justify-center gap-1 rounded-full border-0 bg-(--color-accent) px-4 py-2 text-sm font-semibold text-white transition-all duration-200 hover:shadow-(--shadow-accent) hover:not-disabled:bg-(--color-accent-hover) disabled:cursor-not-allowed disabled:opacity-60"
           disabled={isLoading}
           id="auth-submit"
         >
           {isLoading ? (
-            <Loader2 size={16} className="spin" />
+            <Loader2 size={16} className="animate-spin" />
           ) : mode === "login" ? (
             "Sign In"
           ) : (

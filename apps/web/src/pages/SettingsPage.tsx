@@ -227,30 +227,32 @@ const SettingsPage: React.FC = () => {
   };
 
   return (
-    <div className="index-page">
-      <header className="page-header glass">
-        <div className="header-info">
-          <h1>Settings</h1>
-          <span>
+    <div className="flex h-full flex-col">
+      <header className="z-10 flex items-center justify-between border-b border-(--glass-border) bg-(--header-bg) px-8 py-4 [backdrop-filter:var(--glass-blur)] [-webkit-backdrop-filter:var(--glass-blur)]">
+        <div>
+          <h1 className="text-md font-bold text-(--color-text-primary)">
+            Settings
+          </h1>
+          <span className="text-xs text-(--color-text-muted)">
             Configure AI models, API keys, and application preferences.
           </span>
         </div>
       </header>
 
-      <div className="index-container">
+      <div className="mx-auto flex w-full max-w-[960px] flex-1 flex-col gap-12 overflow-y-auto p-12">
         {isLoading ? (
-          <div className="empty-state glass">
+          <div className="flex items-center gap-2 rounded-md border border-dashed border-(--color-border) bg-(--panel-soft-bg) p-6 text-(--color-text-secondary)">
             <Loader2 className="animate-spin text-(--color-accent)" size={32} />
             <span className="font-medium">Loading settings...</span>
           </div>
         ) : (
           <>
-            <div className="index-card glass">
-            <div className="card-header">
-              <Server size={24} className="accent-text" />
+            <div className="flex flex-col gap-8 rounded-lg border border-(--glass-border) bg-(--color-bg-surface) p-12 shadow-(--shadow-md)">
+            <div className="flex items-center gap-6">
+              <Server size={24} className="text-(--color-accent)" />
               <div>
-                <h3>LLM Provider</h3>
-                <p>
+                <h3 className="text-lg text-(--color-text-primary)">LLM Provider</h3>
+                <p className="text-sm text-(--color-text-secondary)">
                   Choose which AI brain powers your Second Brain experience.
                 </p>
               </div>
@@ -408,8 +410,8 @@ const SettingsPage: React.FC = () => {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
-            <div className="index-card glass">
+            <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-2">
+            <div className="flex flex-col gap-8 rounded-lg border border-(--glass-border) bg-(--color-bg-surface) p-12 shadow-(--shadow-md)">
               <MemorySettingsSection
                 enableMemory={enableMemory}
                 enableLongTermMemory={enableLongTermMemory}
@@ -420,7 +422,7 @@ const SettingsPage: React.FC = () => {
               />
             </div>
 
-            <div className="index-card glass">
+            <div className="flex flex-col gap-8 rounded-lg border border-(--glass-border) bg-(--color-bg-surface) p-12 shadow-(--shadow-md)">
               <MemoryList
                 memories={memories}
                 isLoading={isMemoriesLoading}

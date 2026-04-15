@@ -9,7 +9,7 @@ import IndexPage from "./pages/IndexPage";
 import FilesPage from "./pages/FilesPage";
 import DocumentViewerPage from "./pages/DocumentViewerPage";
 import SettingsPage from "./pages/SettingsPage";
-import LoginPage from "./pages/LoginPage";
+// import LoginPage from "./pages/LoginPage";
 import AuthCallbackPage from "./pages/AuthCallbackPage";
 import WaitlistPage from "./pages/WaitlistPage";
 import { Loader2 } from "lucide-react";
