@@ -279,7 +279,7 @@ const IndexPage: React.FC = () => {
 
   return (
     <div className="flex h-full flex-col">
-      <header className="z-10 flex items-center justify-between border-b border-(--glass-border) bg-(--header-bg) px-8 py-4 [backdrop-filter:var(--glass-blur)] [-webkit-backdrop-filter:var(--glass-blur)]">
+      <header className="z-10 flex items-center justify-between rounded-t-xl border-b border-(--glass-border) bg-(--header-bg) px-8 py-4 [backdrop-filter:var(--glass-blur)] [-webkit-backdrop-filter:var(--glass-blur)]">
         <div>
           <h1 className="text-md font-bold text-(--color-text-primary)">
             Knowledge Index
@@ -290,8 +290,13 @@ const IndexPage: React.FC = () => {
         </div>
       </header>
 
-      <div className="mx-auto flex w-full max-w-[960px] flex-1 flex-col gap-12 overflow-y-auto p-12">
-        {/* === TEMPORARILY DISABLED FOR TWITTER ===
+      <div className="flex-1 overflow-y-auto">
+        <div
+          className={`mx-auto flex min-h-full w-full max-w-[960px] flex-col p-12 ${
+            uploadItems.length === 0 ? "justify-center" : "gap-6"
+          }`}
+        >
+          {/* === TEMPORARILY DISABLED FOR TWITTER ===
         <div className="index-card glass">
           <div className="card-header">
             <HardDrive size={24} className="accent-text" />
@@ -582,7 +587,7 @@ const IndexPage: React.FC = () => {
 
         {/* Polished Cloud Dropzone — always visible */}
         <div
-          className={`relative mx-auto mt-12 flex min-h-[400px] w-full max-w-[700px] cursor-pointer flex-col items-center justify-center gap-6 overflow-hidden rounded-lg border-2 border-dashed border-(--color-accent) bg-(--panel-soft-bg) px-8 py-[60px] text-center transition-all duration-300 before:pointer-events-none before:absolute before:inset-0 before:bg-[radial-gradient(circle_at_center,rgba(108,99,255,0.08)_0%,transparent_70%)] ${dragOver ? "translate-y-[-2px] border-(--color-accent-hover) shadow-[var(--shadow-lg),0_0_40px_rgba(108,99,255,0.15)]" : "hover:translate-y-[-2px] hover:border-(--color-accent-hover) hover:shadow-[var(--shadow-lg),0_0_40px_rgba(108,99,255,0.15)]"}`}
+          className={`relative mx-auto flex min-h-[400px] w-full max-w-[700px] cursor-pointer flex-col items-center justify-center gap-6 overflow-hidden rounded-lg border-2 border-dashed border-(--color-accent) bg-(--panel-soft-bg) px-8 py-[60px] text-center transition-all duration-300 before:pointer-events-none before:absolute before:inset-0 before:bg-[radial-gradient(circle_at_center,rgba(108,99,255,0.08)_0%,transparent_70%)] ${dragOver ? "translate-y-[-2px] border-(--color-accent-hover) shadow-[var(--shadow-lg),0_0_40px_rgba(108,99,255,0.15)]" : "hover:translate-y-[-2px] hover:border-(--color-accent-hover) hover:shadow-[var(--shadow-lg),0_0_40px_rgba(108,99,255,0.15)]"}`}
           onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
           onDragLeave={() => setDragOver(false)}
           onDrop={handleDrop}
@@ -725,7 +730,8 @@ const IndexPage: React.FC = () => {
           )}
         </AnimatePresence>
 
-        <div className="index-tips" />
+          <div className="index-tips" />
+        </div>
       </div>
     </div>
   );

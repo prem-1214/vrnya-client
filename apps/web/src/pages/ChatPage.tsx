@@ -10,7 +10,18 @@ import MemoryStatusChip from "../components/chat/MemoryStatusChip";
 const ChatPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { messages, isTyping, send, sendVoice, generateAndInjectFile, error, loadHistory, clearMessages, conversationId } = useChat();
+  const {
+    messages,
+    isTyping,
+    isHistoryLoading,
+    send,
+    sendVoice,
+    generateAndInjectFile,
+    error,
+    loadHistory,
+    clearMessages,
+    conversationId,
+  } = useChat();
   const { speak, stop: stopSpeech } = useSpeech();
   const [isAutoSpeakEnabled, setIsAutoSpeakEnabled] = useState(() => {
     return localStorage.getItem("vrnya_auto_speak") === "true";
@@ -100,7 +111,7 @@ const ChatPage: React.FC = () => {
 
   return (
     <div className="flex h-full flex-col">
-      <header className="z-10 flex items-center justify-between border-b border-(--glass-border) bg-(--header-bg) px-8 py-4 [backdrop-filter:var(--glass-blur)] [-webkit-backdrop-filter:var(--glass-blur)]">
+      <header className="z-10 flex items-center justify-between rounded-t-xl border-b border-(--glass-border) bg-(--header-bg) px-8 py-4 [backdrop-filter:var(--glass-blur)] [-webkit-backdrop-filter:var(--glass-blur)]">
         <div>
           <h1 className="text-md font-bold text-(--color-text-primary)">
             Agent Workspace
@@ -124,6 +135,7 @@ const ChatPage: React.FC = () => {
           <MessageList
             messages={messages}
             isTyping={isTyping}
+            isHistoryLoading={isHistoryLoading}
             onOpenPreview={setPreviewTarget}
           />
 
@@ -139,7 +151,7 @@ const ChatPage: React.FC = () => {
             }}
             isAutoSpeakEnabled={isAutoSpeakEnabled}
             onToggleAutoSpeak={() => setIsAutoSpeakEnabled(!isAutoSpeakEnabled)}
-            disabled={isTyping}
+            disabled={isTyping || isHistoryLoading}
           />
         </div>
 

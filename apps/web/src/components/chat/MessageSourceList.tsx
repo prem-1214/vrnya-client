@@ -1,6 +1,5 @@
 import React from "react";
 import { ExternalLink, File, FolderOpen } from "lucide-react";
-import "./SourceMessageList.css";
 import type { AgentSource } from "../../hooks/useChat";
 import { showPathInFolder } from "../../platform/shell";
 
@@ -33,9 +32,11 @@ const MessageSourceList: React.FC<MessageSourceListProps> = ({
   };
 
   return (
-    <div className="message-sources">
-      <span className="message-sources-label">Sources</span>
-      <div className="message-sources-list">
+    <div className="mt-2.5 flex flex-col gap-1.5">
+      <span className="text-[11px] font-medium tracking-[0.05em] text-(--color-text-muted) uppercase">
+        Sources
+      </span>
+      <div className="flex flex-col gap-1">
         {sources.map((source) => {
           const name = source.name || getFileName(source.path);
           const ext = getExtension(source.path);
@@ -45,25 +46,33 @@ const MessageSourceList: React.FC<MessageSourceListProps> = ({
               : null;
 
           return (
-            <div key={source.path} className="message-source-card">
-              <div className="message-source-icon">
+            <div
+              key={source.path}
+              className="flex items-center gap-2 rounded-md border border-(--color-border) bg-(--panel-soft-bg) px-2 py-1.5 transition-colors duration-150 hover:border-(--glass-border)"
+            >
+              <div className="shrink-0 text-(--color-text-muted)">
                 <File size={14} />
-                <span className="message-source-ext">{ext}</span>
+                <span className="block text-[9px] leading-none font-medium text-(--color-text-muted)">
+                  {ext}
+                </span>
               </div>
-              <div className="message-source-info">
-                <span className="message-source-name" title={source.path}>
+              <div className="flex min-w-0 flex-1 items-center gap-1.5">
+                <span
+                  className="overflow-hidden text-ellipsis whitespace-nowrap text-xs text-(--color-text-primary)"
+                  title={source.path}
+                >
                   {name}
                 </span>
                 {similarity && (
-                  <span className="message-source-similarity">
+                  <span className="shrink-0 text-[11px] text-(--color-text-muted)">
                     {similarity}
                   </span>
                 )}
               </div>
-              <div className="message-source-actions">
+              <div className="shrink-0 flex gap-0.5">
                 <button
                   type="button"
-                  className="message-source-btn"
+                  className="flex h-6 w-6 cursor-pointer items-center justify-center rounded border-0 bg-transparent text-(--color-text-muted) transition-colors duration-150 hover:bg-(--panel-strong-bg) hover:text-(--color-text-primary)"
                   title="Preview"
                   onClick={() => onOpenPreview(source)}
                 >
@@ -71,7 +80,7 @@ const MessageSourceList: React.FC<MessageSourceListProps> = ({
                 </button>
                 <button
                   type="button"
-                  className="message-source-btn"
+                  className="flex h-6 w-6 cursor-pointer items-center justify-center rounded border-0 bg-transparent text-(--color-text-muted) transition-colors duration-150 hover:bg-(--panel-strong-bg) hover:text-(--color-text-primary)"
                   title="Show in folder"
                   onClick={() => handleShowInFolder(source.path)}
                 >

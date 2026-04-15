@@ -126,6 +126,7 @@ function createMessage(role: "user" | "assistant", content: string): Message {
 export const useChat = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isTyping, setIsTyping] = useState(false);
+  const [isHistoryLoading, setIsHistoryLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [conversationId, setConversationId] = useState<string | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
@@ -292,8 +293,9 @@ export const useChat = () => {
 
   const loadHistory = useCallback(async (id: string) => {
     try {
-      setIsTyping(true);
+      setIsHistoryLoading(true);
       setError(null);
+      setMessages([]);
       const history = await listMessages(id);
       setMessages(
         history.map((msg) => ({
@@ -305,13 +307,14 @@ export const useChat = () => {
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Failed to load history");
     } finally {
-      setIsTyping(false);
+      setIsHistoryLoading(false);
     }
   }, []);
 
   return {
     messages,
     isTyping,
+    isHistoryLoading,
     error,
     conversationId,
     send,

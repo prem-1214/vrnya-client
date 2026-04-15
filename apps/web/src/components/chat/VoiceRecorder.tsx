@@ -1,6 +1,5 @@
 import React, { useState, useRef, useCallback } from "react";
 import { Mic, Square } from "lucide-react";
-import "./VoiceRecorder.css";
 
 interface VoiceRecorderProps {
   onRecordingComplete: (transcript: string) => void;
@@ -78,7 +77,11 @@ const VoiceRecorder: React.FC<VoiceRecorderProps> = ({
 
   return (
     <button
-      className={`voice-recorder-button ${isRecording ? "recording" : ""}`}
+      className={`relative flex h-10 w-10 items-center justify-center overflow-visible rounded-full border-0 p-0 transition-all duration-200 ${
+        isRecording
+          ? "animate-pulse bg-red-500 text-white hover:bg-red-600"
+          : "bg-white/5 text-slate-400 hover:scale-105 hover:bg-white/10 hover:text-slate-50"
+      } disabled:cursor-not-allowed disabled:opacity-50`}
       onClick={isRecording ? stopRecording : startRecording}
       disabled={disabled}
       title={isRecording ? "Stop Recording" : "Record Voice Command"}
@@ -89,7 +92,9 @@ const VoiceRecorder: React.FC<VoiceRecorderProps> = ({
       ) : (
         <Mic size={18} />
       )}
-      {isRecording && <span className="recording-pulse"></span>}
+      {isRecording && (
+        <span className="absolute -inset-0.5 animate-ping rounded-full border-2 border-red-500 opacity-60" />
+      )}
     </button>
   );
 };

@@ -465,7 +465,7 @@ const DocumentViewerPage: React.FC = () => {
     <div className="box-border flex h-screen gap-4 overflow-hidden bg-transparent p-4">
       {/* LEFT PANE: Document Content */}
       <div className="glass flex flex-2 flex-col overflow-hidden rounded-lg border border-(--color-border)">
-        <header className="flex items-center gap-4 border-b border-(--color-border) bg-(--panel-soft-bg) p-4">
+        <header className="flex items-center gap-4 rounded-t-lg border-b border-(--color-border) bg-(--panel-soft-bg) p-4">
           <button
             className="flex h-8 w-8 cursor-pointer items-center justify-center rounded border border-(--color-border) bg-transparent text-(--color-text-primary) transition-colors duration-200 hover:bg-(--color-bg-hover)"
             onClick={() => navigate(-1)}

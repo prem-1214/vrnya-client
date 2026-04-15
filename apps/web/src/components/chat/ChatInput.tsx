@@ -1,8 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { Send, Hash, Loader2, Square, Volume2, VolumeX } from "lucide-react";
 import VoiceRecorder from "./VoiceRecorder";
-import { sendVoiceMessage, generateFile } from "../../api/client";
-import "./ChatInput.css";
+import { generateFile } from "../../api/client";
 
 interface VoiceResult {
   transcript: string;
@@ -78,9 +77,9 @@ const ChatInput: React.FC<ChatInputProps> = ({
   };
 
   return (
-    <div className="chat-input-wrapper">
-      <div className="chat-input-container glass">
-        <div className="chat-input-prefix">
+    <div className="mt-auto flex flex-col gap-2 px-4 pb-4 md:px-6 md:pb-6">
+      <div className="glass mx-auto flex w-full max-w-[920px] items-end gap-4 rounded-[18px] border border-(--color-border) bg-[linear-gradient(180deg,rgba(255,255,255,0.035),rgba(255,255,255,0.012)),var(--color-bg-surface)] px-4 py-4 shadow-[0_14px_30px_rgba(0,0,0,0.14)] transition-all duration-300 focus-within:-translate-y-px focus-within:border-(--color-accent) focus-within:shadow-(--shadow-accent)">
+        <div className="flex h-10 items-center text-(--color-text-muted)">
           {isProcessingVoice ? (
             <Loader2 size={18} className="animate-spin" />
           ) : (
@@ -99,56 +98,56 @@ const ChatInput: React.FC<ChatInputProps> = ({
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={handleKeyDown}
           disabled={disabled || isProcessingVoice}
+          className="max-h-[200px] min-w-0 flex-1 resize-none border-0 bg-transparent py-2.5 font-sans text-sm leading-relaxed text-(--color-text-primary) outline-none placeholder:text-(--color-text-muted)"
         />
-        <div className="chat-input-actions">
+        <div className="flex items-center gap-2 pr-2">
           <VoiceRecorder
             onRecordingComplete={handleVoiceRecording}
             disabled={disabled || isProcessingVoice}
           />
           <button
-            className={`auto-speak-toggle ${isAutoSpeakEnabled ? "active" : ""}`}
+            className={`flex items-center justify-center rounded-full border-0 bg-transparent p-1 transition-all duration-200 hover:scale-110 hover:bg-(--panel-strong-bg) ${
+              isAutoSpeakEnabled
+                ? "text-(--color-accent) drop-shadow-[0_0_4px_var(--color-accent)]"
+                : "text-(--color-text-muted)"
+            }`}
             onClick={onToggleAutoSpeak}
             title={isAutoSpeakEnabled ? "Disable auto-speak" : "Enable auto-speak"}
-            style={{
-              background: "transparent",
-              border: "none",
-              color: isAutoSpeakEnabled ? "var(--accent)" : "var(--color-text-muted)",
-              cursor: "pointer",
-              padding: "4px",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              borderRadius: "4px",
-              transition: "all 0.2s"
-            }}
+            type="button"
           >
             {isAutoSpeakEnabled ? <Volume2 size={18} /> : <VolumeX size={18} />}
           </button>
           {disabled && onStop ? (
             <button
-              className="stop-button"
+              className="flex h-9 w-9 items-center justify-center rounded-lg border-0 bg-red-500/15 text-red-500 transition-colors duration-200 hover:bg-red-500/30"
               onClick={onStop}
               title="Stop generation"
+              type="button"
             >
               <Square size={18} />
             </button>
           ) : (
             <button
-              className={`send-button ${input.trim() && !disabled && !isProcessingVoice ? "active" : ""}`}
+              className={`flex items-center justify-center rounded-full border-0 p-2 transition-all duration-200 ${
+                input.trim() && !disabled && !isProcessingVoice
+                  ? "text-blue-500 hover:-translate-y-0.5 hover:text-blue-600"
+                  : "text-(--color-text-muted)"
+              } hover:scale-105 hover:bg-(--panel-strong-bg) disabled:cursor-not-allowed disabled:opacity-50`}
               onClick={handleSend}
               disabled={!input.trim() || disabled || isProcessingVoice}
+              type="button"
             >
               <Send size={18} />
             </button>
           )}
         </div>
       </div>
-      <div className="chat-input-hint">
+      <div className="mx-auto flex w-full max-w-[920px] flex-wrap justify-center gap-4 text-[10px] tracking-[0.05em] text-(--color-text-muted) uppercase md:gap-6">
         <span>
-          <b>Shift + Enter</b> for new line
+          <b className="text-(--color-text-secondary)">Shift + Enter</b> for new line
         </span>
         <span>
-          <b>Enter</b> to send
+          <b className="text-(--color-text-secondary)">Enter</b> to send
         </span>
       </div>
     </div>

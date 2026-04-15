@@ -7,6 +7,28 @@ import MemorySettingsSection from "../components/settings/MemorySettingsSection"
 import MemoryList from "../components/settings/MemoryList";
 
 const API_URL = `${BASE_URL}/api/v1`;
+const PROVIDER_OPTIONS = [
+  {
+    value: "ollama",
+    label: "Ollama",
+    subtitle: "Local / Free",
+  },
+  {
+    value: "gemini",
+    label: "Google Gemini",
+    subtitle: "Cloud",
+  },
+  {
+    value: "groq",
+    label: "Groq",
+    subtitle: "Cloud",
+  },
+  {
+    value: "openrouter",
+    label: "OpenRouter",
+    subtitle: "Cloud Hub",
+  },
+] as const;
 
 function getErrorMessage(error: unknown, fallback: string): string {
   return error instanceof Error ? error.message : fallback;
@@ -228,7 +250,7 @@ const SettingsPage: React.FC = () => {
 
   return (
     <div className="flex h-full flex-col">
-      <header className="z-10 flex items-center justify-between border-b border-(--glass-border) bg-(--header-bg) px-8 py-4 [backdrop-filter:var(--glass-blur)] [-webkit-backdrop-filter:var(--glass-blur)]">
+      <header className="z-10 flex items-center justify-between rounded-t-xl border-b border-(--glass-border) bg-(--header-bg) px-8 py-4 [backdrop-filter:var(--glass-blur)] [-webkit-backdrop-filter:var(--glass-blur)]">
         <div>
           <h1 className="text-md font-bold text-(--color-text-primary)">
             Settings
@@ -239,200 +261,225 @@ const SettingsPage: React.FC = () => {
         </div>
       </header>
 
-      <div className="mx-auto flex w-full max-w-[960px] flex-1 flex-col gap-12 overflow-y-auto p-12">
-        {isLoading ? (
-          <div className="flex items-center gap-2 rounded-md border border-dashed border-(--color-border) bg-(--panel-soft-bg) p-6 text-(--color-text-secondary)">
-            <Loader2 className="animate-spin text-(--color-accent)" size={32} />
-            <span className="font-medium">Loading settings...</span>
-          </div>
-        ) : (
-          <>
-            <div className="flex flex-col gap-8 rounded-lg border border-(--glass-border) bg-(--color-bg-surface) p-12 shadow-(--shadow-md)">
-            <div className="flex items-center gap-6">
-              <Server size={24} className="text-(--color-accent)" />
-              <div>
-                <h3 className="text-lg text-(--color-text-primary)">LLM Provider</h3>
-                <p className="text-sm text-(--color-text-secondary)">
-                  Choose which AI brain powers your Second Brain experience.
-                </p>
-              </div>
+      <div className="flex-1 overflow-y-auto">
+        <div className="mx-auto flex w-full max-w-[1200px] p-6 lg:p-8">
+          {isLoading ? (
+            <div className="m-auto flex items-center gap-2 rounded-md border border-dashed border-(--color-border) bg-(--panel-soft-bg) p-6 text-(--color-text-secondary)">
+              <Loader2 className="animate-spin text-(--color-accent)" size={32} />
+              <span className="font-medium">Loading settings...</span>
             </div>
-
-            <div className="flex flex-col gap-8 mt-2">
-              <div className="h-auto flex flex-col gap-2">
-                <label className="block text-sm font-semibold text-(--color-text-primary) mb-4 pb-6">
-                  Active Provider
-                </label>
-                <select
-                  value={provider}
-                  onChange={(e) => setProvider(e.target.value)}
-                  className="w-full border border-(--color-border) text-(--color-text-primary) min-h-8 rounded-xl outline-none focus:border-(--color-accent) transition-colors text-sm font-medium cursor-pointer shadow-sm"
-                >
-                  <option value="ollama">Ollama (Local / Free)</option>
-                  <option value="gemini">Google Gemini (Cloud)</option>
-                  <option value="groq">Groq (Cloud)</option>
-                  <option value="openrouter">OpenRouter</option>
-                </select>
+          ) : (
+            <div className="grid w-full grid-cols-1 gap-6 lg:grid-cols-[320px_minmax(0,1fr)]">
+            <aside className="glass rounded-xl border border-(--glass-border) bg-(--color-bg-surface) p-5 shadow-(--shadow-md) lg:sticky lg:top-4 lg:h-fit">
+              <div className="mb-5 flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-(--color-accent-subtle) text-(--color-accent)">
+                  <Server size={20} />
+                </div>
+                <div>
+                  <h3 className="text-sm font-bold text-(--color-text-primary)">
+                    Provider
+                  </h3>
+                  <p className="text-xs text-(--color-text-muted)">
+                    Choose your active AI backend
+                  </p>
+                </div>
               </div>
 
-              {provider === "gemini" && (
-                <ProviderSection title="Gemini" icon={Key}>
-                  <InputField
-                    label="API Key"
-                    placeholder="AIzaSy..."
-                    value={geminiKey}
-                    onChange={(e) => setGeminiKey(e.target.value)}
-                    helpText="Get your key from Google AI Studio. (Leave masked string if unchanged)"
-                  />
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                    <InputField
-                      label="Chat Model"
-                      value={geminiModel}
-                      onChange={(e) => setGeminiModel(e.target.value)}
-                    />
-                    <InputField
-                      label="Embedding Model"
-                      value={geminiEmbedModel}
-                      onChange={(e) => setGeminiEmbedModel(e.target.value)}
-                    />
-                  </div>
-                </ProviderSection>
-              )}
+              <div className="mb-6 flex flex-col gap-2">
+                {PROVIDER_OPTIONS.map((option) => (
+                  <button
+                    key={option.value}
+                    type="button"
+                    onClick={() => setProvider(option.value)}
+                    className={`flex w-full items-center justify-between rounded-lg border px-3 py-2 text-left transition-colors ${
+                      provider === option.value
+                        ? "border-(--color-accent) bg-(--color-accent-subtle) text-(--color-accent)"
+                        : "border-(--color-border) bg-transparent text-(--color-text-secondary) hover:bg-(--color-bg-hover) hover:text-(--color-text-primary)"
+                    }`}
+                  >
+                    <span className="text-sm font-semibold">{option.label}</span>
+                    <span className="text-xs opacity-80">{option.subtitle}</span>
+                  </button>
+                ))}
+              </div>
 
-              {provider === "groq" && (
-                <ProviderSection title="Groq" icon={Key}>
-                  <InputField
-                    label="API Key"
-                    placeholder="gsk_..."
-                    value={groqKey}
-                    onChange={(e) => setGroqKey(e.target.value)}
-                    helpText="Get your key from Groq Console. (Leave masked string if unchanged)"
-                  />
-                  <InputField
-                    label="Chat Model"
-                    value={groqModel}
-                    onChange={(e) => setGroqModel(e.target.value)}
-                  />
-                </ProviderSection>
-              )}
-
-              {provider === "ollama" && (
-                <ProviderSection title="Ollama" icon={Server}>
-                  <InputField
-                    label="Ollama Server URL"
-                    value={ollamaUrl}
-                    onChange={(e) => setOllamaUrl(e.target.value)}
-                    className="font-mono"
-                  />
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                    <InputField
-                      label="Chat Model"
-                      value={ollamaChatModel}
-                      onChange={(e) => setOllamaChatModel(e.target.value)}
-                      className="font-mono"
-                      helpText={
-                        <>
-                          E.g.{" "}
-                          <code className="bg-(--inline-code-bg) px-1 rounded">
-                            llama3.2:3b
-                          </code>
-                        </>
-                      }
-                    />
-                    <InputField
-                      label="Embedding Model"
-                      value={ollamaEmbedModel}
-                      onChange={(e) => setOllamaEmbedModel(e.target.value)}
-                      className="font-mono"
-                      helpText={
-                        <>
-                          E.g.{" "}
-                          <code className="bg-(--inline-code-bg) px-1 rounded">
-                            nomic-embed-text
-                          </code>
-                        </>
-                      }
-                    />
-                  </div>
-                </ProviderSection>
-              )}
-
-              {provider === "openrouter" && (
-                <ProviderSection title="OpenRouter" icon={Key}>
-                  <InputField
-                    label="API Key"
-                    placeholder="sk-or-v1-..."
-                    value={openRouterKey}
-                    onChange={(e) => setOpenRouterKey(e.target.value)}
-                    helpText="Get your key from openrouter.ai"
-                  />
-                  <InputField
-                    label="Chat Model"
-                    value={openRouterModel}
-                    onChange={(e) => setOpenRouterModel(e.target.value)}
-                  />
-                </ProviderSection>
-              )}
-
-              <div className="mt-4 pt-6 border-t border-(--color-border-subtle) flex items-center justify-between">
-                <div className="flex-1">
-                  <AnimatePresence>
-                    {message && (
-                      <motion.div
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, scale: 0.95 }}
-                        className={`text-sm font-medium px-4 py-2 rounded-lg inline-flex items-center border ${
-                          message.type === "success"
-                            ? "bg-[rgba(52,211,153,0.1)] text-(--color-success) border-[rgba(52,211,153,0.2)]"
-                            : "bg-[rgba(248,113,113,0.1)] text-(--color-error) border-[rgba(248,113,113,0.2)]"
-                        }`}
-                      >
-                        {message.text}
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </div>
+              <div className="border-t border-(--color-border-subtle) pt-4">
+                <AnimatePresence mode="wait">
+                  {message && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -6 }}
+                      className={`mb-3 rounded-lg border px-3 py-2 text-sm font-medium ${
+                        message.type === "success"
+                          ? "border-[rgba(52,211,153,0.2)] bg-[rgba(52,211,153,0.1)] text-(--color-success)"
+                          : "border-[rgba(248,113,113,0.2)] bg-[rgba(248,113,113,0.1)] text-(--color-error)"
+                      }`}
+                    >
+                      {message.text}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
 
                 <button
                   onClick={handleSave}
                   disabled={isSaving}
-                  className="min-h-12 min-w-28 flex items-center justify-center gap-2 bg-[linear-gradient(135deg,var(--color-accent),var(--color-accent-hover))] hover:shadow-[0_4px_15px_rgba(37,99,235,0.3)] text-white rounded-xl font-semibold transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-70 disabled:hover:scale-100 disabled:cursor-not-allowed"
+                  className="flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-[linear-gradient(135deg,var(--color-accent),var(--color-accent-hover))] px-4 text-sm font-semibold text-white transition-all hover:scale-[1.01] hover:shadow-[0_4px_15px_rgba(37,99,235,0.3)] active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-70 disabled:hover:scale-100"
                 >
                   {isSaving ? (
-                    <Loader2 className="animate-spin" size={18} />
+                    <Loader2 className="animate-spin" size={16} />
                   ) : (
-                    <Save size={18} />
+                    <Save size={16} />
                   )}
-                  <span>{isSaving ? "Saving..." : "Save"}</span>
+                  <span>{isSaving ? "Saving..." : "Save Changes"}</span>
                 </button>
               </div>
-            </div>
-          </div>
+            </aside>
 
-            <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-2">
-            <div className="flex flex-col gap-8 rounded-lg border border-(--glass-border) bg-(--color-bg-surface) p-12 shadow-(--shadow-md)">
-              <MemorySettingsSection
-                enableMemory={enableMemory}
-                enableLongTermMemory={enableLongTermMemory}
-                onToggleMemory={setEnableMemory}
-                onToggleLongTermMemory={setEnableLongTermMemory}
-                onClearAll={handleClearAllMemories}
-                isClearing={isClearingMemories}
-              />
-            </div>
+            <section className="flex min-w-0 flex-col gap-6">
+              <div className="glass rounded-xl border border-(--glass-border) bg-(--color-bg-surface) p-6 shadow-(--shadow-md) md:p-8">
+                <div className="mb-6 flex items-center gap-4">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-(--color-accent-subtle) text-(--color-accent)">
+                    <Key size={18} />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-bold text-(--color-text-primary)">
+                      {PROVIDER_OPTIONS.find((p) => p.value === provider)?.label}{" "}
+                      Settings
+                    </h3>
+                    <p className="text-sm text-(--color-text-secondary)">
+                      Update credentials and model preferences for the active provider.
+                    </p>
+                  </div>
+                </div>
 
-            <div className="flex flex-col gap-8 rounded-lg border border-(--glass-border) bg-(--color-bg-surface) p-12 shadow-(--shadow-md)">
-              <MemoryList
-                memories={memories}
-                isLoading={isMemoriesLoading}
-                error={memoryError}
-                onDeleteMemory={handleDeleteMemory}
-              />
+                <div className="flex flex-col gap-6">
+                  {provider === "gemini" && (
+                    <ProviderSection title="Gemini" icon={Key}>
+                      <InputField
+                        label="API Key"
+                        placeholder="AIzaSy..."
+                        value={geminiKey}
+                        onChange={(e) => setGeminiKey(e.target.value)}
+                        helpText="Get your key from Google AI Studio. Keep masked value if unchanged."
+                      />
+                      <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+                        <InputField
+                          label="Chat Model"
+                          value={geminiModel}
+                          onChange={(e) => setGeminiModel(e.target.value)}
+                        />
+                        <InputField
+                          label="Embedding Model"
+                          value={geminiEmbedModel}
+                          onChange={(e) => setGeminiEmbedModel(e.target.value)}
+                        />
+                      </div>
+                    </ProviderSection>
+                  )}
+
+                  {provider === "groq" && (
+                    <ProviderSection title="Groq" icon={Key}>
+                      <InputField
+                        label="API Key"
+                        placeholder="gsk_..."
+                        value={groqKey}
+                        onChange={(e) => setGroqKey(e.target.value)}
+                        helpText="Get your key from Groq Console. Keep masked value if unchanged."
+                      />
+                      <InputField
+                        label="Chat Model"
+                        value={groqModel}
+                        onChange={(e) => setGroqModel(e.target.value)}
+                      />
+                    </ProviderSection>
+                  )}
+
+                  {provider === "ollama" && (
+                    <ProviderSection title="Ollama" icon={Server}>
+                      <InputField
+                        label="Ollama Server URL"
+                        value={ollamaUrl}
+                        onChange={(e) => setOllamaUrl(e.target.value)}
+                        className="font-mono"
+                      />
+                      <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+                        <InputField
+                          label="Chat Model"
+                          value={ollamaChatModel}
+                          onChange={(e) => setOllamaChatModel(e.target.value)}
+                          className="font-mono"
+                          helpText={
+                            <>
+                              E.g.{" "}
+                              <code className="rounded bg-(--inline-code-bg) px-1">
+                                llama3.2:3b
+                              </code>
+                            </>
+                          }
+                        />
+                        <InputField
+                          label="Embedding Model"
+                          value={ollamaEmbedModel}
+                          onChange={(e) => setOllamaEmbedModel(e.target.value)}
+                          className="font-mono"
+                          helpText={
+                            <>
+                              E.g.{" "}
+                              <code className="rounded bg-(--inline-code-bg) px-1">
+                                nomic-embed-text
+                              </code>
+                            </>
+                          }
+                        />
+                      </div>
+                    </ProviderSection>
+                  )}
+
+                  {provider === "openrouter" && (
+                    <ProviderSection title="OpenRouter" icon={Key}>
+                      <InputField
+                        label="API Key"
+                        placeholder="sk-or-v1-..."
+                        value={openRouterKey}
+                        onChange={(e) => setOpenRouterKey(e.target.value)}
+                        helpText="Get your key from openrouter.ai"
+                      />
+                      <InputField
+                        label="Chat Model"
+                        value={openRouterModel}
+                        onChange={(e) => setOpenRouterModel(e.target.value)}
+                      />
+                    </ProviderSection>
+                  )}
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
+                <div className="glass rounded-xl border border-(--glass-border) bg-(--color-bg-surface) p-6 shadow-(--shadow-md) md:p-8">
+                  <MemorySettingsSection
+                    enableMemory={enableMemory}
+                    enableLongTermMemory={enableLongTermMemory}
+                    onToggleMemory={setEnableMemory}
+                    onToggleLongTermMemory={setEnableLongTermMemory}
+                    onClearAll={handleClearAllMemories}
+                    isClearing={isClearingMemories}
+                  />
+                </div>
+
+                <div className="glass rounded-xl border border-(--glass-border) bg-(--color-bg-surface) p-6 shadow-(--shadow-md) md:p-8">
+                  <MemoryList
+                    memories={memories}
+                    isLoading={isMemoriesLoading}
+                    error={memoryError}
+                    onDeleteMemory={handleDeleteMemory}
+                  />
+                </div>
+              </div>
+            </section>
             </div>
-          </div>
-        </>
-        )}
+          )}
+        </div>
       </div>
     </div>
   );

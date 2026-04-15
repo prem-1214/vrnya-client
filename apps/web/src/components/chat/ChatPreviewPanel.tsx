@@ -17,7 +17,6 @@ import {
   openPathInShell,
   showPathInFolder,
 } from "../../platform/shell";
-import "./ChatPreviewPanel.css";
 
 interface ChatPreviewPanelProps {
   target: AgentSource | { path: string } | null;
@@ -308,28 +307,39 @@ const ChatPreviewPanel: React.FC<ChatPreviewPanelProps> = ({ target, onClose, wi
 
   return (
     <aside 
-      className={`chat-preview-panel glass ${path ? "open" : ""}`}
+      className={`glass flex min-w-0 flex-col overflow-hidden border-l border-(--glass-border) bg-(--color-bg-surface) transition-all duration-200 ${
+        path ? "w-[min(40vw,520px)] min-w-80 opacity-100" : "w-0 min-w-0 opacity-0"
+      }`}
       style={path && width ? { width: `${width}px`, minWidth: `${width}px` } : undefined}
     >
-      <div className="chat-preview-header">
-        <div className="chat-preview-title">
+      <div className="flex items-start justify-between gap-4 border-b border-(--glass-border) px-6 py-4">
+        <div className="flex min-w-0 items-start gap-2">
           <File size={16} />
           <div>
-            <h3>{path ? fileName : "Preview"}</h3>
-            <span title={path || undefined}>{path || "Select a file from chat to preview it here."}</span>
+            <h3 className="m-0 text-sm">{path ? fileName : "Preview"}</h3>
+            <span
+              className="block max-w-[360px] overflow-hidden text-ellipsis whitespace-nowrap text-xs text-(--color-text-muted)"
+              title={path || undefined}
+            >
+              {path || "Select a file from chat to preview it here."}
+            </span>
           </div>
         </div>
-        <button type="button" className="chat-preview-close" onClick={onClose}>
+        <button
+          type="button"
+          className="cursor-pointer rounded-sm border border-(--glass-border) bg-transparent p-1.5 text-(--color-text-secondary) transition-colors duration-150 hover:bg-(--panel-soft-bg)"
+          onClick={onClose}
+        >
           <X size={16} />
         </button>
       </div>
 
       {path ? (
         <>
-          <div className="chat-preview-actions">
+          <div className="flex gap-2 border-b border-(--glass-border) px-6 py-4">
             <button
               type="button"
-              className="chat-preview-btn"
+              className="inline-flex cursor-pointer items-center gap-1.5 rounded-sm border border-(--glass-border) bg-transparent px-2.5 py-2 text-(--color-text-primary) transition-colors duration-150 hover:bg-(--panel-soft-bg) disabled:cursor-not-allowed disabled:opacity-50"
               onClick={handleOpenInSystem}
               disabled={!canUseNativeShell}
               title={
@@ -343,7 +353,7 @@ const ChatPreviewPanel: React.FC<ChatPreviewPanelProps> = ({ target, onClose, wi
             </button>
             <button
               type="button"
-              className="chat-preview-btn"
+              className="inline-flex cursor-pointer items-center gap-1.5 rounded-sm border border-(--glass-border) bg-transparent px-2.5 py-2 text-(--color-text-primary) transition-colors duration-150 hover:bg-(--panel-soft-bg) disabled:cursor-not-allowed disabled:opacity-50"
               onClick={handleShowInFolder}
               disabled={!canUseNativeShell}
               title={
@@ -357,16 +367,16 @@ const ChatPreviewPanel: React.FC<ChatPreviewPanelProps> = ({ target, onClose, wi
             </button>
           </div>
 
-          <div className="chat-preview-body">
+          <div className="flex-1 overflow-auto">
             {isLoading && (
-              <div className="chat-preview-empty">
-                <Loader2 size={22} className="spin" />
+              <div className="flex h-full min-h-[220px] flex-col items-center justify-center gap-2 px-8 py-8 text-center text-(--color-text-muted)">
+                <Loader2 size={22} className="animate-spin" />
                 <p>Loading preview...</p>
               </div>
             )}
 
             {!isLoading && error && (
-              <div className="chat-preview-empty error">
+              <div className="flex h-full min-h-[220px] flex-col items-center justify-center gap-2 px-8 py-8 text-center text-(--color-error)">
                 <AlertCircle size={22} />
                 <p>{error}</p>
               </div>
@@ -374,7 +384,7 @@ const ChatPreviewPanel: React.FC<ChatPreviewPanelProps> = ({ target, onClose, wi
 
             {!isLoading && !error && isPdf && path && (
               <iframe
-                className="chat-preview-pdf"
+                className="min-h-[420px] h-full w-full border-0 bg-white"
                 src={pdfUrl ?? undefined}
                 title="PDF Preview"
               />
@@ -384,10 +394,10 @@ const ChatPreviewPanel: React.FC<ChatPreviewPanelProps> = ({ target, onClose, wi
               docxBuffer ? (
                 <div
                   ref={docxContainerRef}
-                  className="chat-preview-docx docx-rendered-container"
+                  className="docx-rendered-container"
                 />
               ) : (
-                <div className="chat-preview-empty">
+                <div className="flex h-full min-h-[220px] flex-col items-center justify-center gap-2 px-8 py-8 text-center text-(--color-text-muted)">
                   <File size={22} />
                   <p>This DOCX file could not be rendered inline.</p>
                 </div>
@@ -395,7 +405,7 @@ const ChatPreviewPanel: React.FC<ChatPreviewPanelProps> = ({ target, onClose, wi
             )}
 
             {!isLoading && !error && !canPreviewAsText && !isPdf && !isDocx && (
-              <div className="chat-preview-empty">
+              <div className="flex h-full min-h-[220px] flex-col items-center justify-center gap-2 px-8 py-8 text-center text-(--color-text-muted)">
                 <File size={22} />
                 <p>This file type does not have an inline preview yet.</p>
               </div>
@@ -403,19 +413,21 @@ const ChatPreviewPanel: React.FC<ChatPreviewPanelProps> = ({ target, onClose, wi
 
             {!isLoading && !error && canPreviewAsText && (
               isMarkdown ? (
-                <div className="chat-preview-markdown markdown-body">
+                <div className="markdown-body p-6">
                   <ReactMarkdown remarkPlugins={[remarkGfm]}>
                     {content}
                   </ReactMarkdown>
                 </div>
               ) : (
-                <pre className="chat-preview-text">{content}</pre>
+                <pre className="m-0 whitespace-pre-wrap wrap-break-word p-6 font-mono text-sm text-(--color-text-primary)">
+                  {content}
+                </pre>
               )
             )}
           </div>
         </>
       ) : (
-        <div className="chat-preview-empty">
+        <div className="flex h-full min-h-[220px] flex-col items-center justify-center gap-2 px-8 py-8 text-center text-(--color-text-muted)">
           <File size={22} />
           <p>Open any chat result on the left to inspect it here.</p>
         </div>

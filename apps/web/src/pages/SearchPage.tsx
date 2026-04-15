@@ -123,7 +123,7 @@ const SearchPage: React.FC = () => {
 
   return (
     <div className="flex h-full flex-col">
-      <header className="z-10 flex items-center justify-between border-b border-(--glass-border) bg-(--header-bg) px-8 py-4 [backdrop-filter:var(--glass-blur)] [-webkit-backdrop-filter:var(--glass-blur)]">
+      <header className="z-10 flex items-center justify-between rounded-t-xl border-b border-(--glass-border) bg-(--header-bg) px-8 py-4 [backdrop-filter:var(--glass-blur)] [-webkit-backdrop-filter:var(--glass-blur)]">
         <div>
           <h1 className="text-md font-bold text-(--color-text-primary)">
             Semantic Search

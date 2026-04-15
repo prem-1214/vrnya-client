@@ -9,7 +9,6 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useR2Upload, type UploadStage } from "../../hooks/useR2Upload";
-import "./R2UploadModal.css";
 
 const ACCEPTED_TYPES = [
   "application/pdf",
@@ -80,30 +79,34 @@ const R2UploadModal: React.FC<R2UploadModalProps> = ({
   const isError = state.stage === "error";
 
   return (
-    <div className="r2-modal-overlay" onClick={onClose}>
+    <div
+      className="fixed inset-0 z-1000 flex items-center justify-center bg-black/55 p-4 [backdrop-filter:blur(6px)]"
+      onClick={onClose}
+    >
       <motion.div
-        className="r2-modal glass"
+        className="glass w-full max-w-[520px] overflow-hidden rounded-lg shadow-(--shadow-lg)"
         initial={{ opacity: 0, scale: 0.94, y: 20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.94, y: 20 }}
         transition={{ duration: 0.22, ease: "easeOut" }}
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="r2-modal-header">
-          <div className="r2-modal-title">
-            <CloudUpload size={20} className="r2-modal-title-icon" />
+        <div className="flex items-center justify-between border-b border-(--color-border-subtle) px-6 py-4">
+          <div className="flex items-center gap-2 text-md font-semibold text-(--color-text-primary)">
+            <CloudUpload size={20} className="text-(--color-accent)" />
             <span>Upload to Cloud</span>
           </div>
           <button
-            className="r2-modal-close"
+            className="flex items-center rounded-sm border-0 bg-transparent p-1 text-(--color-text-muted) transition-colors duration-200 hover:text-(--color-text-primary) disabled:cursor-not-allowed disabled:opacity-40"
             onClick={onClose}
             disabled={isActive}
+            type="button"
           >
             <X size={18} />
           </button>
         </div>
 
-        <div className="r2-modal-body">
+        <div className="flex min-h-[240px] flex-col justify-center p-6">
           <AnimatePresence mode="wait">
             {state.stage === "idle" ? (
               <motion.div
@@ -113,7 +116,11 @@ const R2UploadModal: React.FC<R2UploadModalProps> = ({
                 exit={{ opacity: 0 }}
               >
                 <div
-                  className={`r2-dropzone ${dragOver ? "r2-dropzone--active" : ""}`}
+                  className={`flex cursor-pointer flex-col items-center gap-2 rounded-md border-2 border-dashed px-6 py-12 text-center transition-all duration-200 ${
+                    dragOver
+                      ? "border-(--color-accent) bg-(--color-accent-subtle)"
+                      : "border-(--color-border) hover:border-(--color-accent) hover:bg-(--color-accent-subtle)"
+                  }`}
                   onDragOver={(e) => {
                     e.preventDefault();
                     setDragOver(true);
@@ -122,19 +129,21 @@ const R2UploadModal: React.FC<R2UploadModalProps> = ({
                   onDrop={handleDrop}
                   onClick={() => fileInputRef.current?.click()}
                 >
-                  <Upload size={36} className="r2-dropzone-icon" />
-                  <p className="r2-dropzone-label">
+                  <Upload size={36} className="text-(--color-accent) opacity-80" />
+                  <p className="text-md text-(--color-text-secondary)">
                     Drag & drop a file here, or{" "}
-                    <span className="r2-link">click to browse</span>
+                    <span className="cursor-pointer text-(--color-accent) underline">
+                      click to browse
+                    </span>
                   </p>
-                  <p className="r2-dropzone-hint">
+                  <p className="text-xs text-(--color-text-muted)">
                     PDF, DOCX, TXT, MD, CSV, JSON, HTML — max 50MB
                   </p>
                   <input
                     ref={fileInputRef}
                     type="file"
                     accept={ACCEPTED_TYPES}
-                    className="r2-file-input"
+                    className="hidden"
                     onChange={handleInputChange}
                     id="r2-file-input"
                   />
@@ -145,22 +154,32 @@ const R2UploadModal: React.FC<R2UploadModalProps> = ({
                 key="done"
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
-                className="r2-status-panel r2-status-panel--success"
+                className="flex flex-col items-center gap-2 py-6 text-center"
               >
                 <CheckCircle
                   size={44}
-                  className="r2-status-icon r2-status-icon--success"
+                  className="text-(--color-success)"
                 />
-                <p className="r2-status-title">Upload Complete</p>
-                <p className="r2-status-detail">
+                <p className="text-lg font-semibold text-(--color-text-primary)">
+                  Upload Complete
+                </p>
+                <p className="max-w-[340px] text-sm text-(--color-text-muted)">
                   <strong>{state.fileName}</strong> has been uploaded and
                   indexed successfully.
                 </p>
-                <div className="r2-done-actions">
-                  <button className="r2-btn r2-btn--primary" onClick={onClose}>
+                <div className="mt-2 flex gap-2">
+                  <button
+                    className="cursor-pointer rounded-sm border-0 bg-(--color-accent) px-4 py-2 text-sm font-medium text-white transition-colors duration-200 hover:bg-(--color-accent-hover)"
+                    onClick={onClose}
+                    type="button"
+                  >
                     Done
                   </button>
-                  <button className="r2-btn r2-btn--ghost" onClick={reset}>
+                  <button
+                    className="cursor-pointer rounded-sm border border-(--color-border) bg-(--color-bg-surface) px-4 py-2 text-sm font-medium text-(--color-text-secondary) transition-colors duration-200 hover:bg-(--color-bg-hover)"
+                    onClick={reset}
+                    type="button"
+                  >
                     Upload Another
                   </button>
                 </div>
@@ -170,15 +189,23 @@ const R2UploadModal: React.FC<R2UploadModalProps> = ({
                 key="error"
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
-                className="r2-status-panel r2-status-panel--error"
+                className="flex flex-col items-center gap-2 py-6 text-center"
               >
                 <AlertCircle
                   size={44}
-                  className="r2-status-icon r2-status-icon--error"
+                  className="text-(--color-error)"
                 />
-                <p className="r2-status-title">Upload Failed</p>
-                <p className="r2-status-detail">{state.error}</p>
-                <button className="r2-btn r2-btn--primary" onClick={reset}>
+                <p className="text-lg font-semibold text-(--color-text-primary)">
+                  Upload Failed
+                </p>
+                <p className="max-w-[340px] text-sm text-(--color-text-muted)">
+                  {state.error}
+                </p>
+                <button
+                  className="cursor-pointer rounded-sm border-0 bg-(--color-accent) px-4 py-2 text-sm font-medium text-white transition-colors duration-200 hover:bg-(--color-accent-hover)"
+                  onClick={reset}
+                  type="button"
+                >
                   Try Again
                 </button>
               </motion.div>
@@ -187,19 +214,25 @@ const R2UploadModal: React.FC<R2UploadModalProps> = ({
                 key="progress"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                className="r2-progress-panel"
+                className="flex flex-col items-center gap-4 py-6"
               >
-                <Loader2 size={36} className="r2-progress-spinner" />
-                <p className="r2-progress-label">{STAGE_LABELS[state.stage]}</p>
-                <p className="r2-progress-filename">{state.fileName}</p>
+                <Loader2 size={36} className="animate-spin text-(--color-accent)" />
+                <p className="text-md font-medium text-(--color-text-primary)">
+                  {STAGE_LABELS[state.stage]}
+                </p>
+                <p className="max-w-[360px] overflow-hidden text-ellipsis whitespace-nowrap font-mono text-sm text-(--color-text-muted)">
+                  {state.fileName}
+                </p>
 
                 {state.stage === "uploading" && (
-                  <div className="r2-progress-bar-wrap">
+                  <div className="relative h-2 w-full max-w-[360px] overflow-hidden rounded-full bg-(--color-border-subtle)">
                     <div
-                      className="r2-progress-bar-fill"
+                      className="h-full rounded-full bg-[linear-gradient(90deg,var(--color-accent),var(--color-accent-hover))] shadow-[0_0_8px_var(--color-accent-glow)] transition-[width] duration-300 ease-in-out"
                       style={{ width: `${state.progress}%` }}
                     />
-                    <span className="r2-progress-pct">{state.progress}%</span>
+                    <span className="absolute right-0 top-3.5 text-xs text-(--color-text-muted)">
+                      {state.progress}%
+                    </span>
                   </div>
                 )}
               </motion.div>
