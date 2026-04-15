@@ -19,6 +19,7 @@ import {
   getDocumentById,
   summarizeDocument,
   chatWithDocument,
+  getDocumentChatHistory,
   getR2DownloadUrl,
   BASE_URL,
 } from "../api/client";
@@ -124,6 +125,7 @@ const DocumentViewerPage: React.FC = () => {
   >([]);
   const [chatInput, setChatInput] = useState("");
   const [isChatting, setIsChatting] = useState(false);
+  const [isChatHistoryLoading, setIsChatHistoryLoading] = useState(false);
   const chatEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -147,6 +149,7 @@ const DocumentViewerPage: React.FC = () => {
     if (!id) return;
     const fetchDoc = async () => {
       setIsLoading(true);
+      setChatMessages([]);
       try {
         const response = await getDocumentById(id);
         const doc = response.document as {
@@ -194,6 +197,27 @@ const DocumentViewerPage: React.FC = () => {
       }
     };
     fetchDoc();
+  }, [id]);
+
+  useEffect(() => {
+    if (!id) return;
+
+    const loadChatHistory = async () => {
+      setIsChatHistoryLoading(true);
+      try {
+        const history = await getDocumentChatHistory(id);
+        setChatMessages(history.messages.map((message) => ({
+          role: message.role,
+          text: message.text,
+        })));
+      } catch {
+        setChatMessages([]);
+      } finally {
+        setIsChatHistoryLoading(false);
+      }
+    };
+
+    loadChatHistory();
   }, [id]);
 
   // Scroll to the highlighted section after content loads
@@ -577,12 +601,18 @@ const DocumentViewerPage: React.FC = () => {
                 className="sidebar-pane chat-pane"
               >
                 <div className="chat-messages">
-                  {chatMessages.length === 0 ? (
+                  {isChatHistoryLoading ? (
+                    <div className="chat-empty">
+                      <Loader2 size={24} className="spin" />
+                      <p>Loading previous chat for this document...</p>
+                    </div>
+                  ) : chatMessages.length === 0 ? (
                     <div className="chat-empty">
                       <MessageSquare size={24} />
                       <p>
-                        Ask questions specifically about this file. The AI's
-                        context is strictly locked to this document.
+                        Ask questions specifically about this file. Follow-up
+                        questions in this panel will continue the same
+                        document-specific chat.
                       </p>
                     </div>
                   ) : (
@@ -614,11 +644,13 @@ const DocumentViewerPage: React.FC = () => {
                     placeholder="Ask about this file..."
                     value={chatInput}
                     onChange={(e) => setChatInput(e.target.value)}
-                    disabled={isChatting}
+                    disabled={isChatting || isChatHistoryLoading}
                   />
                   <button
                     type="submit"
-                    disabled={isChatting || !chatInput.trim()}
+                    disabled={
+                      isChatting || isChatHistoryLoading || !chatInput.trim()
+                    }
                   >
                     <Send size={14} />
                   </button>

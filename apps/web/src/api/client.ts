@@ -463,13 +463,24 @@ export const listUploadedFiles = () =>
   apiFetch<{ files: UploadedFile[] }>("/api/v1/documents");
 
 export const chatWithDocument = (fileId: string, question: string) =>
-  apiFetch<{ text: string; path?: string }>(
+  apiFetch<{ text: string; path?: string; conversationId: string }>(
     `/api/v1/documents/${fileId}/chat`,
     {
       method: "POST",
       body: JSON.stringify({ question }),
     },
   );
+
+export const getDocumentChatHistory = (fileId: string) =>
+  apiFetch<{
+    conversationId: string | null;
+    messages: Array<{
+      id: string;
+      role: "user" | "ai";
+      text: string;
+      created_at: string;
+    }>;
+  }>(`/api/v1/documents/${fileId}/chat`);
 
 export const indexAllPathsWithProgress = async (
   onProgress: (event: {
