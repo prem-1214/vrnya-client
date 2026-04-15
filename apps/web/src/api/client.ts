@@ -71,6 +71,12 @@ export interface ConfirmUploadResponse {
   r2Key: string;
   name: string;
   message: string;
+  jobId?: string;
+}
+export interface JobStatusResponse {
+  state: "waiting" | "active" | "completed" | "failed" | "delayed" | "prioritized";
+  progress: number;
+  failedReason: string | null;
 }
 export interface R2IndexResponse {
   fileId: string;
@@ -600,6 +606,8 @@ export const deleteUploadedFile = (fileId: string) =>
   apiFetch<{ message: string }>(`/api/v1/upload/${fileId}`, {
     method: "DELETE",
   });
+export const getJobStatus = (jobId: string) =>
+  apiFetch<JobStatusResponse>(`/api/v1/upload/jobs/${jobId}`);
 /**
  * Upload a file directly to R2 using a presigned PUT URL.
  * This goes browser → R2 directly (skips the server).

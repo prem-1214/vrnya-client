@@ -4,6 +4,7 @@ import {
   FolderOpen,
   ArrowRight,
   CheckCircle,
+  CheckCircle2,
   AlertCircle,
   Loader2,
   Plus,
@@ -12,6 +13,8 @@ import {
   Folder,
   RefreshCcw,
   CloudUpload,
+  X,
+  Sparkles,
 } from "lucide-react";
 import {
   addAllowedIndexPath,
@@ -22,7 +25,7 @@ import {
 } from "../api/client";
 import type { AllowedIndexPath, IndexResponse } from "../api/client";
 import { motion, AnimatePresence } from "framer-motion";
-import { useR2Upload, type UploadStage } from "../hooks/useR2Upload";
+import { useR2Upload, type UploadItem } from "../hooks/useR2Upload";
 import {
   canPickFilePath,
   canPickFolderPath,
@@ -41,13 +44,15 @@ const ACCEPTED_TYPES = [
   "text/html",
 ].join(",");
 
-const STAGE_LABELS: Record<UploadStage, string> = {
+const STAGE_LABELS: Record<UploadItem["stage"], string> = {
   idle: "",
-  presigning: "Preparing upload...",
-  uploading: "Uploading to cloud...",
-  confirming: "Registering file...",
-  done: "Done!",
-  error: "Upload failed",
+  validating: "Validating...",
+  presigning: "Preparing...",
+  uploading: "Uploading...",
+  confirming: "Registering...",
+  indexing: "Indexing...",
+  done: "Indexed",
+  error: "Failed",
 };
 
 function getErrorMessage(error: unknown, fallback: string): string {
@@ -74,32 +79,30 @@ const IndexPage: React.FC = () => {
     failed: number;
   } | null>(null);
 
-  const { state: uploadState, upload, reset: resetUpload } = useR2Upload();
+  const { items: uploadItems, uploadMultiple, dismissItem, clearCompleted, hasCompleted } = useR2Upload();
   const [dragOver, setDragOver] = useState(false);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
 
-  const handleFile = React.useCallback(
-    (file: File) => {
-      upload(file).then(() => {
-        // success is handled in the UI state hook implicitly
-      });
+  const handleFiles = React.useCallback(
+    (files: FileList | File[]) => {
+      if (files && files.length > 0) uploadMultiple(files);
     },
-    [upload],
+    [uploadMultiple],
   );
 
   const handleDrop = React.useCallback(
     (e: React.DragEvent<HTMLDivElement>) => {
       e.preventDefault();
       setDragOver(false);
-      const file = e.dataTransfer.files[0];
-      if (file) handleFile(file);
+      handleFiles(e.dataTransfer.files);
     },
-    [handleFile],
+    [handleFiles],
   );
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) handleFile(file);
+    if (e.target.files && e.target.files.length > 0) handleFiles(e.target.files);
+    // Reset input so the same file can be re-selected
+    e.target.value = "";
   };
 
   const resetFeedback = () => {
@@ -574,121 +577,171 @@ const IndexPage: React.FC = () => {
         </div>
         */}
 
-        {/* Polished Inline Upload to Cloud Dropzone */}
-        <AnimatePresence mode="wait">
-          {uploadState.stage === "idle" ? (
+        {/* Polished Cloud Dropzone — always visible */}
+        <div
+          className={`upload-dropzone glass ${dragOver ? "drag-active" : ""}`}
+          onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+          onDragLeave={() => setDragOver(false)}
+          onDrop={handleDrop}
+          onClick={() => fileInputRef.current?.click()}
+          style={{ cursor: "pointer" }}
+        >
+          <div className="dropzone-icon-container">
+            <CloudUpload size={54} className="accent-text" />
+          </div>
+          <div className="dropzone-text">
+            <h3>Cloud Vault</h3>
+            <p>Drag &amp; drop files here to vault them, or click to browse.</p>
+            <div style={{ marginTop: "8px", fontSize: "14px", color: "var(--color-text-muted)" }}>
+              PDF, DOCX, TXT, MD, CSV, JSON, HTML — max 50MB per file
+            </div>
+          </div>
+          <button className="r2-upload-trigger-btn large-btn" style={{ pointerEvents: "none" }}>
+            <CloudUpload size={22} />
+            <span>Select Files</span>
+          </button>
+          <input
+            ref={fileInputRef}
+            type="file"
+            multiple
+            accept={ACCEPTED_TYPES}
+            style={{ display: "none" }}
+            onChange={handleInputChange}
+          />
+        </div>
+
+        {/* Upload Queue */}
+        <AnimatePresence>
+          {uploadItems.length > 0 && (
             <motion.div
-              key="dropzone"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className={`upload-dropzone glass ${dragOver ? "drag-active" : ""}`}
-              onDragOver={(e) => {
-                e.preventDefault();
-                setDragOver(true);
-              }}
-              onDragLeave={() => setDragOver(false)}
-              onDrop={handleDrop}
-              onClick={() => fileInputRef.current?.click()}
-              style={{ cursor: "pointer" }}
+              key="upload-queue"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 10 }}
+              style={{ marginTop: "16px", display: "flex", flexDirection: "column", gap: "10px" }}
             >
-              <div className="dropzone-icon-container">
-                <CloudUpload size={54} className="accent-text" />
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "4px" }}>
+                <span style={{ fontSize: "14px", fontWeight: 600, color: "var(--color-text-secondary)" }}>
+                  Upload Queue ({uploadItems.length})
+                </span>
+                {hasCompleted && (
+                  <button
+                    onClick={clearCompleted}
+                    style={{
+                      fontSize: "12px",
+                      background: "transparent",
+                      border: "1px solid var(--color-border)",
+                      color: "var(--color-text-muted)",
+                      borderRadius: "6px",
+                      padding: "3px 10px",
+                      cursor: "pointer",
+                    }}
+                  >
+                    Clear Completed
+                  </button>
+                )}
               </div>
-              <div className="dropzone-text">
-                <h3>Cloud Vault</h3>
-                <p>Drag & drop your knowledge documents here to securely vault them, or click to browse.</p>
-                <div style={{ marginTop: "8px", fontSize: "14px", color: "var(--color-text-muted)" }}>
-                   PDF, DOCX, TXT, MD, CSV, JSON, HTML — max 50MB
-                </div>
-              </div>
-              <button className="r2-upload-trigger-btn large-btn" style={{ pointerEvents: 'none' }}>
-                <CloudUpload size={22} />
-                <span>Select Files</span>
-              </button>
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept={ACCEPTED_TYPES}
-                style={{ display: "none" }}
-                onChange={handleInputChange}
-              />
-            </motion.div>
-          ) : uploadState.stage === "done" ? (
-            <motion.div
-              key="done"
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="upload-dropzone glass success-state"
-              style={{ borderColor: "rgba(52, 211, 153, 0.4)", background: "rgba(52, 211, 153, 0.05)" }}
-            >
-              <CheckCircle size={64} style={{ color: "var(--color-success)", marginBottom: "16px" }} />
-              <div className="dropzone-text">
-                <h3>Upload Complete!</h3>
-                <p><strong>{uploadState.fileName}</strong> has been vaulted successfully.</p>
-              </div>
-              <button className="r2-upload-trigger-btn large-btn" onClick={resetUpload} style={{ marginTop: "24px" }}>
-                Vault Another File
-              </button>
-            </motion.div>
-          ) : uploadState.stage === "error" ? (
-            <motion.div
-              key="error"
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="upload-dropzone glass error-state"
-              style={{ borderColor: "rgba(248, 113, 113, 0.4)", background: "rgba(248, 113, 113, 0.05)" }}
-            >
-              <AlertCircle size={64} style={{ color: "var(--color-error)", marginBottom: "16px" }} />
-              <div className="dropzone-text">
-                <h3>Upload Failed</h3>
-                <p>{uploadState.error}</p>
-              </div>
-              <button className="r2-upload-trigger-btn large-btn" onClick={resetUpload} style={{ marginTop: "24px", background: "var(--color-bg-surface)", color: "var(--color-text-primary)" }}>
-                Try Again
-              </button>
-            </motion.div>
-          ) : (
-            <motion.div
-              key="progress"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="upload-dropzone glass uploading-state"
-            >
-              <Loader2 size={48} className="accent-text spin" style={{ marginBottom: "16px" }} />
-              <div className="dropzone-text">
-                <h3>{STAGE_LABELS[uploadState.stage]}</h3>
-                <p style={{ fontFamily: "var(--font-mono)", opacity: 0.8 }}>{uploadState.fileName}</p>
-              </div>
-              {uploadState.stage === "uploading" && (
-                <div style={{ width: "100%", maxWidth: "400px", height: "8px", background: "var(--color-border-subtle)", borderRadius: "4px", marginTop: "24px", overflow: "hidden", position: "relative" }}>
-                   <div style={{ height: "100%", background: "var(--color-accent)", width: `${uploadState.progress}%`, transition: "width 0.3s ease" }} />
-                   <span style={{ position: "absolute", right: "0", top: "-20px", fontSize: "12px", color: "var(--color-text-muted)" }}>{uploadState.progress}%</span>
-                </div>
-              )}
+
+              <AnimatePresence mode="popLayout">
+                {uploadItems.map((item) => (
+                  <motion.div
+                    key={item.id}
+                    initial={{ opacity: 0, scale: 0.97 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.95, height: 0, marginBottom: 0 }}
+                    className="glass"
+                    style={{
+                      borderRadius: "10px",
+                      padding: "12px 14px",
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: "8px",
+                      borderLeft: item.stage === "error" ? "3px solid var(--color-error, #f87171)" :
+                                  item.stage === "done" ? "3px solid var(--color-success, #34d399)" :
+                                  "3px solid var(--color-accent, #6c63ff)",
+                    }}
+                  >
+                    {/* Row 1: filename + badge + dismiss */}
+                    <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <span style={{ fontWeight: 500, fontSize: "13px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", display: "block" }}>
+                          {item.fileName}
+                        </span>
+                        {item.stage === "error" && item.error && (
+                          <span style={{ fontSize: "11px", color: "var(--color-error, #f87171)" }}>{item.error}</span>
+                        )}
+                      </div>
+                      <span style={{
+                        fontSize: "11px",
+                        padding: "2px 8px",
+                        borderRadius: "20px",
+                        whiteSpace: "nowrap",
+                        background: item.stage === "done" ? "rgba(52, 211, 153, 0.15)" :
+                                    item.stage === "error" ? "rgba(248, 113, 113, 0.15)" :
+                                    "rgba(108, 99, 255, 0.15)",
+                        color: item.stage === "done" ? "var(--color-success, #34d399)" :
+                               item.stage === "error" ? "var(--color-error, #f87171)" :
+                               "var(--color-accent, #6c63ff)",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "4px",
+                      }}>
+                        {item.stage === "done" ? <CheckCircle2 size={10} /> :
+                         item.stage === "error" ? <AlertCircle size={10} /> :
+                         item.stage === "indexing" ? <Sparkles size={10} /> :
+                         <Loader2 size={10} className="spin" />}
+                        {STAGE_LABELS[item.stage]}
+                      </span>
+                      {(item.stage === "done" || item.stage === "error") && (
+                        <button
+                          onClick={() => dismissItem(item.id)}
+                          title="Dismiss"
+                          style={{
+                            background: "transparent",
+                            border: "none",
+                            color: "var(--color-text-muted)",
+                            cursor: "pointer",
+                            padding: "2px",
+                            display: "flex",
+                            alignItems: "center",
+                          }}
+                        >
+                          <X size={14} />
+                        </button>
+                      )}
+                    </div>
+
+                    {/* Row 2: Progress bars */}
+                    {item.stage === "uploading" && (
+                      <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", fontSize: "11px", color: "var(--color-text-muted)" }}>
+                          <span>Upload</span>
+                          <span>{item.uploadProgress}%</span>
+                        </div>
+                        <div style={{ height: "4px", background: "var(--color-border-subtle, rgba(255,255,255,0.08))", borderRadius: "2px", overflow: "hidden" }}>
+                          <div style={{ height: "100%", width: `${item.uploadProgress}%`, background: "var(--color-accent, #6c63ff)", transition: "width 0.3s ease" }} />
+                        </div>
+                      </div>
+                    )}
+                    {item.stage === "indexing" && (
+                      <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", fontSize: "11px", color: "var(--color-text-muted)" }}>
+                          <span>Indexing</span>
+                          <span>{item.indexProgress}%</span>
+                        </div>
+                        <div style={{ height: "4px", background: "var(--color-border-subtle, rgba(255,255,255,0.08))", borderRadius: "2px", overflow: "hidden" }}>
+                          <div style={{ height: "100%", width: `${item.indexProgress}%`, background: "#a78bfa", transition: "width 0.5s ease" }} />
+                        </div>
+                      </div>
+                    )}
+                  </motion.div>
+                ))}
+              </AnimatePresence>
             </motion.div>
           )}
         </AnimatePresence>
 
-        <div className="index-tips">
-          {/*
-          <h4>Indexing Notes</h4>
-          <ul>
-            <li>
-              Only allowed paths can be indexed, which keeps search more
-              predictable.
-            </li>
-            <li>
-              Folder entries are best for notebooks, docs, and codebases. File
-              entries are useful for one-off documents.
-            </li>
-            <li>
-              Index All skips redundant nested paths when a parent folder
-              already covers them.
-            </li>
-          </ul>
-          */}
-        </div>
+        <div className="index-tips" />
       </div>
     </div>
   );
