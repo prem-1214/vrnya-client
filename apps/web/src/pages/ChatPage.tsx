@@ -21,6 +21,7 @@ const ChatPage: React.FC = () => {
   >(null);
   const [previewWidth, setPreviewWidth] = useState(400);
   const isResizing = useRef(false);
+  const previousRouteIdRef = useRef<string | undefined>(id);
 
   useEffect(() => {
     localStorage.setItem("vrnya_auto_speak", String(isAutoSpeakEnabled));
@@ -49,8 +50,12 @@ const ChatPage: React.FC = () => {
         loadHistory(id);
       }
     } else {
-      clearMessages();
+      const hadRouteBefore = Boolean(previousRouteIdRef.current);
+      if (hadRouteBefore) {
+        clearMessages();
+      }
     }
+    previousRouteIdRef.current = id;
   }, [id, loadHistory, clearMessages, conversationId]);
 
   // Handle redirecting to new conversation URL after first message

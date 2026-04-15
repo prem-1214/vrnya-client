@@ -26,7 +26,7 @@ const MessageList: React.FC<MessageListProps> = ({
     <div className="message-list" ref={scrollRef}>
       {messages.length === 0 ? (
         <div className="empty-chat">
-          <div className="empty-chat-icon">✨</div>
+          {/* <div className="empty-chat-icon">✨</div> */}
           <h3>How can I help you today?</h3>
           <p>Index your files and ask me to find, read, or summarize them.</p>
         </div>
