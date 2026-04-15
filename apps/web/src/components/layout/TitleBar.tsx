@@ -27,18 +27,20 @@ const TitleBar: React.FC = () => {
           onClick={toggleTheme}
           className={`${buttonBaseClass} text-[var(--color-accent)] ${buttonHoverClass}`}
           title={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}
+          type="button"
+          aria-label={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}
         >
           {theme === "dark" ? <Sun size={14} /> : <Moon size={14} />}
         </button>
         {showWindowControls && (
           <>
-            <button onClick={minimizeWindow} className={`${buttonBaseClass} text-[var(--color-text-secondary)] ${buttonHoverClass}`} title="Minimize">
+            <button onClick={minimizeWindow} className={`${buttonBaseClass} text-[var(--color-text-secondary)] ${buttonHoverClass}`} title="Minimize" type="button" aria-label="Minimize window">
               <Minus size={14} />
             </button>
-            <button onClick={maximizeWindow} className={`${buttonBaseClass} text-[var(--color-text-secondary)] ${buttonHoverClass}`} title="Maximize">
+            <button onClick={maximizeWindow} className={`${buttonBaseClass} text-[var(--color-text-secondary)] ${buttonHoverClass}`} title="Maximize" type="button" aria-label="Maximize window">
               <Square size={12} />
             </button>
-            <button onClick={closeWindow} className={`${buttonBaseClass} text-[var(--color-text-secondary)] ${closeButtonHoverClass}`} title="Close">
+            <button onClick={closeWindow} className={`${buttonBaseClass} text-[var(--color-text-secondary)] ${closeButtonHoverClass}`} title="Close" type="button" aria-label="Close window">
               <X size={14} />
             </button>
           </>

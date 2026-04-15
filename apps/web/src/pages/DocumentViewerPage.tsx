@@ -23,6 +23,7 @@ import {
   getR2DownloadUrl,
   BASE_URL,
 } from "../api/client";
+import { useResizablePane } from "../hooks/useResizablePane";
 
 // ─── Highlight helpers ────────────────────────────────────────────────────────
 
@@ -140,8 +141,17 @@ const DocumentViewerPage: React.FC = () => {
     }
   }, [chatMessages, isChatting, activeTab]);
 
-  const [sidebarWidth, setSidebarWidth] = useState(400);
-  const [isResizing, setIsResizing] = useState(false);
+  const {
+    width: sidebarWidth,
+    isResizing,
+    startResizing: startPaneResizing,
+    resizeFromClientX,
+    stopResizing,
+  } = useResizablePane({
+    initialWidth: 400,
+    minWidth: 250,
+    maxWidth: (windowWidth) => windowWidth * 0.6,
+  });
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
 
   const [docxBuffer, setDocxBuffer] = useState<ArrayBuffer | null>(null);
@@ -284,39 +294,22 @@ const DocumentViewerPage: React.FC = () => {
     }
   };
 
+  const startResizing = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    startPaneResizing();
+  }, [startPaneResizing]);
+
   useEffect(() => {
-    const handleMouseMove = (e: MouseEvent) => {
-      if (!isResizing) return;
-      const maxW = window.innerWidth * 0.6;
-      let newWidth = window.innerWidth - e.clientX - 16;
-      if (newWidth < 250) newWidth = 250;
-      if (newWidth > maxW) newWidth = maxW;
-      setSidebarWidth(newWidth);
-    };
-
-    const handleMouseUp = () => {
-      setIsResizing(false);
-      window.document.body.style.cursor = "default";
-      window.document.body.style.userSelect = "auto";
-    };
-
-    if (isResizing) {
-      window.addEventListener("mousemove", handleMouseMove);
-      window.addEventListener("mouseup", handleMouseUp);
-      window.document.body.style.cursor = "col-resize";
-      window.document.body.style.userSelect = "none";
-    }
-
+    if (!isResizing) return;
+    const handleMouseMove = (e: MouseEvent) => resizeFromClientX(e.clientX, 16);
+    const handleMouseUp = () => stopResizing();
+    window.addEventListener("mousemove", handleMouseMove);
+    window.addEventListener("mouseup", handleMouseUp);
     return () => {
       window.removeEventListener("mousemove", handleMouseMove);
       window.removeEventListener("mouseup", handleMouseUp);
     };
-  }, [isResizing]);
-
-  const startResizing = useCallback((e: React.MouseEvent) => {
-    e.preventDefault();
-    setIsResizing(true);
-  }, []);
+  }, [isResizing, resizeFromClientX, stopResizing]);
 
   // Render the DOCX file when buffer and container are ready
   useEffect(() => {

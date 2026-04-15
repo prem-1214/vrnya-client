@@ -4,6 +4,7 @@ import { summarizeDocument, chatWithDocument } from "../../api/client";
 import { motion, AnimatePresence } from "framer-motion";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import { useDialogA11y } from "../../hooks/useDialogA11y";
 
 interface DocumentIntelligenceModalProps {
   isOpen: boolean;
@@ -30,6 +31,8 @@ export const DocumentIntelligenceModal: React.FC<DocumentIntelligenceModalProps>
   );
   const [chatInput, setChatInput] = useState("");
   const [isChatting, setIsChatting] = useState(false);
+  const closeButtonRef = React.useRef<HTMLButtonElement>(null);
+  useDialogA11y({ isOpen, onClose, initialFocusRef: closeButtonRef });
 
   // When modal is newly opened or file changes, reset state
   React.useEffect(() => {
@@ -82,16 +85,20 @@ export const DocumentIntelligenceModal: React.FC<DocumentIntelligenceModalProps>
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-1000 flex items-center justify-center bg-black/40 [backdrop-filter:blur(4px)]">
+    <div className="fixed inset-0 z-1000 flex items-center justify-center bg-black/40 [backdrop-filter:blur(4px)]" onClick={onClose}>
       <motion.div
         className="glass flex h-[80vh] w-[90%] max-w-[800px] flex-col overflow-hidden rounded-2xl border border-(--color-border) bg-(--color-bg-surface) shadow-[0_25px_50px_-12px_rgba(0,0,0,0.25)]"
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         exit={{ opacity: 0, scale: 0.95 }}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="doc-intelligence-title"
+        onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between border-b border-(--color-border) bg-black/20 px-6 py-4">
           <div>
-            <h2 className="line-clamp-1 text-[1.1rem] font-semibold text-(--color-text-primary)">
+            <h2 id="doc-intelligence-title" className="line-clamp-1 text-[1.1rem] font-semibold text-(--color-text-primary)">
               {fileName}
             </h2>
             <span className="mt-0.5 block text-[0.8rem] text-(--color-text-secondary) opacity-70">
@@ -99,9 +106,11 @@ export const DocumentIntelligenceModal: React.FC<DocumentIntelligenceModalProps>
             </span>
           </div>
           <button
+            ref={closeButtonRef}
             className="cursor-pointer rounded border-0 bg-transparent p-1 text-(--color-text-secondary) transition-all duration-200 hover:bg-white/10 hover:text-(--color-text-primary)"
             onClick={onClose}
             type="button"
+            aria-label="Close document intelligence dialog"
           >
             <X size={20} />
           </button>
@@ -221,7 +230,11 @@ export const DocumentIntelligenceModal: React.FC<DocumentIntelligenceModalProps>
                   )}
                 </div>
                 <form className="flex gap-2 border-t border-(--color-border) bg-black/20 p-4" onSubmit={handleSendMessage}>
+                  <label htmlFor="doc-intelligence-chat-input" className="sr-only">
+                    Ask a question about this file
+                  </label>
                   <input
+                    id="doc-intelligence-chat-input"
                     type="text"
                     placeholder="Ask a question about this file..."
                     value={chatInput}

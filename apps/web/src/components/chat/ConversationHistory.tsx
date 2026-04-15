@@ -74,7 +74,11 @@ const ConversationHistory: React.FC<ConversationHistoryProps> = ({
 
         <div className="relative group">
           <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-(--color-text-muted) group-focus-within:text-(--color-accent) transition-colors" />
+          <label htmlFor="conversation-search" className="sr-only">
+            Search conversations
+          </label>
           <input
+            id="conversation-search"
             type="text"
             placeholder="Search chats..."
             value={searchQuery}
@@ -103,11 +107,20 @@ const ConversationHistory: React.FC<ConversationHistoryProps> = ({
                 <div
                   key={chat.id}
                   onClick={() => onSelect(chat.id)}
-                  className={`group relative flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all duration-200 ${
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      onSelect(chat.id);
+                    }
+                  }}
+                  className={`group relative flex w-full items-center gap-3 rounded-xl p-3 text-left transition-all duration-200 ${
                     isActive
                       ? "bg-(--color-accent-subtle) text-(--color-accent)"
                       : "text-(--color-text-primary) hover:bg-(--color-bg-hover)"
                   }`}
+                  role="button"
+                  tabIndex={0}
+                  aria-label={`Open conversation ${chat.title || "Untitled Chat"}`}
                 >
                   <MessageSquare size={16} className={isActive ? "text-(--color-accent)" : "text-(--color-text-muted)"} />
                   <div className="flex-1 flex flex-col min-w-0">
@@ -123,6 +136,8 @@ const ConversationHistory: React.FC<ConversationHistoryProps> = ({
                     onClick={(e) => handleDelete(e, chat.id)}
                     className="opacity-0 group-hover:opacity-100 p-1.5 rounded-lg text-(--color-text-muted) hover:text-(--color-error) hover:bg-[rgba(239,68,68,0.1)] transition-all"
                     title="Delete chat"
+                    aria-label="Delete chat"
+                    type="button"
                   >
                     <Trash2 size={14} />
                   </button>

@@ -17,16 +17,27 @@ const MessageList: React.FC<MessageListProps> = ({
   onOpenPreview,
 }) => {
   const scrollRef = useRef<HTMLDivElement>(null);
+  const bottomRef = useRef<HTMLDivElement>(null);
+
+  const scrollToBottom = () => {
+    window.requestAnimationFrame(() => {
+      bottomRef.current?.scrollIntoView({ block: "end" });
+    });
+  };
 
   useEffect(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-    }
-  }, [messages, isTyping]);
+    const raf1 = window.requestAnimationFrame(() => {
+      const raf2 = window.requestAnimationFrame(() => {
+        bottomRef.current?.scrollIntoView({ block: "end" });
+      });
+      return () => window.cancelAnimationFrame(raf2);
+    });
+    return () => window.cancelAnimationFrame(raf1);
+  }, [messages.length, isTyping, isHistoryLoading]);
 
   return (
     <div
-      className="flex min-w-0 flex-1 flex-col gap-2 overflow-y-auto px-4 pb-4 pt-6 md:px-6 md:pb-6"
+      className="flex min-h-0 min-w-0 flex-1 flex-col gap-2 overflow-y-auto px-4 pb-4 pt-6 md:px-6 md:pb-6"
       ref={scrollRef}
     >
       {isHistoryLoading ? (
@@ -55,6 +66,7 @@ const MessageList: React.FC<MessageListProps> = ({
             message={msg}
             disableAnimation={Boolean(msg.created_at)}
             onOpenPreview={onOpenPreview}
+            onAnimationProgress={scrollToBottom}
           />
         ))
       )}
@@ -67,6 +79,7 @@ const MessageList: React.FC<MessageListProps> = ({
           </div>
         </div>
       )}
+      <div ref={bottomRef} aria-hidden="true" />
     </div>
   );
 };

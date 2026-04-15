@@ -17,12 +17,14 @@ import {
   deleteUploadedFile,
 } from "../api/client";
 import { motion, AnimatePresence } from "framer-motion";
+import { useMotionSettings } from "../lib/motion";
 
 const UploadedFilesPanel: React.FC = () => {
   const [files, setFiles] = useState<UploadedFile[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [indexingIds, setIndexingIds] = useState<Set<string>>(new Set());
+  const { itemTransition, fadeSlide } = useMotionSettings();
 
   const navigate = useNavigate();
 
@@ -187,9 +189,11 @@ const UploadedFilesPanel: React.FC = () => {
               {files.map((file, idx) => (
                 <motion.div
                   key={file.id}
-                  initial={{ opacity: 0, x: -10 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: idx * 0.02 }}
+                  variants={fadeSlide(8)}
+                  initial="hidden"
+                  animate="visible"
+                  exit="exit"
+                  transition={itemTransition(idx)}
                   className="grid cursor-pointer grid-cols-[minmax(0,1fr)_120px_80px] items-center border-b border-(--glass-border) bg-(--color-bg-surface) p-4 text-sm transition-colors duration-200 last:border-b-0 hover:bg-(--color-bg-hover)"
                   onClick={() => navigate(`/document/${file.id}`)}
                 >

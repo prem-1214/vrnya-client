@@ -32,6 +32,7 @@ import {
   pickFilePath,
   pickFolderPath,
 } from "../platform/shell";
+import PageShell from "../components/layout/PageShell";
 
 const ACCEPTED_TYPES = [
   "application/pdf",
@@ -90,7 +91,7 @@ const IndexPage: React.FC = () => {
   );
 
   const handleDrop = React.useCallback(
-    (e: React.DragEvent<HTMLDivElement>) => {
+    (e: React.DragEvent<HTMLElement>) => {
       e.preventDefault();
       setDragOver(false);
       handleFiles(e.dataTransfer.files);
@@ -278,24 +279,13 @@ const IndexPage: React.FC = () => {
   };
 
   return (
-    <div className="flex h-full flex-col">
-      <header className="z-10 flex items-center justify-between rounded-t-xl border-b border-(--glass-border) bg-(--header-bg) px-8 py-4 [backdrop-filter:var(--glass-blur)] [-webkit-backdrop-filter:var(--glass-blur)]">
-        <div>
-          <h1 className="text-md font-bold text-(--color-text-primary)">
-            Knowledge Index
-          </h1>
-          <span className="text-xs text-(--color-text-muted)">
-            Manage the exact paths this app is allowed to index.
-          </span>
-        </div>
-      </header>
-
-      <div className="flex-1 overflow-y-auto">
-        <div
-          className={`mx-auto flex min-h-full w-full max-w-[960px] flex-col p-12 ${
-            uploadItems.length === 0 ? "justify-center" : "gap-6"
-          }`}
-        >
+    <PageShell
+      title="Knowledge Index"
+      subtitle="Manage the exact paths this app is allowed to index."
+      contentClassName={`flex min-h-full max-w-[960px] flex-col p-12 ${
+        uploadItems.length === 0 ? "justify-center" : "gap-6"
+      }`}
+    >
           {/* === TEMPORARILY DISABLED FOR TWITTER ===
         <div className="index-card glass">
           <div className="card-header">
@@ -586,12 +576,14 @@ const IndexPage: React.FC = () => {
         */}
 
         {/* Polished Cloud Dropzone — always visible */}
-        <div
+        <button
+          type="button"
           className={`relative mx-auto flex min-h-[400px] w-full max-w-[700px] cursor-pointer flex-col items-center justify-center gap-6 overflow-hidden rounded-lg border-2 border-dashed border-(--color-accent) bg-(--panel-soft-bg) px-8 py-[60px] text-center transition-all duration-300 before:pointer-events-none before:absolute before:inset-0 before:bg-[radial-gradient(circle_at_center,rgba(108,99,255,0.08)_0%,transparent_70%)] ${dragOver ? "translate-y-[-2px] border-(--color-accent-hover) shadow-[var(--shadow-lg),0_0_40px_rgba(108,99,255,0.15)]" : "hover:translate-y-[-2px] hover:border-(--color-accent-hover) hover:shadow-[var(--shadow-lg),0_0_40px_rgba(108,99,255,0.15)]"}`}
           onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
           onDragLeave={() => setDragOver(false)}
           onDrop={handleDrop}
           onClick={() => fileInputRef.current?.click()}
+          aria-label="Upload files to cloud vault"
         >
           <div className="relative z-10 mb-1 flex h-[100px] w-[100px] items-center justify-center rounded-full bg-(--color-accent-subtle) shadow-[inset_0_0_20px_rgba(108,99,255,0.2),0_0_0_8px_rgba(108,99,255,0.05)] transition-transform duration-300">
             <CloudUpload size={54} className="text-(--color-accent)" />
@@ -619,7 +611,7 @@ const IndexPage: React.FC = () => {
             style={{ display: "none" }}
             onChange={handleInputChange}
           />
-        </div>
+        </button>
 
         {/* Upload Queue */}
         <AnimatePresence>
@@ -731,9 +723,7 @@ const IndexPage: React.FC = () => {
         </AnimatePresence>
 
           <div className="index-tips" />
-        </div>
-      </div>
-    </div>
+    </PageShell>
   );
 };
 

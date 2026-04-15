@@ -2,6 +2,8 @@ import React from "react";
 import { Link } from "react-router-dom";
 import { LogIn, Search, Eye, MessageSquare } from "lucide-react";
 import LoginModal from "../components/LoginModal";
+import SeoMeta from "../components/seo/SeoMeta";
+import { Helmet } from "react-helmet-async";
 
 const glassNav =
   "border border-(--glass-border) bg-(--glass-bg) [backdrop-filter:var(--glass-blur)] [-webkit-backdrop-filter:var(--glass-blur)]";
@@ -11,6 +13,31 @@ const featureCardClass = `${glassNav} rounded-3xl border-white/30 bg-white/40 p-
 const WaitlistPage: React.FC = () => {
   return (
     <main className="relative h-full min-h-screen overflow-y-auto overflow-x-hidden overscroll-y-contain bg-(--color-bg-primary) p-4 font-sans md:p-8">
+      <SeoMeta
+        title="Vrnya - AI Workspace For Your Documents"
+        description="Search, preview, and chat with your documents in one AI-powered workspace."
+        canonical="https://vrnya.vercel.app/waitlist"
+        robots="index,follow"
+      />
+      <Helmet>
+        <script type="application/ld+json">
+          {JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "SoftwareApplication",
+            name: "Vrnya",
+            applicationCategory: "BusinessApplication",
+            operatingSystem: "Windows, macOS, Linux, Web",
+            description:
+              "AI-powered workspace for searching, previewing, and chatting with your documents.",
+            url: "https://vrnya.vercel.app/waitlist",
+            publisher: {
+              "@type": "Organization",
+              name: "Vrnya",
+              url: "https://vrnya.vercel.app",
+            },
+          })}
+        </script>
+      </Helmet>
       <div
         className="pointer-events-none fixed -left-[100px] -top-[100px] z-0 h-[500px] w-[500px] rounded-full opacity-25 blur-[100px] [background:radial-gradient(circle,var(--color-accent)_0%,transparent_70%)]"
         aria-hidden

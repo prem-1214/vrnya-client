@@ -5,6 +5,7 @@ import { useAppContext } from "../context/AppContext";
 import { BASE_URL, tokenStore, listMemories, deleteMemory, clearAllMemories, type MemoryItem } from "../api/client";
 import MemorySettingsSection from "../components/settings/MemorySettingsSection";
 import MemoryList from "../components/settings/MemoryList";
+import PageShell from "../components/layout/PageShell";
 
 const API_URL = `${BASE_URL}/api/v1`;
 const PROVIDER_OPTIONS = [
@@ -249,20 +250,11 @@ const SettingsPage: React.FC = () => {
   };
 
   return (
-    <div className="flex h-full flex-col">
-      <header className="z-10 flex items-center justify-between rounded-t-xl border-b border-(--glass-border) bg-(--header-bg) px-8 py-4 [backdrop-filter:var(--glass-blur)] [-webkit-backdrop-filter:var(--glass-blur)]">
-        <div>
-          <h1 className="text-md font-bold text-(--color-text-primary)">
-            Settings
-          </h1>
-          <span className="text-xs text-(--color-text-muted)">
-            Configure AI models, API keys, and application preferences.
-          </span>
-        </div>
-      </header>
-
-      <div className="flex-1 overflow-y-auto">
-        <div className="mx-auto flex w-full max-w-[1200px] p-6 lg:p-8">
+    <PageShell
+      title="Settings"
+      subtitle="Configure AI models, API keys, and application preferences."
+      contentClassName="max-w-[1200px] p-6 lg:p-8"
+    >
           {isLoading ? (
             <div className="m-auto flex items-center gap-2 rounded-md border border-dashed border-(--color-border) bg-(--panel-soft-bg) p-6 text-(--color-text-secondary)">
               <Loader2 className="animate-spin text-(--color-accent)" size={32} />
@@ -479,9 +471,7 @@ const SettingsPage: React.FC = () => {
             </section>
             </div>
           )}
-        </div>
-      </div>
-    </div>
+    </PageShell>
   );
 };
 

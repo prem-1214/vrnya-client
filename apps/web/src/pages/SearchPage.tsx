@@ -5,6 +5,18 @@ import { searchFiles } from "../api/client";
 import type { SearchResult } from "../api/client";
 import { motion, AnimatePresence } from "framer-motion";
 import { openPathInShell } from "../platform/shell";
+import PageShell from "../components/layout/PageShell";
+import { useMotionSettings } from "../lib/motion";
+
+const FILE_TYPE_FILTERS = [
+  { label: "All", extensions: [] as string[] },
+  { label: "PDF", extensions: [".pdf"] },
+  { label: "Text", extensions: [".txt"] },
+  { label: "Markdown", extensions: [".md"] },
+  { label: "JSON", extensions: [".json"] },
+  { label: "Code", extensions: [".js", ".ts", ".html", ".css"] },
+  { label: "Docs", extensions: [".docx"] },
+] as const;
 
 function getSnippet(content: string, query: string, maxLength = 200): string {
   const lower = content.toLowerCase();
@@ -63,22 +75,13 @@ const SearchPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [activeFilter, setActiveFilter] = useState(0);
   const navigate = useNavigate();
+  const { reduceMotion, itemTransition, fadeSlide } = useMotionSettings();
   const filterChipClass = (isActive: boolean) =>
     `cursor-pointer rounded-full border px-3.5 py-1.5 text-[0.8rem] transition-all duration-150 ${
       isActive
         ? "border-(--color-accent) bg-(--color-accent) font-semibold text-white"
         : "border-(--color-border) bg-transparent font-medium text-(--color-text-secondary) hover:border-(--color-accent) hover:text-(--color-text-primary)"
     }`;
-
-  const FILE_TYPE_FILTERS = [
-    { label: "All", extensions: [] as string[] },
-    { label: "PDF", extensions: [".pdf"] },
-    { label: "Text", extensions: [".txt"] },
-    { label: "Markdown", extensions: [".md"] },
-    { label: "JSON", extensions: [".json"] },
-    { label: "Code", extensions: [".js", ".ts", ".html", ".css"] },
-    { label: "Docs", extensions: [".docx"] },
-  ] as const;
 
   useEffect(() => {
     const delayDebounce = setTimeout(async () => {
@@ -122,20 +125,11 @@ const SearchPage: React.FC = () => {
   };
 
   return (
-    <div className="flex h-full flex-col">
-      <header className="z-10 flex items-center justify-between rounded-t-xl border-b border-(--glass-border) bg-(--header-bg) px-8 py-4 [backdrop-filter:var(--glass-blur)] [-webkit-backdrop-filter:var(--glass-blur)]">
-        <div>
-          <h1 className="text-md font-bold text-(--color-text-primary)">
-            Semantic Search
-          </h1>
-          <span className="text-xs text-(--color-text-muted)">
-            Search indexed files by meaning, then open them in the document
-            viewer
-          </span>
-        </div>
-      </header>
-
-      <div className="flex flex-1 flex-col gap-8 overflow-y-auto p-8">
+    <PageShell
+      title="Semantic Search"
+      subtitle="Search indexed files by meaning, then open them in the document viewer"
+      contentClassName="flex min-h-full flex-col gap-8 p-8"
+    >
         <div className="mx-auto flex w-full max-w-[800px] items-center gap-4 rounded-lg border border-(--glass-border) bg-(--color-bg-surface) px-6 py-4 shadow-(--shadow-sm) transition-all duration-200 focus-within:-translate-y-0.5 focus-within:border-(--color-accent) focus-within:shadow-(--shadow-accent)">
           <Search className="text-(--color-text-muted)" size={20} />
           <input
@@ -167,13 +161,17 @@ const SearchPage: React.FC = () => {
           <AnimatePresence>
             {results.length > 0 ? (
               results.map((result: SearchResult, idx: number) => (
-                <motion.div
+                <motion.button
                   key={`${result.id}-${idx}`}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: idx * 0.05 }}
-                  className="flex min-h-40 cursor-pointer flex-col gap-4 rounded-lg border border-(--glass-border) bg-(--color-bg-surface) p-4 shadow-(--shadow-sm) transition-all duration-150 hover:-translate-y-0.5 hover:border-[rgba(90,169,255,0.28)] hover:bg-(--color-bg-hover) hover:shadow-[0_6px_20px_rgba(0,0,0,0.15)]"
+                  variants={fadeSlide(10)}
+                  initial="hidden"
+                  animate="visible"
+                  exit="exit"
+                  transition={itemTransition(idx)}
+                  className="flex min-h-40 cursor-pointer flex-col gap-4 rounded-lg border border-(--glass-border) bg-(--color-bg-surface) p-4 text-left shadow-(--shadow-sm) transition-all duration-150 hover:-translate-y-0.5 hover:border-[rgba(90,169,255,0.28)] hover:bg-(--color-bg-hover) hover:shadow-[0_6px_20px_rgba(0,0,0,0.15)]"
                   onClick={() => handleOpenResult(result)}
+                  type="button"
+                  aria-label={`Open search result ${result.name || "document"}`}
                 >
                   <div className="flex items-start justify-between gap-3 overflow-hidden">
                     <div className="min-w-0 flex-1">
@@ -204,7 +202,8 @@ const SearchPage: React.FC = () => {
                     {result.id && (
                       <button
                         className="flex cursor-pointer items-center gap-1 rounded border-0 bg-transparent px-2 py-1 text-xs text-(--color-accent)"
-                        title="Ask AI about this file"
+                        aria-label="Open AI view for this document"
+                        type="button"
                         onClick={(e) => {
                           e.stopPropagation();
                           navigate(`/document/${result.id}`);
@@ -215,7 +214,7 @@ const SearchPage: React.FC = () => {
                       </button>
                     )}
                   </div>
-                </motion.div>
+                </motion.button>
               ))
             ) : query.trim() && !isLoading ? (
               <div className="col-span-full p-12 text-center text-(--color-text-muted)">
@@ -227,15 +226,17 @@ const SearchPage: React.FC = () => {
             ) : (
               !query.trim() && (
                 <div className="col-span-full p-12 text-center text-(--color-text-muted)">
-                  <Search size={48} className="mb-4 inline opacity-20" />
+                  <Search
+                    size={48}
+                    className={`mb-4 inline opacity-20 ${reduceMotion ? "" : "transition-transform duration-300"}`}
+                  />
                   <p>Start typing to search your brain</p>
                 </div>
               )
             )}
           </AnimatePresence>
         </div>
-      </div>
-    </div>
+    </PageShell>
   );
 };
 

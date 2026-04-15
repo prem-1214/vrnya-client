@@ -1,0 +1,11 @@
+User-agent: *
+Allow: /waitlist
+Disallow: /auth/
+Disallow: /chat
+Disallow: /search
+Disallow: /index
+Disallow: /files
+Disallow: /document/
+Disallow: /settings
+
+Sitemap: https://vrnya.vercel.app/sitemap.xml

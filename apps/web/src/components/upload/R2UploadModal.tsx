@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useR2Upload, type UploadStage } from "../../hooks/useR2Upload";
+import { useDialogA11y } from "../../hooks/useDialogA11y";
 
 const ACCEPTED_TYPES = [
   "application/pdf",
@@ -41,6 +42,7 @@ const R2UploadModal: React.FC<R2UploadModalProps> = ({
   const { state, upload, reset } = useR2Upload();
   const [dragOver, setDragOver] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
 
   const handleFile = useCallback(
     (file: File) => {
@@ -77,6 +79,7 @@ const R2UploadModal: React.FC<R2UploadModalProps> = ({
     state.stage !== "idle" && state.stage !== "error" && state.stage !== "done";
   const isDone = state.stage === "done";
   const isError = state.stage === "error";
+  useDialogA11y({ isOpen: true, onClose, initialFocusRef: closeButtonRef });
 
   return (
     <div
@@ -90,17 +93,22 @@ const R2UploadModal: React.FC<R2UploadModalProps> = ({
         exit={{ opacity: 0, scale: 0.94, y: 20 }}
         transition={{ duration: 0.22, ease: "easeOut" }}
         onClick={(e) => e.stopPropagation()}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="r2-upload-modal-title"
       >
         <div className="flex items-center justify-between border-b border-(--color-border-subtle) px-6 py-4">
           <div className="flex items-center gap-2 text-md font-semibold text-(--color-text-primary)">
             <CloudUpload size={20} className="text-(--color-accent)" />
-            <span>Upload to Cloud</span>
+            <span id="r2-upload-modal-title">Upload to Cloud</span>
           </div>
           <button
+            ref={closeButtonRef}
             className="flex items-center rounded-sm border-0 bg-transparent p-1 text-(--color-text-muted) transition-colors duration-200 hover:text-(--color-text-primary) disabled:cursor-not-allowed disabled:opacity-40"
             onClick={onClose}
             disabled={isActive}
             type="button"
+            aria-label="Close upload dialog"
           >
             <X size={18} />
           </button>
@@ -115,7 +123,8 @@ const R2UploadModal: React.FC<R2UploadModalProps> = ({
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
               >
-                <div
+                <button
+                  type="button"
                   className={`flex cursor-pointer flex-col items-center gap-2 rounded-md border-2 border-dashed px-6 py-12 text-center transition-all duration-200 ${
                     dragOver
                       ? "border-(--color-accent) bg-(--color-accent-subtle)"
@@ -128,6 +137,7 @@ const R2UploadModal: React.FC<R2UploadModalProps> = ({
                   onDragLeave={() => setDragOver(false)}
                   onDrop={handleDrop}
                   onClick={() => fileInputRef.current?.click()}
+                  aria-label="Choose file to upload to cloud"
                 >
                   <Upload size={36} className="text-(--color-accent) opacity-80" />
                   <p className="text-md text-(--color-text-secondary)">
@@ -147,7 +157,7 @@ const R2UploadModal: React.FC<R2UploadModalProps> = ({
                     onChange={handleInputChange}
                     id="r2-file-input"
                   />
-                </div>
+                </button>
               </motion.div>
             ) : isDone ? (
               <motion.div

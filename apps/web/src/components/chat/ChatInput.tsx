@@ -17,6 +17,7 @@ interface ChatInputProps {
   isAutoSpeakEnabled?: boolean;
   onToggleAutoSpeak?: () => void;
   disabled: boolean;
+  dockToBottom?: boolean;
 }
 
 const ChatInput: React.FC<ChatInputProps> = ({
@@ -27,6 +28,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
   isAutoSpeakEnabled = false,
   onToggleAutoSpeak,
   disabled,
+  dockToBottom = false,
 }) => {
   const [input, setInput] = useState("");
   const [isProcessingVoice, setIsProcessingVoice] = useState(false);
@@ -77,7 +79,11 @@ const ChatInput: React.FC<ChatInputProps> = ({
   };
 
   return (
-    <div className="mt-auto flex flex-col gap-2 px-4 pb-4 md:px-6 md:pb-6">
+    <div
+      className={`flex flex-col gap-2 px-4 pb-4 transition-all duration-300 md:px-6 md:pb-6 ${
+        dockToBottom ? "mt-auto" : "mt-6"
+      }`}
+    >
       <div className="glass mx-auto flex w-full max-w-[920px] items-end gap-4 rounded-[18px] border border-(--color-border) bg-[linear-gradient(180deg,rgba(255,255,255,0.035),rgba(255,255,255,0.012)),var(--color-bg-surface)] px-4 py-4 shadow-[0_14px_30px_rgba(0,0,0,0.14)] transition-all duration-300 focus-within:-translate-y-px focus-within:border-(--color-accent) focus-within:shadow-(--shadow-accent)">
         <div className="flex h-10 items-center text-(--color-text-muted)">
           {isProcessingVoice ? (
@@ -88,6 +94,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
         </div>
         <textarea
           ref={textareaRef}
+          aria-label="Message input"
           rows={1}
           placeholder={
             isProcessingVoice
@@ -114,6 +121,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
             onClick={onToggleAutoSpeak}
             title={isAutoSpeakEnabled ? "Disable auto-speak" : "Enable auto-speak"}
             type="button"
+            aria-label={isAutoSpeakEnabled ? "Disable auto-speak" : "Enable auto-speak"}
           >
             {isAutoSpeakEnabled ? <Volume2 size={18} /> : <VolumeX size={18} />}
           </button>
@@ -123,6 +131,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
               onClick={onStop}
               title="Stop generation"
               type="button"
+              aria-label="Stop generation"
             >
               <Square size={18} />
             </button>
@@ -136,6 +145,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
               onClick={handleSend}
               disabled={!input.trim() || disabled || isProcessingVoice}
               type="button"
+              aria-label="Send message"
             >
               <Send size={18} />
             </button>

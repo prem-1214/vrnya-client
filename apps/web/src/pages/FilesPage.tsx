@@ -16,6 +16,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { openPathInShell } from "../platform/shell";
 
 import UploadedFilesPanel from "./UploadedFilesPanel";
+import PageShell from "../components/layout/PageShell";
+import { useMotionSettings } from "../lib/motion";
 
 const FilesPage: React.FC = () => {
   const [currentPath, setCurrentPath] = useState<string | null>(null);
@@ -23,6 +25,7 @@ const FilesPage: React.FC = () => {
   const [view, setView] = useState<"local" | "uploaded">("uploaded");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { itemTransition, fadeSlide } = useMotionSettings();
 
   const navigate = useNavigate();
 
@@ -116,50 +119,52 @@ const FilesPage: React.FC = () => {
     }`;
 
   return (
-    <div className="flex h-full flex-col">
-      <header className="z-10 flex items-center justify-between rounded-t-xl border-b border-(--glass-border) bg-(--header-bg) px-8 py-4 [backdrop-filter:var(--glass-blur)] [-webkit-backdrop-filter:var(--glass-blur)]">
-        <div>
-          <h1 className="text-md font-bold text-(--color-text-primary)">
-            File Explorer
-          </h1>
-          <span className="text-xs text-(--color-text-muted)">
-            Browse and manage your local and uploaded files
-          </span>
-          <div className="mt-4 flex w-fit gap-1 rounded-md border border-(--color-border) bg-(--color-bg-surface) p-1">
-            <button
-              className={viewToggleBtnClass(view === "local")}
-              onClick={() => setView("local")}
-            >
-              Local Files
-            </button>
-            <button
-              className={viewToggleBtnClass(view === "uploaded")}
-              onClick={() => setView("uploaded")}
-            >
-              Uploaded Files
-            </button>
-          </div>
-        </div>
-        {view === "local" && (
+    <PageShell
+      title="File Explorer"
+      subtitle="Browse and manage your local and uploaded files"
+      actions={
+        view === "local" ? (
           <button
             className="cursor-pointer rounded-sm border border-(--color-border) bg-(--color-bg-surface) p-2 text-(--color-text-muted) shadow-(--shadow-sm) transition-all duration-300 hover:bg-(--color-bg-hover) hover:text-(--color-text-primary)"
             onClick={() => fetchFiles(currentPath)}
             disabled={isLoading}
+            aria-label="Refresh current folder"
+            type="button"
           >
             <RefreshCw size={16} className={isLoading ? "animate-spin" : ""} />
           </button>
-        )}
-      </header>
-
-      <div className="flex flex-1 flex-col gap-6 overflow-hidden p-8">
-        {view === "local" ? (
+        ) : null
+      }
+      bodyClassName="overflow-hidden"
+      contentClassName="flex min-h-full flex-col gap-6 p-8"
+    >
+      <div className="mt-1 flex w-fit gap-1 rounded-md border border-(--color-border) bg-(--color-bg-surface) p-1">
+        <button
+          className={viewToggleBtnClass(view === "local")}
+          onClick={() => setView("local")}
+          type="button"
+        >
+          Local Files
+        </button>
+        <button
+          className={viewToggleBtnClass(view === "uploaded")}
+          onClick={() => setView("uploaded")}
+          type="button"
+        >
+          Uploaded Files
+        </button>
+      </div>
+      {view === "local" ? (
           <>
             <nav className="flex items-center gap-2 rounded-md border border-(--glass-border) bg-(--color-bg-surface) px-4 py-2 text-xs text-(--color-text-secondary) shadow-(--shadow-sm)">
-              <Home
-                size={16}
-                className="cursor-pointer transition-all duration-200 hover:bg-(--color-bg-hover) active:scale-98"
+              <button
+                type="button"
+                className="flex cursor-pointer items-center rounded border-0 bg-transparent p-0.5 transition-all duration-200 hover:bg-(--color-bg-hover) active:scale-98"
                 onClick={() => handleNavigate(null)}
-              />
+                aria-label="Go to root"
+              >
+                <Home size={16} />
+              </button>
               <button
                 className="flex cursor-pointer items-center gap-1 border-0 bg-transparent p-0 font-inherit text-inherit transition-all duration-200 hover:bg-(--color-bg-hover) disabled:cursor-not-allowed disabled:opacity-60 active:scale-98"
                 onClick={handleGoUp}
@@ -228,17 +233,25 @@ const FilesPage: React.FC = () => {
                     {items.map((item, idx) => (
                       <motion.div
                         key={item.path}
-                        initial={{ opacity: 0, x: -10 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: idx * 0.02 }}
+                        variants={fadeSlide(8)}
+                        initial="hidden"
+                        animate="visible"
+                        exit="exit"
+                        transition={itemTransition(idx)}
                         className="grid grid-cols-[minmax(0,1fr)_100px_80px] items-center border-b border-(--glass-border) bg-(--color-bg-surface) p-4 text-sm transition-colors duration-200 last:border-b-0 hover:bg-(--color-bg-hover)"
                       >
-                        <div
-                          className="flex flex-1 cursor-pointer items-center gap-3"
+                        <button
+                          type="button"
+                          className="flex flex-1 cursor-pointer items-center gap-3 border-0 bg-transparent p-0 text-left"
                           onClick={() =>
                             item.type === "directory"
                               ? handleNavigate(item.path)
                               : handleOpenFile(item)
+                          }
+                          aria-label={
+                            item.type === "directory"
+                              ? `Open folder ${item.name}`
+                              : `Open file ${item.name}`
                           }
                         >
                           {item.type === "directory" ? (
@@ -250,7 +263,7 @@ const FilesPage: React.FC = () => {
                             />
                           )}
                           <span>{item.name}</span>
-                        </div>
+                        </button>
 
                         <div className="flex justify-end gap-2">
                           {item.type === "file" && item.id && (
@@ -279,9 +292,8 @@ const FilesPage: React.FC = () => {
           </>
         ) : (
           <UploadedFilesPanel />
-        )}
-      </div>
-    </div>
+      )}
+    </PageShell>
   );
 };
 

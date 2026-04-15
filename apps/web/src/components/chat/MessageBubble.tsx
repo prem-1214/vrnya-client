@@ -13,6 +13,7 @@ interface MessageBubbleProps {
   onOpenPreview?: (target: AgentSource | { path: string }) => void;
   isAutoSpeaking?: boolean;
   disableAnimation?: boolean;
+  onAnimationProgress?: () => void;
 }
 
 const MessageBubble: React.FC<MessageBubbleProps> = ({
@@ -20,6 +21,7 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
   onOpenPreview,
   isAutoSpeaking = false,
   disableAnimation = false,
+  onAnimationProgress,
 }) => {
   const { speak, stop, isSpeaking } = useSpeech();
   const isUser = message.role === "user";
@@ -51,21 +53,22 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
     }
 
     let index = 0;
-    const step = 28;
-    const intervalMs = 18;
+    const step = 16;
+    const intervalMs = 26;
 
     // setVisibleContent("");
 
     const timer = window.setInterval(() => {
       index = Math.min(index + step, fullDisplayContent.length);
       setVisibleContent(fullDisplayContent.slice(0, index));
+      onAnimationProgress?.();
       if (index >= fullDisplayContent.length) {
         window.clearInterval(timer);
       }
     }, intervalMs);
 
     return () => window.clearInterval(timer);
-  }, [fullDisplayContent, shouldAnimate]);
+  }, [fullDisplayContent, onAnimationProgress, shouldAnimate]);
 
   const displayContent = shouldAnimate ? visibleContent : fullDisplayContent;
   const revealComplete = displayContent.length >= fullDisplayContent.length;
@@ -112,7 +115,7 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
         }`}
       >
         <div className="mb-2 flex flex-wrap items-center justify-between gap-4 text-[10px] font-bold tracking-[0.08em] uppercase">
-          <span className={isUser ? "text-white/70" : "text-(--color-accent)"}>
+          <span className={isUser ? "text-(--message-user-text) opacity-70" : "text-(--color-accent)"}>
             {isUser ? "You" : "Assistant"}
           </span>
           <div className="flex items-center gap-2">
@@ -130,7 +133,7 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
                 {isSpeaking ? <VolumeX size={14} /> : <Volume2 size={14} />}
               </button>
             )}
-            <span className={isUser ? "text-white/70" : "text-(--color-text-muted)"}>
+            <span className={isUser ? "text-(--message-user-text) opacity-70" : "text-(--color-text-muted)"}>
               {message.timestamp.toLocaleTimeString([], {
                 hour: "2-digit",
                 minute: "2-digit",

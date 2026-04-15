@@ -66,9 +66,9 @@ const LoginModal: React.FC = () => {
     >
       {/* Logo / Brand */}
       <div className="mb-1 text-center">
-        <h1 className="m-0 text-[2.5rem] font-bold text-(--color-text-primary)">
+        <h2 className="m-0 text-[2.5rem] font-bold text-(--color-text-primary)">
           Vrnya
-        </h1>
+        </h2>
         <p className="mt-1 text-sm text-(--color-text-muted)">
           Your AI-powered knowledge base
         </p>
@@ -217,7 +217,7 @@ const LoginModal: React.FC = () => {
               type="button"
               className="absolute right-2.5 flex cursor-pointer border-0 bg-transparent p-1 text-(--color-text-muted) transition-colors duration-200 hover:text-(--color-text-primary)"
               onClick={() => setShowPassword((v) => !v)}
-              tabIndex={-1}
+              aria-label={showPassword ? "Hide password" : "Show password"}
             >
               {showPassword ? <EyeOff size={15} /> : <Eye size={15} />}
             </button>

@@ -55,7 +55,7 @@ const Sidebar: React.FC = () => {
         isCollapsed ? "w-18" : "w-64"
       }`}
     >
-      <nav className="flex min-h-0 flex-1 flex-col">
+      <nav className="flex min-h-0 flex-1 flex-col" aria-label="Primary app navigation">
         <div className="flex flex-col gap-1 p-1.5">
           {navItems.map((item) => (
             <NavLink
