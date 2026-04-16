@@ -1,5 +1,10 @@
 import { useState, useCallback, useEffect, useRef } from "react";
-import { presignUpload, uploadFileToR2, confirmUpload, getJobStatus } from "../api/client";
+import {
+  presignUpload,
+  uploadFileToR2,
+  confirmUpload,
+  getJobStatus,
+} from "../api/client";
 
 export type UploadStage =
   | "idle"
@@ -18,7 +23,7 @@ export interface UploadItem {
   fileName: string;
   stage: UploadStage;
   uploadProgress: number; // 0–100, network upload progress
-  indexProgress: number;  // 0–100, BullMQ embedding progress
+  indexProgress: number; // 0–100, BullMQ embedding progress
   error: string | null;
   fileId: string | null;
   jobId: string | null;
@@ -26,17 +31,41 @@ export interface UploadItem {
 
 const makeId = () => Math.random().toString(36).slice(2, 10);
 
+const EXTENSION_TO_MIME: Record<string, string> = {
+  ".pdf": "application/pdf",
+  ".docx":
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  ".txt": "text/plain",
+  ".md": "text/markdown",
+  ".csv": "text/csv",
+  ".json": "application/json",
+  ".html": "text/html",
+  ".css": "text/css",
+  ".js": "application/javascript",
+  ".yaml": "application/x-yaml",
+  ".yml": "application/x-yaml",
+};
+
+const getMimeTypeFromFile = (file: File): string => {
+  if (file.type) return file.type;
+  const extensionMatch = file.name.toLowerCase().match(/\.[^./\\]+$/);
+  if (!extensionMatch) return "";
+  return EXTENSION_TO_MIME[extensionMatch[0]] ?? "";
+};
+
 export function useR2Upload() {
   const [items, setItems] = useState<UploadItem[]>([]);
   const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const itemsRef = useRef<UploadItem[]>(items);
 
   // Keep itemsRef in sync so polling callback always reads fresh state
-  useEffect(() => { itemsRef.current = items; }, [items]);
+  useEffect(() => {
+    itemsRef.current = items;
+  }, [items]);
 
   const updateItem = useCallback((id: string, patch: Partial<UploadItem>) => {
     setItems((prev) =>
-      prev.map((item) => (item.id === id ? { ...item, ...patch } : item))
+      prev.map((item) => (item.id === id ? { ...item, ...patch } : item)),
     );
   }, []);
 
@@ -44,7 +73,7 @@ export function useR2Upload() {
   useEffect(() => {
     const poll = async () => {
       const indexing = itemsRef.current.filter(
-        (i) => i.stage === "indexing" && i.jobId
+        (i) => i.stage === "indexing" && i.jobId,
       );
       if (!indexing.length) return;
 
@@ -61,7 +90,8 @@ export function useR2Upload() {
               });
             } else {
               updateItem(item.id, {
-                indexProgress: (status.progress as number) ?? item.indexProgress,
+                indexProgress:
+                  (status.progress as number) ?? item.indexProgress,
               });
             }
           } catch (err: unknown) {
@@ -77,11 +107,13 @@ export function useR2Upload() {
             }
             // All other errors: don't change state, keep polling
           }
-        })
+        }),
       );
     };
 
-    pollingRef.current = setInterval(() => { void poll(); }, 2500);
+    pollingRef.current = setInterval(() => {
+      void poll();
+    }, 2500);
     return () => {
       if (pollingRef.current) clearInterval(pollingRef.current);
     };
@@ -125,25 +157,39 @@ export function useR2Upload() {
       ]);
 
       try {
+        const mimeType = getMimeTypeFromFile(file);
+        if (!mimeType) {
+          updateItem(id, {
+            stage: "error",
+            error: "Unsupported file type or missing MIME type",
+          });
+          return;
+        }
+
         // Step 1: Presign
         const { uploadUrl, r2Key } = await presignUpload({
           fileName: file.name,
-          mimeType: file.type,
+          mimeType,
           fileSizeBytes: file.size,
         });
 
         // Step 2: Upload to R2
         updateItem(id, { stage: "uploading" });
-        await uploadFileToR2(uploadUrl, file, (percent) => {
-          updateItem(id, { uploadProgress: percent });
-        });
+        await uploadFileToR2(
+          uploadUrl,
+          file,
+          (percent) => {
+            updateItem(id, { uploadProgress: percent });
+          },
+          mimeType,
+        );
 
         // Step 3: Confirm
         updateItem(id, { stage: "confirming", uploadProgress: 100 });
         const result = await confirmUpload({
           r2Key,
           fileName: file.name,
-          mimeType: file.type,
+          mimeType,
           fileSizeBytes: file.size,
         });
 
@@ -158,7 +204,7 @@ export function useR2Upload() {
         updateItem(id, { stage: "error", error: message });
       }
     },
-    [updateItem]
+    [updateItem],
   );
 
   const uploadMultiple = useCallback(
@@ -168,7 +214,7 @@ export function useR2Upload() {
         uploadSingle(file); // fire all in parallel
       });
     },
-    [uploadSingle]
+    [uploadSingle],
   );
 
   const dismissItem = useCallback((id: string) => {
@@ -177,14 +223,21 @@ export function useR2Upload() {
 
   const clearCompleted = useCallback(() => {
     setItems((prev) =>
-      prev.filter((item) => item.stage !== "done" && item.stage !== "error")
+      prev.filter((item) => item.stage !== "done" && item.stage !== "error"),
     );
   }, []);
 
   const hasCompleted = items.some(
-    (i) => i.stage === "done" || i.stage === "error"
+    (i) => i.stage === "done" || i.stage === "error",
   );
   const isIdle = items.length === 0;
 
-  return { items, uploadMultiple, dismissItem, clearCompleted, hasCompleted, isIdle };
+  return {
+    items,
+    uploadMultiple,
+    dismissItem,
+    clearCompleted,
+    hasCompleted,
+    isIdle,
+  };
 }

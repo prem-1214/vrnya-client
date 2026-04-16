@@ -74,7 +74,13 @@ export interface ConfirmUploadResponse {
   jobId?: string;
 }
 export interface JobStatusResponse {
-  state: "waiting" | "active" | "completed" | "failed" | "delayed" | "prioritized";
+  state:
+    | "waiting"
+    | "active"
+    | "completed"
+    | "failed"
+    | "delayed"
+    | "prioritized";
   progress: number;
   failedReason: string | null;
 }
@@ -627,6 +633,7 @@ export async function uploadFileToR2(
   presignedUrl: string,
   file: File,
   onProgress?: (percent: number) => void,
+  contentType?: string,
 ): Promise<void> {
   return new Promise<void>((resolve, reject) => {
     const xhr = new XMLHttpRequest();
@@ -647,7 +654,7 @@ export async function uploadFileToR2(
     );
     xhr.addEventListener("abort", () => reject(new Error("R2 upload aborted")));
     xhr.open("PUT", presignedUrl);
-    xhr.setRequestHeader("Content-Type", file.type);
+    xhr.setRequestHeader("Content-Type", contentType ?? file.type);
     xhr.send(file);
   });
 }
@@ -751,7 +758,13 @@ export const deleteConversation = (id: string) =>
   });
 
 export const generateFile = (prompt: string) =>
-  apiFetch<{ fileId: string; filename: string; mimeType: string; url: string; preview: string }>("/api/v1/generate", {
+  apiFetch<{
+    fileId: string;
+    filename: string;
+    mimeType: string;
+    url: string;
+    preview: string;
+  }>("/api/v1/generate", {
     method: "POST",
     body: JSON.stringify({ prompt }),
   });

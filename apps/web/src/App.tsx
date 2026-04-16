@@ -1,6 +1,7 @@
 import { Routes, Route, Navigate, BrowserRouter } from "react-router-dom";
 import { AppProvider } from "./context/AppContext";
 import { AuthProvider, useAuth } from "./context/AuthContext";
+import { UploadProvider } from "./context/UploadContext";
 import AppLayout from "./components/layout/AppLayout";
 
 import ChatPage from "./pages/ChatPage";
@@ -46,6 +47,7 @@ function App() {
   return (
     <AuthProvider>
       <AppProvider>
+        <UploadProvider>
         <BrowserRouter>
           <Routes>
             {/* Public routes */}
@@ -71,6 +73,7 @@ function App() {
             </Route>
           </Routes>
         </BrowserRouter>
+        </UploadProvider>
       </AppProvider>
     </AuthProvider>
   );
