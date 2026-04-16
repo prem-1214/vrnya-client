@@ -23,7 +23,6 @@ import {
   getR2DownloadUrl,
   BASE_URL,
 } from "../api/client";
-import { useResizablePane } from "../hooks/useResizablePane";
 
 // ─── Highlight helpers ────────────────────────────────────────────────────────
 
@@ -135,25 +134,59 @@ const DocumentViewerPage: React.FC = () => {
   const [isChatHistoryLoading, setIsChatHistoryLoading] = useState(false);
   const chatEndRef = useRef<HTMLDivElement>(null);
 
+  // Custom resize state
+  const [sidebarWidth, setSidebarWidth] = useState(400);
+  const [isResizing, setIsResizing] = useState(false);
+  const isResizingRef = useRef(false);
+
   useEffect(() => {
     if (activeTab === "chat") {
       chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
     }
   }, [chatMessages, isChatting, activeTab]);
 
-  const {
-    width: sidebarWidth,
-    isResizing,
-    startResizing: startPaneResizing,
-    resizeFromClientX,
-    stopResizing,
-  } = useResizablePane({
-    initialWidth: 400,
-    minWidth: 250,
-    maxWidth: (windowWidth) => windowWidth * 0.6,
-  });
-  const [pdfUrl, setPdfUrl] = useState<string | null>(null);
+  // Custom resizing logic
+  const handleMouseDown = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    isResizingRef.current = true;
+    setIsResizing(true);
+    document.body.style.cursor = "col-resize";
+    document.body.style.userSelect = "none";
+  }, []);
 
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!isResizingRef.current) return;
+
+      const newWidth = window.innerWidth - e.clientX - 16;
+      const minWidth = 250;
+      const maxWidth = window.innerWidth * 0.6;
+
+      if (newWidth >= minWidth && newWidth <= maxWidth) {
+        setSidebarWidth(newWidth);
+      }
+    };
+
+    const handleMouseUp = () => {
+      if (isResizingRef.current) {
+        isResizingRef.current = false;
+        setIsResizing(false);
+        document.body.style.cursor = "default";
+        document.body.style.userSelect = "auto";
+      }
+    };
+
+    if (isResizing) {
+      window.addEventListener("mousemove", handleMouseMove);
+      window.addEventListener("mouseup", handleMouseUp);
+      return () => {
+        window.removeEventListener("mousemove", handleMouseMove);
+        window.removeEventListener("mouseup", handleMouseUp);
+      };
+    }
+  }, [isResizing]);
+
+  const [pdfUrl, setPdfUrl] = useState<string | null>(null);
   const [docxBuffer, setDocxBuffer] = useState<ArrayBuffer | null>(null);
   const [isDocxLoading, setIsDocxLoading] = useState(false);
   const docxContainerRef = useRef<HTMLDivElement>(null);
@@ -226,10 +259,12 @@ const DocumentViewerPage: React.FC = () => {
       setIsChatHistoryLoading(true);
       try {
         const history = await getDocumentChatHistory(id);
-        setChatMessages(history.messages.map((message) => ({
-          role: message.role,
-          text: message.text,
-        })));
+        setChatMessages(
+          history.messages.map((message) => ({
+            role: message.role,
+            text: message.text,
+          })),
+        );
       } catch {
         setChatMessages([]);
       } finally {
@@ -294,23 +329,6 @@ const DocumentViewerPage: React.FC = () => {
     }
   };
 
-  const startResizing = useCallback((e: React.MouseEvent) => {
-    e.preventDefault();
-    startPaneResizing();
-  }, [startPaneResizing]);
-
-  useEffect(() => {
-    if (!isResizing) return;
-    const handleMouseMove = (e: MouseEvent) => resizeFromClientX(e.clientX, 16);
-    const handleMouseUp = () => stopResizing();
-    window.addEventListener("mousemove", handleMouseMove);
-    window.addEventListener("mouseup", handleMouseUp);
-    return () => {
-      window.removeEventListener("mousemove", handleMouseMove);
-      window.removeEventListener("mouseup", handleMouseUp);
-    };
-  }, [isResizing, resizeFromClientX, stopResizing]);
-
   // Render the DOCX file when buffer and container are ready
   useEffect(() => {
     if (docxBuffer && docxContainerRef.current) {
@@ -326,16 +344,16 @@ const DocumentViewerPage: React.FC = () => {
         renderHeaders: true,
         renderFooters: true,
         renderFootnotes: true,
-        renderEndnotes: true
+        renderEndnotes: true,
       });
     }
   }, [docxBuffer]);
 
   useEffect(() => {
     if (!docxContainerRef.current) return;
-    const wrapper = docxContainerRef.current.querySelector(".docx-wrapper") as
-      | HTMLElement
-      | null;
+    const wrapper = docxContainerRef.current.querySelector(
+      ".docx-wrapper",
+    ) as HTMLElement | null;
     if (!wrapper) return;
     wrapper.style.background = "transparent";
     wrapper.style.padding = "0";
@@ -393,7 +411,15 @@ const DocumentViewerPage: React.FC = () => {
     if (document.extension === ".docx" || document.extension === ".doc") {
       if (document.storage_type === "r2" && isDocxLoading) {
         return (
-          <div className="doc-viewer-loading" style={{ height: "100%", display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <div
+            className="doc-viewer-loading"
+            style={{
+              height: "100%",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
             <Loader2 size={32} className="spin accent-text" />
             <p style={{ marginLeft: "1rem" }}>Rendering document...</p>
           </div>
@@ -510,7 +536,7 @@ const DocumentViewerPage: React.FC = () => {
         className={`flex w-2.5 cursor-col-resize items-center justify-center rounded transition-colors duration-200 ${
           isResizing ? "bg-(--color-bg-hover)" : "hover:bg-(--color-bg-hover)"
         }`}
-        onMouseDown={startResizing}
+        onMouseDown={handleMouseDown}
         data-testid="resizer"
       >
         <div
@@ -571,7 +597,10 @@ const DocumentViewerPage: React.FC = () => {
                 )}
                 {isSummarizing && (
                   <div className="flex h-full flex-col items-center justify-center gap-4 text-center text-(--color-text-secondary)">
-                    <Loader2 size={24} className="animate-spin text-(--color-accent)" />
+                    <Loader2
+                      size={24}
+                      className="animate-spin text-(--color-accent)"
+                    />
                     <p>Extracting key points...</p>
                   </div>
                 )}

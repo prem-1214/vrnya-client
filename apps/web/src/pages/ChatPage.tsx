@@ -47,12 +47,12 @@ const ChatPage: React.FC = () => {
   const lastProcessedMessageId = useRef<string | null>(null);
   useEffect(() => {
     if (!isAutoSpeakEnabled) return;
-    
+
     const lastMessage = messages[messages.length - 1];
     if (
-      lastMessage && 
-      lastMessage.role === "assistant" && 
-      !isTyping && 
+      lastMessage &&
+      lastMessage.role === "assistant" &&
+      !isTyping &&
       lastMessage.id !== lastProcessedMessageId.current
     ) {
       speak(lastMessage.content);
@@ -77,7 +77,11 @@ const ChatPage: React.FC = () => {
   // Handle redirecting to new conversation URL after first message
   const lastConversationId = useRef<string | null>(null);
   useEffect(() => {
-    if (conversationId && !id && conversationId !== lastConversationId.current) {
+    if (
+      conversationId &&
+      !id &&
+      conversationId !== lastConversationId.current
+    ) {
       navigate(`/chat/${conversationId}`, { replace: true });
     }
     lastConversationId.current = conversationId;
