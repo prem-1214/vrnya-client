@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import type { ReactNode } from "react";
 import { healthCheck, getConfig } from "../api/client";
+import { useAuth } from "./AuthContext";
 
 type ThemeMode = "dark" | "light";
 
@@ -55,12 +56,14 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({
       const config = await getConfig();
       const provider = config.llm_provider || "ollama";
       let model = "unknown";
-      
+
       if (provider === "ollama") model = config.ollama_chat_model || "unknown";
-      else if (provider === "gemini") model = config.gemini_chat_model || "unknown";
+      else if (provider === "gemini")
+        model = config.gemini_chat_model || "unknown";
       else if (provider === "groq") model = config.groq_chat_model || "unknown";
-      else if (provider === "openrouter") model = config.openrouter_chat_model || "unknown";
-      
+      else if (provider === "openrouter")
+        model = config.openrouter_chat_model || "unknown";
+
       const providerName = provider.charAt(0).toUpperCase() + provider.slice(1);
       setActiveLlm(`${providerName}: ${model}`);
     } catch (error) {
@@ -68,12 +71,16 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({
     }
   };
 
+  const { isAuthLoading } = useAuth();
+
   useEffect(() => {
     checkConnection();
-    refreshConfig();
+    if (isAuthLoading) {
+      refreshConfig();
+    }
     const interval = setInterval(checkConnection, 10000); // 10s polling
     return () => clearInterval(interval);
-  }, []);
+  }, [isAuthLoading]);
 
   useEffect(() => {
     document.documentElement.dataset.theme = theme;
