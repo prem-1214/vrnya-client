@@ -73,7 +73,13 @@ const WaitlistPage: React.FC = () => {
       <div className="waitlist-page__glow waitlist-page__glow--right" />
 
       <header className="waitlist-nav glass">
-        <div className="waitlist-nav__brand">Vrnya</div>
+        <div className="waitlist-nav__brand">
+          <img
+            src="/Vrnya-logo.png"
+            alt="Vrnya Logo"
+            className="waitlist-logo"
+          />
+        </div>
         <nav className="waitlist-nav__links" aria-label="Primary">
           <a href="#features">Search</a>
           <a href="#features">Preview</a>
@@ -95,9 +101,9 @@ const WaitlistPage: React.FC = () => {
             </div>
             <h1>Ask anything from your documents</h1>
             <p className="waitlist-hero__subtext">
-              Upload your PDFs, reports, and notes. Search across all of them. Get
-              exact answers with the source highlighted. No more opening files
-              one by one.
+              Upload your PDFs, reports, and notes. Search across all of them.
+              Get exact answers with the source highlighted. No more opening
+              files one by one.
             </p>
           </div>
 
