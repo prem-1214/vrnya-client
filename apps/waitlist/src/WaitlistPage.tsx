@@ -90,12 +90,14 @@ const WaitlistPage: React.FC = () => {
       <div className="waitlist-container">
         <section className="waitlist-hero">
           <div className="waitlist-hero__content">
-            <div className="waitlist-pill">Beta Access Now Open</div>
-            <h1>Search, preview, and chat with your documents.</h1>
+            <div className="waitlist-pill">
+              Currently in beta — join the waitlist for early access.
+            </div>
+            <h1>Ask anything from your documents</h1>
             <p className="waitlist-hero__subtext">
-              Vrnya is an AI-powered workspace that helps you find documentation
-              at the speed of thought. Join the waitlist for the next wave of
-              early users.
+              Upload your PDFs, reports, and notes. Search across all of them. Get
+              exact answers with the source highlighted. No more opening files
+              one by one.
             </p>
           </div>
 
@@ -186,24 +188,33 @@ const WaitlistPage: React.FC = () => {
             <div className="waitlist-card__icon">
               <Search size={20} />
             </div>
-            <h2>Smarter Search</h2>
-            <p>Find exactly what you need with context-aware indexing.</p>
+            <h2>Semantic Search</h2>
+            <p>
+              Find the exact paragraph you're looking for across all your
+              uploaded files, not just the file name.
+            </p>
           </article>
 
           <article className="waitlist-card glass">
             <div className="waitlist-card__icon">
               <Eye size={20} />
             </div>
-            <h2>Fast Previews</h2>
-            <p>Review documents instantly without leaving your workspace.</p>
+            <h2>Document Viewer</h2>
+            <p>
+              See exactly where the answer came from, highlighted inside the
+              original document.
+            </p>
           </article>
 
           <article className="waitlist-card glass">
             <div className="waitlist-card__icon">
               <MessageSquare size={20} />
             </div>
-            <h2>Natural Chat</h2>
-            <p>Interact with your codebase and documents using AI.</p>
+            <h2>AI Chat</h2>
+            <p>
+              Ask questions across all your files and get answers with exact
+              source citations instantly.
+            </p>
           </article>
         </section>
       </div>
