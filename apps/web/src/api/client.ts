@@ -104,6 +104,9 @@ export interface ChatStreamEvent {
   text?: string;
   answer?: any;
   error?: string;
+  code?: string;
+  retryable?: boolean;
+  retryAfter?: number;
   conversationId?: string;
 }
 
@@ -111,17 +114,6 @@ export interface ChatStreamEvent {
 export interface HealthResponse {
   status: string;
   db: string;
-}
-
-export interface ChatResponse {
-  answer: any;
-}
-
-export interface ChatStreamEvent {
-  type: "conversation" | "status" | "answer" | "done" | "error";
-  text?: string;
-  answer?: any;
-  error?: string;
 }
 
 export interface SearchResult {

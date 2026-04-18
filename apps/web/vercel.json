@@ -1,8 +1,8 @@
 {
   "outputDirectory": "dist",
   "rewrites": [
-    { "source": "/api/:path*", "destination": "https://secondbrain-api.duckdns.org/api/:path*" },
-    { "source": "/health", "destination": "https://secondbrain-api.duckdns.org/health" },
+    { "source": "/api/:path*", "destination": "https://api.vrnya.tech/api/:path*" },
+    { "source": "/health", "destination": "https://api.vrnya.tech/health" },
     { "source": "/:path*", "destination": "/index.html" }
   ]
 }
