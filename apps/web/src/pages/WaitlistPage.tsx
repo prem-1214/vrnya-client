@@ -53,10 +53,7 @@ const WaitlistPage: React.FC = () => {
         <div className="bg-linear-to-br from-(--color-text-primary) to-indigo-500 bg-clip-text text-2xl font-extrabold tracking-tight text-transparent">
           Vrnya
         </div>
-        <nav
-          className="hidden items-center gap-8 md:flex"
-          aria-label="Primary"
-        >
+        <nav className="hidden items-center gap-8 md:flex" aria-label="Primary">
           <a
             className="text-[0.95rem] font-medium text-(--color-text-secondary) no-underline transition-colors hover:text-(--color-text-primary)"
             href="#features"
@@ -148,6 +145,27 @@ const WaitlistPage: React.FC = () => {
             </p>
           </article>
         </section>
+
+        <footer className="mt-8 border-t border-white/10 py-8 text-center">
+          <p className="text-sm text-(--color-text-secondary)">
+            &copy; {new Date().getFullYear()} Vrnya. All rights reserved.
+          </p>
+          <div className="mt-4 flex justify-center gap-4">
+            <Link
+              to="/privacy-policy"
+              className="text-sm text-(--color-text-secondary) hover:text-(--color-text-primary) transition-colors"
+            >
+              Privacy Policy
+            </Link>
+            <span className="text-sm text-(--color-text-secondary)">•</span>
+            <Link
+              to="/terms-of-service"
+              className="text-sm text-(--color-text-secondary) hover:text-(--color-text-primary) transition-colors"
+            >
+              Terms of Service
+            </Link>
+          </div>
+        </footer>
       </div>
     </main>
   );

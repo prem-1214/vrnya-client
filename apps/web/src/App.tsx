@@ -13,6 +13,8 @@ import SettingsPage from "./pages/SettingsPage";
 // import LoginPage from "./pages/LoginPage";
 import AuthCallbackPage from "./pages/AuthCallbackPage";
 import WaitlistPage from "./pages/WaitlistPage";
+import PrivacyPolicyPage from "./pages/PrivacyPolicyPage";
+import TermsOfServicePage from "./pages/TermsOfServicePage";
 import { Loader2 } from "lucide-react";
 import { type ReactNode } from "react";
 
@@ -52,6 +54,8 @@ function App() {
           <Routes>
             {/* Public routes */}
             <Route path="/waitlist" element={<WaitlistPage />} />
+            <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
+            <Route path="/terms-of-service" element={<TermsOfServicePage />} />
             {/* <Route path="/login" element={<LoginPage />} /> */}
             <Route path="/auth/callback" element={<AuthCallbackPage />} />
 
