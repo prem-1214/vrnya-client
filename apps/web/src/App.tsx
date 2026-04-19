@@ -10,6 +10,7 @@ import IndexPage from "./pages/IndexPage";
 import FilesPage from "./pages/FilesPage";
 import DocumentViewerPage from "./pages/DocumentViewerPage";
 import SettingsPage from "./pages/SettingsPage";
+import AdminPage from "./pages/AdminPage";
 // import LoginPage from "./pages/LoginPage";
 import AuthCallbackPage from "./pages/AuthCallbackPage";
 import WaitlistPage from "./pages/WaitlistPage";
@@ -42,7 +43,11 @@ function ProtectedRoute({ children }: { children: ReactNode }) {
     );
   }
 
-  return isAuthenticated ? <>{children}</> : <Navigate to="/waitlist" replace />;
+  return isAuthenticated ? (
+    <>{children}</>
+  ) : (
+    <Navigate to="/waitlist" replace />
+  );
 }
 
 function App() {
@@ -50,33 +55,37 @@ function App() {
     <AuthProvider>
       <AppProvider>
         <UploadProvider>
-        <BrowserRouter>
-          <Routes>
-            {/* Public routes */}
-            <Route path="/waitlist" element={<WaitlistPage />} />
-            <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
-            <Route path="/terms-of-service" element={<TermsOfServicePage />} />
-            {/* <Route path="/login" element={<LoginPage />} /> */}
-            <Route path="/auth/callback" element={<AuthCallbackPage />} />
+          <BrowserRouter>
+            <Routes>
+              {/* Public routes */}
+              <Route path="/waitlist" element={<WaitlistPage />} />
+              <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
+              <Route
+                path="/terms-of-service"
+                element={<TermsOfServicePage />}
+              />
+              {/* <Route path="/login" element={<LoginPage />} /> */}
+              <Route path="/auth/callback" element={<AuthCallbackPage />} />
 
-            {/* Protected routes */}
-            <Route
-              element={
-                <ProtectedRoute>
-                  <AppLayout />
-                </ProtectedRoute>
-              }
-            >
-              <Route path="/" element={<ChatPage />} />
-              <Route path="/chat/:id" element={<ChatPage />} />
-              <Route path="/search" element={<SearchPage />} />
-              <Route path="/index" element={<IndexPage />} />
-              <Route path="/files" element={<FilesPage />} />
-              <Route path="/document/:id" element={<DocumentViewerPage />} />
-              <Route path="/settings" element={<SettingsPage />} />
-            </Route>
-          </Routes>
-        </BrowserRouter>
+              {/* Protected routes */}
+              <Route
+                element={
+                  <ProtectedRoute>
+                    <AppLayout />
+                  </ProtectedRoute>
+                }
+              >
+                <Route path="/" element={<ChatPage />} />
+                <Route path="/chat/:id" element={<ChatPage />} />
+                <Route path="/search" element={<SearchPage />} />
+                <Route path="/index" element={<IndexPage />} />
+                <Route path="/files" element={<FilesPage />} />
+                <Route path="/document/:id" element={<DocumentViewerPage />} />
+                <Route path="/settings" element={<SettingsPage />} />
+                <Route path="/admin" element={<AdminPage />} />
+              </Route>
+            </Routes>
+          </BrowserRouter>
         </UploadProvider>
       </AppProvider>
     </AuthProvider>

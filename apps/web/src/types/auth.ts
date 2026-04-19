@@ -5,6 +5,7 @@ export interface AuthUser {
   avatarUrl: string | null;
   emailVerified: boolean;
   betaAccess: boolean;
+  role: string;
 }
 
 export interface AuthTokenResponse {

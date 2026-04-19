@@ -659,6 +659,8 @@ export interface AuthUser {
   displayName: string | null;
   avatarUrl: string | null;
   emailVerified: boolean;
+  betaAccess: boolean;
+  role: string;
 }
 
 export const authApi = {
