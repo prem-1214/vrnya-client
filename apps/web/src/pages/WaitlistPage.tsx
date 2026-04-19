@@ -48,10 +48,10 @@ const WaitlistPage: React.FC = () => {
       />
 
       <header
-        className={`sticky top-5 z-50 mx-auto mb-16 flex max-w-[1200px] items-center justify-between rounded-[20px] px-6 py-3 shadow-[0_4px_24px_-1px_rgba(0,0,0,0.05)] ${glassNav}`}
+        className={`sticky top-5 z-50 mx-auto mb-16 flex max-w-[1200px] items-center justify-between rounded-[20px] px-6 py-0 shadow-[0_4px_24px_-1px_rgba(0,0,0,0.05)] ${glassNav}`}
       >
-        <div className="bg-linear-to-br from-(--color-text-primary) to-indigo-500 bg-clip-text text-2xl font-extrabold tracking-tight text-transparent">
-          Vrnya
+        <div className="flex items-center">
+          <img src="/Vrnya-logo.png" alt="Vrnya" className="navbar-logo" />
         </div>
         <nav className="hidden items-center gap-8 md:flex" aria-label="Primary">
           <a

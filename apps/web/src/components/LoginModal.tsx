@@ -65,11 +65,9 @@ const LoginModal: React.FC = () => {
       transition={{ duration: 0.3, ease: "easeOut" }}
     >
       {/* Logo / Brand */}
-      <div className="mb-1 text-center">
-        <h2 className="m-0 text-[2.5rem] font-bold text-(--color-text-primary)">
-          Vrnya
-        </h2>
-        <p className="mt-1 text-sm text-(--color-text-muted)">
+      <div className="mb-1 flex flex-col items-center gap-2">
+        <img src="/Vrnya-logo.png" alt="Vrnya" className="login-modal-logo" />
+        <p className="text-sm text-(--color-text-muted)">
           Your AI-powered knowledge base
         </p>
       </div>

@@ -177,12 +177,8 @@ const WaitlistPage: React.FC = () => {
                       setAuthError(null);
                       // Scroll to the form
                       const formElement =
-                        document.querySelector(".waitlist-form");
-                      if (
-                        formElement &&
-                        formElement !==
-                          event?.currentTarget?.closest(".waitlist-form")
-                      ) {
+                        document.querySelector("form.waitlist-form");
+                      if (formElement) {
                         formElement.scrollIntoView({ behavior: "smooth" });
                       }
                     }}

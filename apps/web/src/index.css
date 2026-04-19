@@ -261,3 +261,29 @@
     scroll-behavior: auto !important;
   }
 }
+
+/* Navbar Logo Styling */
+.navbar-logo {
+  display: block;
+  height: 70px;
+  width: auto;
+  max-width: 200px;
+  object-fit: contain;
+  object-position: center;
+  transition: opacity 0.2s ease;
+  cursor: pointer;
+}
+
+.navbar-logo:hover {
+  opacity: 0.8;
+}
+
+.login-modal-logo {
+  display: block;
+  height: 60px;
+  width: auto;
+  max-width: 180px;
+  object-fit: contain;
+  object-position: center;
+  transition: opacity 0.2s ease;
+}
