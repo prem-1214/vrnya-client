@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { useAuth } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
-import { AlertCircle, Check, X, Loader2 } from "lucide-react";
-import { authApi, BASE_URL } from "../api/client";
+import { AlertCircle, Check, Loader2 } from "lucide-react";
+import { BASE_URL, tokenStore } from "../api/client";
 
 interface WaitlistEntry {
   id: string;
@@ -38,9 +38,18 @@ const AdminPage: React.FC = () => {
     const fetchWaitlist = async () => {
       try {
         setIsLoading(true);
+        const token = tokenStore.get();
+        if (!token) {
+          setMessage({
+            type: "error",
+            text: "No authentication token found. Please login again.",
+          });
+          setIsLoading(false);
+          return;
+        }
         const response = await fetch(`${BASE_URL}/api/v1/admin/waitlist`, {
           headers: {
-            Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+            Authorization: `Bearer ${token}`,
           },
         });
 
@@ -64,13 +73,21 @@ const AdminPage: React.FC = () => {
   const grantAccess = async (email: string) => {
     try {
       setGrantingEmail(email);
+      const token = tokenStore.get();
+      if (!token) {
+        setMessage({
+          type: "error",
+          text: "No authentication token found. Please login again.",
+        });
+        return;
+      }
       const response = await fetch(
         `${BASE_URL}/api/v1/admin/grant-beta-access`,
         {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+            Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify({ email }),
         },
@@ -98,19 +115,30 @@ const AdminPage: React.FC = () => {
   const revokeAccess = async (email: string) => {
     try {
       setRevokingEmail(email);
+      const token = tokenStore.get();
+      if (!token) {
+        setMessage({
+          type: "error",
+          text: "No authentication token found. Please login again.",
+        });
+        return;
+      }
       const response = await fetch(
         `${BASE_URL}/api/v1/admin/revoke-beta-access`,
         {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+            Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify({ email }),
         },
       );
 
-      if (!response.ok) throw new Error("Failed to revoke access");
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || "Failed to revoke access");
+      }
 
       setMessage({
         type: "success",
