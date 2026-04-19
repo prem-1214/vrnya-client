@@ -70,6 +70,26 @@ const AdminPage: React.FC = () => {
     fetchWaitlist();
   }, []);
 
+  // Refresh waitlist without page reload
+  const refreshWaitlist = async () => {
+    try {
+      const token = tokenStore.get();
+      if (!token) return;
+
+      const response = await fetch(`${BASE_URL}/api/v1/admin/waitlist`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setWaitlist(data.waitlist);
+      }
+    } catch (error) {
+      console.error("Error refreshing waitlist:", error);
+    }
+  };
+
   const grantAccess = async (email: string) => {
     try {
       setGrantingEmail(email);
@@ -100,8 +120,8 @@ const AdminPage: React.FC = () => {
         text: `Beta access granted to ${email}`,
       });
 
-      // Refresh waitlist
-      setTimeout(() => window.location.reload(), 1500);
+      // Refresh waitlist without page reload
+      await refreshWaitlist();
     } catch (error) {
       setMessage({
         type: "error",
@@ -145,7 +165,8 @@ const AdminPage: React.FC = () => {
         text: `Beta access revoked from ${email}`,
       });
 
-      setTimeout(() => window.location.reload(), 1500);
+      // Refresh waitlist without page reload
+      await refreshWaitlist();
     } catch (error) {
       setMessage({
         type: "error",
