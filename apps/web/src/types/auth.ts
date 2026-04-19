@@ -4,6 +4,7 @@ export interface AuthUser {
   displayName: string | null;
   avatarUrl: string | null;
   emailVerified: boolean;
+  betaAccess: boolean;
 }
 
 export interface AuthTokenResponse {

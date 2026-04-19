@@ -1,11 +1,19 @@
 import React, { useState, useRef, useEffect } from "react";
-import { Search, Eye, MessageSquare, ChevronDown } from "lucide-react";
+import {
+  Search,
+  Eye,
+  MessageSquare,
+  ChevronDown,
+  AlertCircle,
+} from "lucide-react";
+import { useSearchParams } from "react-router-dom";
 
 import "./WaitlistPage.css";
 import type { Profession } from "./api/client";
 import { joinWaitlist } from "./api/client";
 
 const WaitlistPage: React.FC = () => {
+  const [searchParams] = useSearchParams();
   const [email, setEmail] = useState("");
   const [profession, setProfession] = useState<Profession>(
     "working_professional",
@@ -15,6 +23,15 @@ const WaitlistPage: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [authError, setAuthError] = useState<string | null>(null);
+
+  useEffect(() => {
+    // Check if there's an auth error from Google login attempt
+    const errorParam = searchParams.get("error");
+    if (errorParam) {
+      setAuthError(decodeURIComponent(errorParam));
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -108,80 +125,158 @@ const WaitlistPage: React.FC = () => {
           </div>
 
           <div className="waitlist-onboarding glass">
-            <form className="waitlist-form" onSubmit={handleSubmit}>
-              <div className="waitlist-form__header">
-                <h2>Join the waitlist</h2>
-                <p>Enter your details to get early access.</p>
-              </div>
-
-              <div className="waitlist-form__fields">
-                <label className="waitlist-field">
-                  <span>Email address</span>
-                  <input
-                    autoComplete="email"
-                    name="email"
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="you@work.com"
-                    required
-                    type="email"
-                    value={email}
-                  />
-                </label>
-
-                <label className="waitlist-field">
-                  <span>I am a...</span>
-                  <div className="waitlist-select__wrapper" ref={dropdownRef}>
-                    <div
-                      className={`waitlist-select__trigger ${isDropdownOpen ? "active" : ""}`}
-                      onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                    >
-                      <span>{currentProfessionLabel}</span>
-                      <ChevronDown
-                        className="waitlist-select__icon"
-                        size={18}
-                      />
-                    </div>
-
-                    {isDropdownOpen && (
-                      <ul className="waitlist-select__options glass">
-                        {professionOptions.map((option) => (
-                          <li
-                            key={option.value}
-                            className={`waitlist-select__option ${profession === option.value ? "selected" : ""}`}
-                            onClick={() => {
-                              setProfession(option.value as Profession);
-                              setIsDropdownOpen(false);
-                            }}
-                          >
-                            {option.label}
-                          </li>
-                        ))}
-                      </ul>
-                    )}
+            {authError ? (
+              <div className="waitlist-form" style={{ padding: "2rem" }}>
+                <div
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: "1.5rem",
+                    alignItems: "center",
+                    textAlign: "center",
+                  }}
+                >
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      gap: "0.75rem",
+                      color: "#ef4444",
+                      fontSize: "1.1rem",
+                      fontWeight: "600",
+                    }}
+                  >
+                    <AlertCircle size={24} />
+                    <span>Beta Access Required</span>
                   </div>
-                </label>
+
+                  <p
+                    style={{
+                      fontSize: "1rem",
+                      lineHeight: "1.6",
+                      color: "var(--color-text-secondary)",
+                      maxWidth: "450px",
+                    }}
+                  >
+                    {authError}
+                  </p>
+
+                  <p
+                    style={{
+                      fontSize: "0.95rem",
+                      color: "var(--color-text-secondary)",
+                    }}
+                  >
+                    Join the waitlist below to get notified when beta access
+                    opens up! 🚀
+                  </p>
+
+                  <button
+                    onClick={() => {
+                      setAuthError(null);
+                      // Scroll to the form
+                      const formElement =
+                        document.querySelector(".waitlist-form");
+                      if (
+                        formElement &&
+                        formElement !==
+                          event?.currentTarget?.closest(".waitlist-form")
+                      ) {
+                        formElement.scrollIntoView({ behavior: "smooth" });
+                      }
+                    }}
+                    style={{
+                      marginTop: "1rem",
+                      padding: "0.75rem 1.5rem",
+                      backgroundColor: "var(--color-accent)",
+                      color: "white",
+                      border: "none",
+                      borderRadius: "0.5rem",
+                      cursor: "pointer",
+                      fontWeight: "600",
+                    }}
+                  >
+                    Join the Waitlist
+                  </button>
+                </div>
               </div>
-
-              <button
-                className="waitlist-button waitlist-button--primary"
-                disabled={isSubmitting}
-                type="submit"
-              >
-                {isSubmitting ? "Joining..." : "Get Early Access"}
-              </button>
-
-              {message && (
-                <div className="waitlist-form__message" role="status">
-                  {message}
+            ) : (
+              <form className="waitlist-form" onSubmit={handleSubmit}>
+                <div className="waitlist-form__header">
+                  <h2>Join the waitlist</h2>
+                  <p>Enter your details to get early access.</p>
                 </div>
-              )}
 
-              {error && (
-                <div className="waitlist-form__error" role="alert">
-                  {error}
+                <div className="waitlist-form__fields">
+                  <label className="waitlist-field">
+                    <span>Email address</span>
+                    <input
+                      autoComplete="email"
+                      name="email"
+                      onChange={(e) => setEmail(e.target.value)}
+                      placeholder="you@work.com"
+                      required
+                      type="email"
+                      value={email}
+                    />
+                  </label>
+
+                  <label className="waitlist-field">
+                    <span>I am a...</span>
+                    <div className="waitlist-select__wrapper" ref={dropdownRef}>
+                      <div
+                        className={`waitlist-select__trigger ${isDropdownOpen ? "active" : ""}`}
+                        onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                      >
+                        <span>{currentProfessionLabel}</span>
+                        <ChevronDown
+                          className="waitlist-select__icon"
+                          size={18}
+                        />
+                      </div>
+
+                      {isDropdownOpen && (
+                        <ul className="waitlist-select__options glass">
+                          {professionOptions.map((option) => (
+                            <li
+                              key={option.value}
+                              className={`waitlist-select__option ${profession === option.value ? "selected" : ""}`}
+                              onClick={() => {
+                                setProfession(option.value as Profession);
+                                setIsDropdownOpen(false);
+                              }}
+                            >
+                              {option.label}
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                    </div>
+                  </label>
                 </div>
-              )}
-            </form>
+
+                <button
+                  className="waitlist-button waitlist-button--primary"
+                  disabled={isSubmitting}
+                  type="submit"
+                >
+                  {isSubmitting ? "Joining..." : "Get Early Access"}
+                </button>
+
+                {message && (
+                  <div className="waitlist-form__message" role="status">
+                    {message}
+                  </div>
+                )}
+
+                {error && (
+                  <div className="waitlist-form__error" role="alert">
+                    {error}
+                  </div>
+                )}
+              </form>
+            )}
 
             {/* <div className="waitlist-onboarding__footer">
               <Link to="/login">Existing user? Login</Link>
