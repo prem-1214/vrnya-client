@@ -1,6 +1,5 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import WaitlistPage from "./WaitlistPage";
-import "./App.css";
 
 function App() {
   return (

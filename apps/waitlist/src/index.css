@@ -10,10 +10,6 @@
   
   --shadow-sm: 0 12px 28px rgba(40, 62, 97, 0.08);
   --shadow-md: 0 18px 45px rgba(40, 62, 97, 0.12);
-  
-  --glass-bg: rgba(255, 255, 255, 0.96);
-  --glass-border: rgba(255, 255, 255, 0.4);
-  --glass-blur: blur(6px);
 
   --font-sans: "Inter", system-ui, -apple-system, sans-serif;
   
@@ -23,10 +19,15 @@
     linear-gradient(180deg, #f8fbff 0%, #eaf1f9 100%);
 }
 
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
+@keyframes dropdownEntry {
+  from {
+    opacity: 0;
+    transform: translateY(-10px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 
 html,
@@ -37,11 +38,4 @@ body,
   background: var(--app-background);
   color: var(--color-text-primary);
   font-family: var(--font-sans);
-}
-
-.glass {
-  background: var(--glass-bg);
-  backdrop-filter: var(--glass-blur);
-  -webkit-backdrop-filter: var(--glass-blur);
-  border: 1px solid var(--glass-border);
 }
