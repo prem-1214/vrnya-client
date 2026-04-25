@@ -813,6 +813,78 @@ export const deleteConversation = (id: string) =>
     method: "DELETE",
   });
 
+// ✅ NEW: Search conversations
+export const searchConversations = (
+  query: string,
+  limit?: number,
+  offset?: number,
+) => {
+  const params = new URLSearchParams({ q: query });
+  if (limit) params.append("limit", String(limit));
+  if (offset) params.append("offset", String(offset));
+  return apiFetch<Conversation[]>(`/api/v1/conversations/search?${params}`);
+};
+
+// ✅ NEW: Update conversation title
+export const updateConversationTitle = (id: string, title: string) =>
+  apiFetch<Conversation>(`/api/v1/conversations/${id}/title`, {
+    method: "PATCH",
+    body: JSON.stringify({ title }),
+  });
+
+// ✅ NEW: Update message content
+export const updateMessage = (
+  conversationId: string,
+  messageId: string,
+  content: string,
+) =>
+  apiFetch<Message>(
+    `/api/v1/conversations/${conversationId}/messages/${messageId}`,
+    {
+      method: "PATCH",
+      body: JSON.stringify({ content }),
+    },
+  );
+
+// ✅ NEW: Delete message
+export const deleteMessage = (conversationId: string, messageId: string) =>
+  apiFetch<{ success: boolean }>(
+    `/api/v1/conversations/${conversationId}/messages/${messageId}`,
+    {
+      method: "DELETE",
+    },
+  );
+
+// ✅ NEW: Export conversation
+export const exportConversation = (
+  conversationId: string,
+  format: "json" | "markdown" = "json",
+) => {
+  const token = tokenStore.get();
+  const headers = token ? { Authorization: `Bearer ${token}` } : {};
+
+  return fetch(
+    `${BASE_URL}/api/v1/conversations/${conversationId}/export?format=${format}`,
+    { headers },
+  ).then(async (res) => {
+    if (!res.ok) {
+      throw new Error(`Export failed: ${res.statusText}`);
+    }
+
+    // Get file extension based on format
+    const ext = format === "markdown" ? "md" : "json";
+    const blob = await res.blob();
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `conversation_${conversationId}.${ext}`;
+    document.body.appendChild(a);
+    a.click();
+    window.URL.revokeObjectURL(url);
+    document.body.removeChild(a);
+  });
+};
+
 export const generateFile = (prompt: string) =>
   apiFetch<{
     fileId: string;
