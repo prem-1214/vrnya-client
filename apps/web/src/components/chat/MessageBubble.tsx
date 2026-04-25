@@ -73,7 +73,9 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
   const displayContent = shouldAnimate ? visibleContent : fullDisplayContent;
   const revealComplete = displayContent.length >= fullDisplayContent.length;
 
-  const handleOpen = async (target: AgentSource | { path: string } | string) => {
+  const handleOpen = async (
+    target: AgentSource | { path: string } | string,
+  ) => {
     const previewTarget =
       typeof target === "string" ? { path: target } : target;
 
@@ -102,7 +104,11 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
 
   return (
     <motion.div
-      initial={disableAnimation || message.created_at ? false : { opacity: 0, y: 10, scale: 0.95 }}
+      initial={
+        disableAnimation || message.created_at
+          ? false
+          : { opacity: 0, y: 10, scale: 0.95 }
+      }
       animate={{ opacity: 1, y: 0, scale: 1 }}
       transition={{ duration: 0.2 }}
       className={`mb-4 flex w-full ${isUser ? "justify-end" : "justify-start"}`}
@@ -115,7 +121,13 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
         }`}
       >
         <div className="mb-2 flex flex-wrap items-center justify-between gap-4 text-[10px] font-bold tracking-[0.08em] uppercase">
-          <span className={isUser ? "text-(--message-user-text) opacity-70" : "text-(--color-accent)"}>
+          <span
+            className={
+              isUser
+                ? "text-(--message-user-text) opacity-70"
+                : "text-(--color-accent)"
+            }
+          >
             {isUser ? "You" : "Assistant"}
           </span>
           <div className="flex items-center gap-2">
@@ -126,14 +138,22 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
                     ? "text-(--color-accent) drop-shadow-[0_0_4px_var(--color-accent)]"
                     : "text-(--color-text-muted) opacity-60 hover:opacity-100"
                 } hover:scale-110 hover:bg-(--glass-bg)`}
-                onClick={() => (isSpeaking ? stop() : speak(fullDisplayContent))}
+                onClick={() =>
+                  isSpeaking ? stop() : speak(fullDisplayContent)
+                }
                 title={isSpeaking ? "Stop reading" : "Read aloud"}
                 type="button"
               >
                 {isSpeaking ? <VolumeX size={14} /> : <Volume2 size={14} />}
               </button>
             )}
-            <span className={isUser ? "text-(--message-user-text) opacity-70" : "text-(--color-text-muted)"}>
+            <span
+              className={
+                isUser
+                  ? "text-(--message-user-text) opacity-70"
+                  : "text-(--color-text-muted)"
+              }
+            >
               {message.timestamp.toLocaleTimeString([], {
                 hour: "2-digit",
                 minute: "2-digit",
@@ -142,20 +162,39 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
           </div>
         </div>
 
+        {/* Progress indicator for loading states */}
+        {message.progress !== undefined && message.status && (
+          <div className="mb-3 flex items-center gap-2">
+            <div className="h-1.5 flex-1 rounded-full bg-white/10 overflow-hidden">
+              <motion.div
+                className="h-full rounded-full bg-gradient-to-r from-[var(--color-accent)] to-blue-400"
+                initial={{ width: 0 }}
+                animate={{ width: `${Math.min(message.progress, 95)}%` }}
+                transition={{ duration: 0.3, ease: "easeOut" }}
+              />
+            </div>
+            <span className="text-[11px] font-medium text-[var(--color-text-muted)]">
+              {Math.floor(Math.min(message.progress, 95))}%
+            </span>
+          </div>
+        )}
+
         <div
           className={`prose min-w-0 whitespace-pre-wrap text-[0.95rem] leading-relaxed ${
-            isUser ? "text-(--message-user-text)" : "text-(--color-text-primary)"
+            isUser
+              ? "text-(--message-user-text)"
+              : "text-(--color-text-primary)"
           } [&>*:first-child]:mt-0 [&>*:last-child]:mb-0 [&_p+p]:mt-2 [&_ul]:my-2 [&_ul]:pl-5 [&_ol]:my-2 [&_ol]:pl-5 [&_li+li]:mt-1 [&_h1]:my-2 [&_h1]:leading-tight [&_h2]:my-2 [&_h2]:leading-tight [&_h3]:my-2 [&_h3]:leading-tight [&_pre]:my-2 [&_pre]:max-w-full [&_pre]:overflow-x-auto [&_code]:text-[0.9em] [&_table]:my-2 [&_table]:block [&_table]:max-w-full [&_table]:overflow-x-auto [&_blockquote]:my-2 [&_blockquote]:rounded-r-xl [&_blockquote]:border-l-[3px] [&_blockquote]:border-l-(--color-accent) [&_blockquote]:bg-white/3 [&_blockquote]:px-3 [&_blockquote]:py-2 [&_blockquote]:text-(--color-text-secondary)`}
         >
           {message.fileDetails ? (
             <div>
-              <strong className="mb-2 block">📄 {message.fileDetails.filename}</strong>
-              <pre
-                className="mb-2.5 max-h-[200px] overflow-auto rounded-md bg-(--panel-strong-bg) p-2.5 text-xs"
-              >
+              <strong className="mb-2 block">
+                📄 {message.fileDetails.filename}
+              </strong>
+              <pre className="mb-2.5 max-h-[200px] overflow-auto rounded-md bg-(--panel-strong-bg) p-2.5 text-xs">
                 {message.fileDetails.preview}
               </pre>
-              <button 
+              <button
                 className="inline-flex cursor-pointer items-center gap-1 rounded border border-(--glass-border) bg-(--glass-bg) px-2 py-1 text-[10px] font-semibold text-(--color-accent) transition-all duration-200 hover:-translate-y-px hover:bg-(--color-accent) hover:text-white"
                 onClick={() => window.open(message.fileDetails!.url)}
               >

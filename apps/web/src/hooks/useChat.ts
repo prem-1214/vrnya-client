@@ -1,5 +1,10 @@
 import { useState, useCallback, useRef } from "react";
-import { ApiError, sendMessageStream, listMessages } from "../api/client";
+import {
+  ApiError,
+  sendMessageStream,
+  listMessages,
+  type ChatStatus,
+} from "../api/client";
 
 export interface AgentSource {
   id?: string;
@@ -33,6 +38,8 @@ export interface Message {
     preview: string;
     url: string;
   };
+  status?: ChatStatus;
+  progress?: number;
 }
 
 interface FormattedResponse {
@@ -42,6 +49,32 @@ interface FormattedResponse {
 }
 
 const MAX_AUTO_RETRIES = 1;
+
+// Map chat status types to user-friendly messages
+const STATUS_MESSAGES: Record<ChatStatus, string> = {
+  thinking: "💭 Analyzing your request...",
+  searching: "🔍 Searching your files...",
+  retrieving: "📂 Retrieving information...",
+  generating: "✍️ Generating response...",
+  processing: "⚙️ Processing...",
+};
+
+// Get progress indicator based on status
+const STATUS_PROGRESS: Record<ChatStatus, number> = {
+  thinking: 15,
+  searching: 35,
+  retrieving: 60,
+  generating: 85,
+  processing: 95,
+};
+
+function getStatusMessage(status?: ChatStatus, customText?: string): string {
+  if (customText) return customText;
+  if (status && status in STATUS_MESSAGES) {
+    return STATUS_MESSAGES[status];
+  }
+  return "Processing...";
+}
 
 function logRenderedAssistantResponse(response: FormattedResponse): void {
   console.info("[chat-ui] Assistant response rendered", {
@@ -184,9 +217,17 @@ export const useChat = () => {
                 }
 
                 if (event.type === "status") {
+                  const statusMessage = getStatusMessage(
+                    event.status,
+                    event.text,
+                  );
                   updateAssistantMessage(assistantMessage.id, (message) => ({
                     ...message,
-                    content: event.text || "Thinking...",
+                    content: statusMessage,
+                    status: event.status,
+                    progress:
+                      event.progress ??
+                      STATUS_PROGRESS[event.status || "thinking"],
                   }));
                   return;
                 }
@@ -310,22 +351,22 @@ export const useChat = () => {
                     url: res.url,
                   },
                 }
-              : msg
-          )
+              : msg,
+          ),
         );
       } catch (err) {
         setMessages((prev) =>
           prev.map((msg) =>
             msg.id === assistantMessage.id
               ? { ...msg, content: "Generation failed." }
-              : msg
-          )
+              : msg,
+          ),
         );
       } finally {
         setIsTyping(false);
       }
     },
-    []
+    [],
   );
 
   const clearMessages = useCallback(() => {

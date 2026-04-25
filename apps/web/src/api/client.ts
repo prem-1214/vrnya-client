@@ -99,9 +99,18 @@ export interface ChatResponse {
   answer: any;
 }
 
+export type ChatStatus =
+  | "thinking"
+  | "searching"
+  | "retrieving"
+  | "generating"
+  | "processing";
+
 export interface ChatStreamEvent {
   type: "conversation" | "status" | "answer" | "done" | "error";
   text?: string;
+  status?: ChatStatus;
+  progress?: number; // 0-100
   answer?: any;
   error?: string;
   code?: string;
@@ -252,9 +261,9 @@ async function apiFetch<T>(
   }
 
   if (!res.ok) {
-    const error = await res
+    const error = (await res
       .json()
-      .catch(() => ({ error: "Unknown error" })) as ApiErrorPayload;
+      .catch(() => ({ error: "Unknown error" }))) as ApiErrorPayload;
     throw new ApiError(error.error || "API Request failed", {
       code: error.code,
       retryable: error.retryable,
@@ -319,9 +328,9 @@ export async function sendMessageStream(
   });
 
   if (!res.ok || !res.body) {
-    const error = await res
+    const error = (await res
       .json()
-      .catch(() => ({ error: "Unknown error" })) as ApiErrorPayload;
+      .catch(() => ({ error: "Unknown error" }))) as ApiErrorPayload;
     throw new ApiError(error.error || "Chat stream request failed", {
       code: error.code,
       retryable: error.retryable,
