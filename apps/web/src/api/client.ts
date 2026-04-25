@@ -107,8 +107,9 @@ export type ChatStatus =
   | "processing";
 
 export interface ChatStreamEvent {
-  type: "conversation" | "status" | "answer" | "done" | "error";
+  type: "conversation" | "status" | "token" | "answer" | "done" | "error";
   text?: string;
+  token?: string; // ✅ NEW: Individual token for streaming
   status?: ChatStatus;
   progress?: number; // 0-100
   answer?: any;
@@ -356,9 +357,12 @@ export async function sendMessageStream(
         const trimmed = line.trim();
         if (!trimmed) continue;
         try {
-          onEvent(JSON.parse(trimmed) as ChatStreamEvent);
-        } catch {
+          const parsed = JSON.parse(trimmed) as ChatStreamEvent;
+          console.log("[API] Parsed event:", parsed.type, parsed);
+          onEvent(parsed);
+        } catch (e) {
           // ignore malformed partial lines
+          console.warn("[API] Failed to parse line:", trimmed, e);
         }
       }
     }
@@ -368,8 +372,12 @@ export async function sendMessageStream(
 
   if (!signal?.aborted && buffer.trim()) {
     try {
-      onEvent(JSON.parse(buffer.trim()) as ChatStreamEvent);
-    } catch {}
+      const parsed = JSON.parse(buffer.trim()) as ChatStreamEvent;
+      console.log("[API] Parsed final event:", parsed.type, parsed);
+      onEvent(parsed);
+    } catch (e) {
+      console.warn("[API] Failed to parse final buffer:", buffer, e);
+    }
   }
 }
 

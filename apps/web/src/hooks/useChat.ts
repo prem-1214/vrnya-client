@@ -211,6 +211,8 @@ export const useChat = () => {
               content,
               currentConversationId,
               (event) => {
+                console.log("[useChat] Stream event:", event.type, event);
+
                 if (event.conversationId) {
                   currentConversationId = event.conversationId;
                   setConversationId(event.conversationId);
@@ -229,6 +231,32 @@ export const useChat = () => {
                       event.progress ??
                       STATUS_PROGRESS[event.status || "thinking"],
                   }));
+                  return;
+                }
+
+                // ✅ NEW: Handle streaming tokens
+                if (event.type === "token") {
+                  console.log("[useChat] Token event received:", event.token);
+                  if (event.token) {
+                    updateAssistantMessage(assistantMessage.id, (message) => {
+                      console.log("[useChat] Updating message with token:", {
+                        token: event.token,
+                        prevContent: message.content,
+                        hasStatus: !!message.status,
+                      });
+
+                      const newContent = message.status
+                        ? (event.token ?? "")
+                        : message.content + (event.token ?? "");
+
+                      return {
+                        ...message,
+                        content: newContent,
+                        status: undefined, // Clear status when tokens arrive
+                        progress: 95,
+                      };
+                    });
+                  }
                   return;
                 }
 

@@ -48,7 +48,8 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
 
   useEffect(() => {
     if (!shouldAnimate) {
-      // setVisibleContent(fullDisplayContent);
+      // ✅ FIXED: Update content immediately for real-time token streaming
+      setVisibleContent(fullDisplayContent);
       return;
     }
 
