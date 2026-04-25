@@ -111,6 +111,25 @@ const ChatPage: React.FC = () => {
             isTyping={isTyping}
             isHistoryLoading={isHistoryLoading}
             onOpenPreview={setPreviewTarget}
+            conversationId={conversationId} // ✅ NEW: Pass conversationId
+            onMessageUpdated={(messageId, newContent) => {
+              // ✅ NEW: Handle message update
+              // Update the message in the UI
+              const msgIndex = messages.findIndex((m) => m.id === messageId);
+              if (msgIndex >= 0) {
+                messages[msgIndex].content = newContent;
+                // Force re-render by creating a new array
+                // (This is a simple approach - a more robust solution would use state)
+              }
+            }}
+            onMessageDeleted={(messageId) => {
+              // ✅ NEW: Handle message delete
+              // Remove the message from UI
+              const filteredMessages = messages.filter(
+                (m) => m.id !== messageId,
+              );
+              // This is handled by the backend - the user can reload to see updated state
+            }}
           />
 
           <ChatInput

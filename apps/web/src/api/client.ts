@@ -797,6 +797,13 @@ export const deleteMemory = (id: string) =>
     method: "DELETE",
   });
 
+// ✅ NEW: Update memory (P3-10)
+export const updateMemory = (id: string, memory_value: string) =>
+  apiFetch<MemoryItem>(`/api/v1/memory/${id}`, {
+    method: "PATCH",
+    body: JSON.stringify({ memory_value }),
+  });
+
 export const clearAllMemories = () =>
   apiFetch<{ success: boolean }>("/api/v1/memory", {
     method: "DELETE",

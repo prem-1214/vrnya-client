@@ -8,6 +8,9 @@ interface MessageListProps {
   isTyping: boolean;
   isHistoryLoading?: boolean;
   onOpenPreview?: (target: AgentSource | { path: string }) => void;
+  conversationId?: string; // ✅ NEW: For message actions
+  onMessageUpdated?: (messageId: string, newContent: string) => void; // ✅ NEW
+  onMessageDeleted?: (messageId: string) => void; // ✅ NEW
 }
 
 const MessageList: React.FC<MessageListProps> = ({
@@ -15,6 +18,9 @@ const MessageList: React.FC<MessageListProps> = ({
   isTyping,
   isHistoryLoading = false,
   onOpenPreview,
+  conversationId, // ✅ NEW
+  onMessageUpdated, // ✅ NEW
+  onMessageDeleted, // ✅ NEW
 }) => {
   const scrollRef = useRef<HTMLDivElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -67,6 +73,9 @@ const MessageList: React.FC<MessageListProps> = ({
             disableAnimation={Boolean(msg.created_at)}
             onOpenPreview={onOpenPreview}
             onAnimationProgress={scrollToBottom}
+            conversationId={conversationId} // ✅ NEW
+            onMessageUpdated={onMessageUpdated} // ✅ NEW
+            onMessageDeleted={onMessageDeleted} // ✅ NEW
           />
         ))
       )}

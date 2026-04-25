@@ -4,6 +4,7 @@ import remarkGfm from "remark-gfm";
 import { motion } from "framer-motion";
 import type { AgentSource, Message } from "../../hooks/useChat";
 import MessageSourceList from "./MessageSourceList";
+import MessageActions from "./MessageActions"; // ✅ NEW: Message actions (P3-11)
 import { openPathInShell, showPathInFolder } from "../../platform/shell";
 import { Volume2, VolumeX } from "lucide-react";
 import { useSpeech } from "../../hooks/useSpeech";
@@ -14,6 +15,9 @@ interface MessageBubbleProps {
   isAutoSpeaking?: boolean;
   disableAnimation?: boolean;
   onAnimationProgress?: () => void;
+  conversationId?: string; // ✅ NEW: For message actions
+  onMessageUpdated?: (messageId: string, newContent: string) => void; // ✅ NEW
+  onMessageDeleted?: (messageId: string) => void; // ✅ NEW
 }
 
 const MessageBubble: React.FC<MessageBubbleProps> = ({
@@ -22,6 +26,9 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
   isAutoSpeaking = false,
   disableAnimation = false,
   onAnimationProgress,
+  conversationId, // ✅ NEW
+  onMessageUpdated, // ✅ NEW
+  onMessageDeleted, // ✅ NEW
 }) => {
   const { speak, stop, isSpeaking } = useSpeech();
   const isUser = message.role === "user";
@@ -147,6 +154,19 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
               >
                 {isSpeaking ? <VolumeX size={14} /> : <Volume2 size={14} />}
               </button>
+            )}
+            {/* ✅ NEW: Message actions (P3-11) */}
+            {conversationId && (
+              <MessageActions
+                messageId={message.id}
+                conversationId={conversationId}
+                content={message.content}
+                role={message.role}
+                onMessageUpdated={(newContent) =>
+                  onMessageUpdated?.(message.id, newContent)
+                }
+                onMessageDeleted={() => onMessageDeleted?.(message.id)}
+              />
             )}
             <span
               className={
