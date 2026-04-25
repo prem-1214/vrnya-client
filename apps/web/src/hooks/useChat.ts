@@ -41,6 +41,8 @@ interface FormattedResponse {
   actionPath?: string;
 }
 
+const MAX_AUTO_RETRIES = 1;
+
 function logRenderedAssistantResponse(response: FormattedResponse): void {
   console.info("[chat-ui] Assistant response rendered", {
     content: response.content,
@@ -136,6 +138,17 @@ export const useChat = () => {
     abortControllerRef.current = null;
   }, []);
 
+  const updateAssistantMessage = useCallback(
+    (assistantMessageId: string, updater: (message: Message) => Message) => {
+      setMessages((prev) =>
+        prev.map((message) =>
+          message.id === assistantMessageId ? updater(message) : message,
+        ),
+      );
+    },
+    [],
+  );
+
   const send = useCallback(
     async (content: string) => {
       if (!content.trim()) return;
@@ -156,80 +169,106 @@ export const useChat = () => {
       setError(null);
 
       try {
-        await sendMessageStream(
-          content,
-          conversationId,
-          (event) => {
-            if (event.conversationId) {
-              setConversationId(event.conversationId);
-            }
+        let currentConversationId = conversationId;
+        let retryCount = 0;
 
-            if (event.type === "status") {
-              setMessages((prev) =>
-                prev.map((message) =>
-                  message.id === assistantMessage.id
-                    ? { ...message, content: event.text || "Thinking..." }
-                    : message,
-                ),
-              );
+        while (true) {
+          try {
+            await sendMessageStream(
+              content,
+              currentConversationId,
+              (event) => {
+                if (event.conversationId) {
+                  currentConversationId = event.conversationId;
+                  setConversationId(event.conversationId);
+                }
+
+                if (event.type === "status") {
+                  updateAssistantMessage(assistantMessage.id, (message) => ({
+                    ...message,
+                    content: event.text || "Thinking...",
+                  }));
+                  return;
+                }
+
+                if (event.type === "answer") {
+                  const response = formatAgentResponse(event.answer);
+                  logRenderedAssistantResponse(response);
+                  const { content, sources, actionPath } = response;
+
+                  updateAssistantMessage(assistantMessage.id, (message) => ({
+                    ...message,
+                    content,
+                    sources,
+                    actionPath,
+                  }));
+                  setError(null);
+                  return;
+                }
+
+                if (event.type === "error") {
+                  updateAssistantMessage(assistantMessage.id, (message) => ({
+                    ...message,
+                    content: `I couldn't complete the request: ${event.error || "the stream failed"}.`,
+                  }));
+                  throw new ApiError(event.error || "Chat stream failed", {
+                    code: event.code,
+                    retryable: event.retryable,
+                    retryAfter: event.retryAfter,
+                  });
+                }
+              },
+              controller.signal,
+            );
+            break;
+          } catch (err: unknown) {
+            if (err instanceof Error && err.name === "AbortError") {
+              updateAssistantMessage(assistantMessage.id, (message) => ({
+                ...message,
+                content: "Request stopped.",
+              }));
               return;
             }
 
-            if (event.type === "answer") {
-              const response = formatAgentResponse(event.answer);
-              logRenderedAssistantResponse(response);
-              const { content, sources, actionPath } = response;
+            if (
+              err instanceof ApiError &&
+              err.retryable &&
+              typeof err.retryAfter === "number" &&
+              retryCount < MAX_AUTO_RETRIES
+            ) {
+              retryCount += 1;
+              updateAssistantMessage(assistantMessage.id, (message) => ({
+                ...message,
+                content: `${err.message} Retrying...`,
+              }));
+              setError(`${err.message} (Retrying...)`);
 
-              setMessages((prev) =>
-                prev.map((message) =>
-                  message.id === assistantMessage.id
-                    ? { ...message, content, sources, actionPath }
-                    : message,
-                ),
-              );
-              return;
-            }
-
-            if (event.type === "error") {
-              setMessages((prev) =>
-                prev.map((message) =>
-                  message.id === assistantMessage.id
-                    ? {
-                        ...message,
-                        content: `I couldn't complete the request: ${event.error || "the stream failed"}.`,
-                      }
-                    : message,
-                ),
-              );
-              throw new ApiError(event.error || "Chat stream failed", {
-                code: event.code,
-                retryable: event.retryable,
-                retryAfter: event.retryAfter,
+              await new Promise<void>((resolve, reject) => {
+                const timeoutId = setTimeout(resolve, err.retryAfter);
+                controller.signal.addEventListener(
+                  "abort",
+                  () => {
+                    clearTimeout(timeoutId);
+                    reject(new DOMException("Request aborted", "AbortError"));
+                  },
+                  { once: true },
+                );
               });
+              continue;
             }
-          },
-          controller.signal,
-        );
-      } catch (err: unknown) {
-        if (err instanceof Error && err.name === "AbortError") {
-          setMessages((prev) =>
-            prev.map((msg) =>
-              msg.id === assistantMessage.id
-                ? { ...msg, content: "Request stopped." }
-                : msg,
-            ),
-          );
-          return;
-        }
 
-        const message =
-          err instanceof Error ? err.message : "Failed to send message";
-        setError(message);
+            const message =
+              err instanceof Error ? err.message : "Failed to send message";
+            setError(message);
+            return;
+          }
+        }
       } finally {
+        abortControllerRef.current = null;
         setIsTyping(false);
       }
     },
-    [conversationId],
+    [conversationId, updateAssistantMessage],
   );
 
   const sendVoice = useCallback(
