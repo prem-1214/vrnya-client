@@ -163,23 +163,6 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
           </div>
         </div>
 
-        {/* Progress indicator for loading states */}
-        {message.progress !== undefined && message.status && (
-          <div className="mb-3 flex items-center gap-2">
-            <div className="h-1.5 flex-1 rounded-full bg-white/10 overflow-hidden">
-              <motion.div
-                className="h-full rounded-full bg-gradient-to-r from-[var(--color-accent)] to-blue-400"
-                initial={{ width: 0 }}
-                animate={{ width: `${Math.min(message.progress, 95)}%` }}
-                transition={{ duration: 0.3, ease: "easeOut" }}
-              />
-            </div>
-            <span className="text-[11px] font-medium text-[var(--color-text-muted)]">
-              {Math.floor(Math.min(message.progress, 95))}%
-            </span>
-          </div>
-        )}
-
         <div
           className={`prose min-w-0 whitespace-pre-wrap text-[0.95rem] leading-relaxed ${
             isUser
