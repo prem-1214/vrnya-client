@@ -1,5 +1,5 @@
 import { useState, useCallback, useRef } from "react";
-import { sendMessageStream, listMessages } from "../api/client";
+import { ApiError, sendMessageStream, listMessages } from "../api/client";
 
 export interface AgentSource {
   id?: string;
@@ -201,7 +201,11 @@ export const useChat = () => {
                     : message,
                 ),
               );
-              throw new Error(event.error || "Chat stream failed");
+              throw new ApiError(event.error || "Chat stream failed", {
+                code: event.code,
+                retryable: event.retryable,
+                retryAfter: event.retryAfter,
+              });
             }
           },
           controller.signal,

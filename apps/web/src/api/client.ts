@@ -110,6 +110,37 @@ export interface ChatStreamEvent {
   conversationId?: string;
 }
 
+export interface ApiErrorPayload {
+  error: string;
+  code?: string;
+  retryable?: boolean;
+  retryAfter?: number;
+}
+
+export class ApiError extends Error {
+  readonly code?: string;
+  readonly retryable?: boolean;
+  readonly retryAfter?: number;
+  readonly status?: number;
+
+  constructor(
+    message: string,
+    options?: {
+      code?: string;
+      retryable?: boolean;
+      retryAfter?: number;
+      status?: number;
+    },
+  ) {
+    super(message);
+    this.name = "ApiError";
+    this.code = options?.code;
+    this.retryable = options?.retryable;
+    this.retryAfter = options?.retryAfter;
+    this.status = options?.status;
+  }
+}
+
 // ---------------------- existing types and API functions ----------------------
 export interface HealthResponse {
   status: string;
@@ -221,8 +252,15 @@ async function apiFetch<T>(
   }
 
   if (!res.ok) {
-    const error = await res.json().catch(() => ({ error: "Unknown error" }));
-    throw new Error(error.error || "API Request failed");
+    const error = await res
+      .json()
+      .catch(() => ({ error: "Unknown error" })) as ApiErrorPayload;
+    throw new ApiError(error.error || "API Request failed", {
+      code: error.code,
+      retryable: error.retryable,
+      retryAfter: error.retryAfter,
+      status: res.status,
+    });
   }
 
   return res.json();
@@ -281,8 +319,15 @@ export async function sendMessageStream(
   });
 
   if (!res.ok || !res.body) {
-    const error = await res.json().catch(() => ({ error: "Unknown error" }));
-    throw new Error(error.error || "Chat stream request failed");
+    const error = await res
+      .json()
+      .catch(() => ({ error: "Unknown error" })) as ApiErrorPayload;
+    throw new ApiError(error.error || "Chat stream request failed", {
+      code: error.code,
+      retryable: error.retryable,
+      retryAfter: error.retryAfter,
+      status: res.status,
+    });
   }
 
   const reader = res.body.getReader();
