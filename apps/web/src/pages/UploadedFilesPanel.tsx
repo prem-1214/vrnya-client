@@ -18,6 +18,7 @@ import {
 } from "../api/client";
 import { motion, AnimatePresence } from "framer-motion";
 import { useMotionSettings } from "../lib/motion";
+import { useModal } from "../context/ModalContext"; // ✅ NEW: Custom modal
 
 const UploadedFilesPanel: React.FC = () => {
   const [files, setFiles] = useState<UploadedFile[]>([]);
@@ -25,6 +26,7 @@ const UploadedFilesPanel: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [indexingIds, setIndexingIds] = useState<Set<string>>(new Set());
   const { itemTransition, fadeSlide } = useMotionSettings();
+  const { showError, showConfirm } = useModal(); // ✅ NEW: Use modal
 
   const navigate = useNavigate();
 
@@ -59,7 +61,7 @@ const UploadedFilesPanel: React.FC = () => {
     } catch (err: unknown) {
       const message =
         err instanceof Error ? err.message : "Failed to trigger re-index";
-      alert(message);
+      await showError("Re-index Failed", message); // ✅ UPDATED
     } finally {
       setIndexingIds((prev) => {
         const next = new Set(prev);
@@ -71,7 +73,11 @@ const UploadedFilesPanel: React.FC = () => {
 
   const handleDelete = async (e: React.MouseEvent, fileId: string) => {
     e.stopPropagation();
-    if (!window.confirm("Are you sure you want to permanently delete this document and its indexed data? This cannot be undone.")) {
+    const confirmed = await showConfirm(
+      "Confirm Delete",
+      "Are you sure you want to permanently delete this document and its indexed data? This cannot be undone.",
+    ); // ✅ UPDATED
+    if (!confirmed) {
       return;
     }
 
@@ -79,8 +85,9 @@ const UploadedFilesPanel: React.FC = () => {
       await deleteUploadedFile(fileId);
       setFiles((prev) => prev.filter((f) => f.id !== fileId));
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : "Failed to delete file";
-      alert(message);
+      const message =
+        err instanceof Error ? err.message : "Failed to delete file";
+      await showError("Delete Failed", message); // ✅ UPDATED
     }
   };
 
@@ -151,7 +158,10 @@ const UploadedFilesPanel: React.FC = () => {
               animate={{ opacity: 1 }}
               className="flex h-full flex-col items-center justify-center gap-4 text-(--color-text-secondary)"
             >
-              <Loader2 size={32} className="animate-spin text-(--color-accent)" />
+              <Loader2
+                size={32}
+                className="animate-spin text-(--color-accent)"
+              />
               <p>Loading uploaded files...</p>
             </motion.div>
           ) : error ? (
@@ -204,8 +214,10 @@ const UploadedFilesPanel: React.FC = () => {
                         {file.name}
                       </span>
                       <span className="flex items-center gap-2 text-[11px] text-(--color-text-muted)">
-                        {formatSize(file.size)} &bull; {file.extension || 'Unknown'}
-                        {file.indexed_at && ` • ${new Date(file.indexed_at).toLocaleDateString()}`}
+                        {formatSize(file.size)} &bull;{" "}
+                        {file.extension || "Unknown"}
+                        {file.indexed_at &&
+                          ` • ${new Date(file.indexed_at).toLocaleDateString()}`}
                       </span>
                     </div>
                   </div>

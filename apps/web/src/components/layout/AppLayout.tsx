@@ -4,8 +4,10 @@ import { Helmet } from "react-helmet-async";
 import TitleBar from "./TitleBar";
 import Sidebar from "./Sidebar";
 import StatusBar from "./StatusBar";
+import { useModal, ModalComponent } from "../../context/ModalContext"; // ✅ NEW: Custom modal
 
 const AppLayout: React.FC = () => {
+  const { isOpen, config, closeModal } = useModal(); // ✅ NEW
   return (
     <div
       style={{ padding: "8px" }}
@@ -36,6 +38,8 @@ const AppLayout: React.FC = () => {
         </div>
         <StatusBar />
       </div>
+      {/* ✅ NEW: Render modal component */}
+      <ModalComponent isOpen={isOpen} config={config} onClose={closeModal} />
     </div>
   );
 };

@@ -1,5 +1,6 @@
 import React, { useState, useRef, useCallback } from "react";
 import { Mic, Square } from "lucide-react";
+import { useModal } from "../../context/ModalContext"; // ✅ NEW: Custom modal
 
 interface VoiceRecorderProps {
   onRecordingComplete: (transcript: string) => void;
@@ -11,6 +12,7 @@ const VoiceRecorder: React.FC<VoiceRecorderProps> = ({
   disabled = false,
 }) => {
   const [isRecording, setIsRecording] = useState(false);
+  const { showError } = useModal(); // ✅ NEW: Use modal
   const isRecordingRef = useRef(false);
   const recognitionRef = useRef<any>(null);
   const silenceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -25,16 +27,21 @@ const VoiceRecorder: React.FC<VoiceRecorderProps> = ({
   }, []);
 
   const startRecording = useCallback(() => {
-    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-    
+    const SpeechRecognition =
+      (window as any).SpeechRecognition ||
+      (window as any).webkitSpeechRecognition;
+
     if (!SpeechRecognition) {
-      alert("Browser speech recognition is not supported in this browser.");
+      showError(
+        "Not Supported",
+        "Browser speech recognition is not supported in this browser.",
+      ); // ✅ UPDATED
       return;
     }
 
     try {
       const recognition = new SpeechRecognition();
-      recognition.continuous = false; 
+      recognition.continuous = false;
       recognition.interimResults = true;
       recognition.lang = "en-US";
 
@@ -48,7 +55,7 @@ const VoiceRecorder: React.FC<VoiceRecorderProps> = ({
         if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
         silenceTimerRef.current = setTimeout(() => {
           stopRecording();
-        }, 2000); 
+        }, 2000);
       };
 
       recognition.onspeechend = () => {

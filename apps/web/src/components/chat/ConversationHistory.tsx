@@ -1,6 +1,11 @@
 import React, { useEffect, useState } from "react";
 import { MessageSquare, Plus, Trash2, Loader2, Search } from "lucide-react";
-import { type Conversation, listConversations, deleteConversation } from "../../api/client";
+import {
+  type Conversation,
+  listConversations,
+  deleteConversation,
+} from "../../api/client";
+import { useModal } from "../../context/ModalContext"; // ✅ NEW: Custom modal
 
 interface ConversationHistoryProps {
   activeId: string | null;
@@ -16,6 +21,7 @@ const ConversationHistory: React.FC<ConversationHistoryProps> = ({
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+  const { showConfirm } = useModal(); // ✅ NEW: Use modal
 
   const loadConversations = async () => {
     try {
@@ -35,30 +41,39 @@ const ConversationHistory: React.FC<ConversationHistoryProps> = ({
 
   const handleDelete = async (e: React.MouseEvent, id: string) => {
     e.stopPropagation();
-    if (confirm("Delete this conversation?")) {
-      try {
-        await deleteConversation(id);
-        setConversations(prev => prev.filter(c => c.id !== id));
-        if (activeId === id) onNewChat();
-      } catch (error) {
-        console.error("Failed to delete conversation:", error);
-      }
+    const confirmed = await showConfirm(
+      "Confirm Delete",
+      "Delete this conversation?",
+    ); // ✅ UPDATED
+    if (!confirmed) return;
+
+    try {
+      await deleteConversation(id);
+      setConversations((prev) => prev.filter((c) => c.id !== id));
+      if (activeId === id) onNewChat();
+    } catch (error) {
+      console.error("Failed to delete conversation:", error);
     }
   };
 
-  const filtered = conversations.filter(c => 
-    c.title?.toLowerCase().includes(searchQuery.toLowerCase())
+  const filtered = conversations.filter((c) =>
+    c.title?.toLowerCase().includes(searchQuery.toLowerCase()),
   );
 
   const formatTime = (dateStr: string) => {
     const date = new Date(dateStr);
     const now = new Date();
-    const diffDays = Math.floor((now.getTime() - date.getTime()) / (1000 * 3600 * 24));
-    
+    const diffDays = Math.floor(
+      (now.getTime() - date.getTime()) / (1000 * 3600 * 24),
+    );
+
     if (diffDays === 0) return "Today";
     if (diffDays === 1) return "Yesterday";
     if (diffDays < 7) return `${diffDays}d ago`;
-    return date.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+    return date.toLocaleDateString(undefined, {
+      month: "short",
+      day: "numeric",
+    });
   };
 
   return (
@@ -73,7 +88,10 @@ const ConversationHistory: React.FC<ConversationHistoryProps> = ({
         </button>
 
         <div className="relative group">
-          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-(--color-text-muted) group-focus-within:text-(--color-accent) transition-colors" />
+          <Search
+            size={14}
+            className="absolute left-3 top-1/2 -translate-y-1/2 text-(--color-text-muted) group-focus-within:text-(--color-accent) transition-colors"
+          />
           <label htmlFor="conversation-search" className="sr-only">
             Search conversations
           </label>
@@ -91,12 +109,17 @@ const ConversationHistory: React.FC<ConversationHistoryProps> = ({
       <div className="flex-1 overflow-y-auto px-2 pb-4 scrollbar-thin">
         {isLoading ? (
           <div className="flex items-center justify-center py-8">
-            <Loader2 className="animate-spin text-(--color-accent-subtle)" size={20} />
+            <Loader2
+              className="animate-spin text-(--color-accent-subtle)"
+              size={20}
+            />
           </div>
         ) : filtered.length === 0 ? (
           <div className="text-center py-8 px-4">
             <p className="text-xs font-medium text-(--color-text-muted)">
-              {searchQuery ? "No chats match your search." : "No previous chats found."}
+              {searchQuery
+                ? "No chats match your search."
+                : "No previous chats found."}
             </p>
           </div>
         ) : (
@@ -122,7 +145,14 @@ const ConversationHistory: React.FC<ConversationHistoryProps> = ({
                   tabIndex={0}
                   aria-label={`Open conversation ${chat.title || "Untitled Chat"}`}
                 >
-                  <MessageSquare size={16} className={isActive ? "text-(--color-accent)" : "text-(--color-text-muted)"} />
+                  <MessageSquare
+                    size={16}
+                    className={
+                      isActive
+                        ? "text-(--color-accent)"
+                        : "text-(--color-text-muted)"
+                    }
+                  />
                   <div className="flex-1 flex flex-col min-w-0">
                     <span className="text-xs font-bold truncate leading-tight">
                       {chat.title || "Untitiled Chat"}
@@ -131,7 +161,7 @@ const ConversationHistory: React.FC<ConversationHistoryProps> = ({
                       {formatTime(chat.updated_at)}
                     </span>
                   </div>
-                  
+
                   <button
                     onClick={(e) => handleDelete(e, chat.id)}
                     className="opacity-0 group-hover:opacity-100 p-1.5 rounded-lg text-(--color-text-muted) hover:text-(--color-error) hover:bg-[rgba(239,68,68,0.1)] transition-all"

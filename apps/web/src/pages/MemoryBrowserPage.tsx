@@ -7,6 +7,7 @@ import {
   updateMemory,
   type MemoryItem,
 } from "../api/client";
+import { useModal } from "../context/ModalContext"; // ✅ NEW: Custom modal
 import PageShell from "../components/layout/PageShell";
 
 export const MemoryBrowserPage: React.FC = () => {
@@ -17,6 +18,7 @@ export const MemoryBrowserPage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editValue, setEditValue] = useState("");
+  const { showConfirm, showError, showAlert } = useModal(); // ✅ NEW: Use modal
 
   useEffect(() => {
     loadMemories();
@@ -60,14 +62,18 @@ export const MemoryBrowserPage: React.FC = () => {
   };
 
   const handleDeleteMemory = async (id: string) => {
-    if (!confirm("Delete this memory?")) return;
+    const confirmed = await showConfirm(
+      "Confirm Delete",
+      "Delete this memory?",
+    ); // ✅ UPDATED
+    if (!confirmed) return;
 
     try {
       await deleteMemory(id);
       setMemories(memories.filter((m) => m.id !== id));
     } catch (error) {
       console.error("Failed to delete memory:", error);
-      alert("Failed to delete memory");
+      await showError("Failed to Delete", "Failed to delete memory"); // ✅ UPDATED
     }
   };
 
@@ -78,7 +84,7 @@ export const MemoryBrowserPage: React.FC = () => {
 
   const handleSaveMemory = async (id: string) => {
     if (!editValue.trim()) {
-      alert("Memory value cannot be empty");
+      await showError("Validation Error", "Memory value cannot be empty"); // ✅ UPDATED
       return;
     }
 
@@ -90,9 +96,10 @@ export const MemoryBrowserPage: React.FC = () => {
         ),
       );
       setEditingId(null);
+      await showAlert("Success", "Memory updated successfully"); // ✅ UPDATED
     } catch (error) {
       console.error("Failed to update memory:", error);
-      alert("Failed to update memory");
+      await showError("Failed to Update", "Failed to update memory"); // ✅ UPDATED
     }
   };
 

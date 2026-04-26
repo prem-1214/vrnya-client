@@ -8,6 +8,7 @@ import MessageActions from "./MessageActions"; // ✅ NEW: Message actions (P3-1
 import { openPathInShell, showPathInFolder } from "../../platform/shell";
 import { Volume2, VolumeX } from "lucide-react";
 import { useSpeech } from "../../hooks/useSpeech";
+import { useModal } from "../../context/ModalContext"; // ✅ NEW: Custom modal
 
 interface MessageBubbleProps {
   message: Message;
@@ -31,6 +32,7 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
   onMessageDeleted, // ✅ NEW
 }) => {
   const { speak, stop, isSpeaking } = useSpeech();
+  const { showError } = useModal(); // ✅ NEW: Use modal for errors
   const isUser = message.role === "user";
 
   // Sources and action path now come from structured message fields,
@@ -94,19 +96,23 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
     try {
       const error = await openPathInShell(previewTarget.path);
       if (error) {
-        alert(`Could not open file: ${error}\nPath: ${previewTarget.path}`);
+        await showError(
+          "Failed to Open File",
+          `${error}\n\nPath: ${previewTarget.path}`,
+        ); // ✅ UPDATED
       }
     } catch (err) {
-      alert(`Error calling openPath: ${err}`);
+      await showError("Error", `Error calling openPath: ${err}`); // ✅ UPDATED
     }
   };
 
   const handleShowInFolder = async (path: string) => {
     try {
       const error = await showPathInFolder(path);
-      if (error) alert(`Could not show folder: ${error}\nPath: ${path}`);
+      if (error)
+        await showError("Failed to Open Folder", `${error}\n\nPath: ${path}`); // ✅ UPDATED
     } catch (err) {
-      alert(`Error calling showInFolder: ${err}`);
+      await showError("Error", `Error calling showInFolder: ${err}`); // ✅ UPDATED
     }
   };
 

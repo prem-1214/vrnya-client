@@ -1,6 +1,7 @@
 import React from "react";
 import { Trash2, Clock } from "lucide-react";
 import type { MemoryItem, MemoryType } from "../../api/client";
+import { useModal } from "../../context/ModalContext"; // ✅ NEW: Custom modal
 
 interface MemoryListItemProps {
   memory: MemoryItem;
@@ -25,46 +26,62 @@ const getTypeColor = (type: MemoryType) => {
 };
 
 const formatTypeLabel = (type: string) => {
-  return type.split("_").map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(" ");
+  return type
+    .split("_")
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
 };
 
-const MemoryListItem: React.FC<MemoryListItemProps> = ({ memory, onDelete }) => {
+const MemoryListItem: React.FC<MemoryListItemProps> = ({
+  memory,
+  onDelete,
+}) => {
   const [isDeleting, setIsDeleting] = React.useState(false);
+  const { showConfirm } = useModal(); // ✅ NEW: Use modal
 
   const handleDelete = async () => {
-    if (confirm("Delete this memory?")) {
-      setIsDeleting(true);
-      try {
-        await onDelete(memory.id);
-      } finally {
-        setIsDeleting(false);
-      }
+    const confirmed = await showConfirm(
+      "Confirm Delete",
+      "Delete this memory?",
+    ); // ✅ UPDATED
+    if (!confirmed) return;
+
+    setIsDeleting(true);
+    try {
+      await onDelete(memory.id);
+    } finally {
+      setIsDeleting(false);
     }
   };
 
-  const relativeTime = new Date(memory.updated_at).toLocaleDateString(undefined, {
-    month: "short",
-    day: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
+  const relativeTime = new Date(memory.updated_at).toLocaleDateString(
+    undefined,
+    {
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    },
+  );
 
   return (
     <div className="group relative flex items-center gap-4 p-4 rounded-xl border border-(--color-border-subtle) hover:bg-(--color-bg-hover) transition-all duration-200">
       <div className="flex-1 flex flex-col gap-2 min-w-0">
         <div className="flex items-center gap-2">
-          <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full border ${getTypeColor(memory.memory_type)}`}>
+          <span
+            className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full border ${getTypeColor(memory.memory_type)}`}
+          >
             {formatTypeLabel(memory.memory_type)}
           </span>
           <span className="text-[11px] font-semibold text-(--color-text-muted) truncate">
             {memory.memory_key}
           </span>
         </div>
-        
+
         <p className="text-sm text-(--color-text-primary) font-medium leading-normal">
           {memory.memory_value}
         </p>
-        
+
         <div className="flex items-center gap-1.5 text-(--color-text-muted)">
           <Clock size={12} />
           <span className="text-[11px] font-medium">{relativeTime}</span>

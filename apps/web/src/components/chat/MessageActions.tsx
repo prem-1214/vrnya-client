@@ -3,6 +3,7 @@ import { Copy, Edit2, Trash2, Volume2, VolumeX } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { deleteMessage, updateMessage } from "../../api/client";
 import { useSpeech } from "../../hooks/useSpeech";
+import { useModal } from "../../context/ModalContext"; // ✅ NEW: Custom modal
 
 interface MessageActionsProps {
   messageId: string;
@@ -25,11 +26,12 @@ export const MessageActions: React.FC<MessageActionsProps> = ({
   const [isEditing, setIsEditing] = useState(false);
   const [editValue, setEditValue] = useState(content);
   const { speak, stop, isSpeaking } = useSpeech();
+  const { showAlert, showError, showConfirm } = useModal(); // ✅ NEW: Use modal
 
   const handleCopy = async () => {
     try {
       await navigator.clipboard.writeText(content);
-      alert("Copied to clipboard!");
+      await showAlert("Success", "Copied to clipboard!"); // ✅ UPDATED
     } catch (error) {
       console.error("Failed to copy:", error);
     }
@@ -42,7 +44,7 @@ export const MessageActions: React.FC<MessageActionsProps> = ({
 
   const handleSaveEdit = async () => {
     if (!editValue.trim()) {
-      alert("Message cannot be empty");
+      await showError("Validation Error", "Message cannot be empty"); // ✅ UPDATED
       return;
     }
 
@@ -53,12 +55,16 @@ export const MessageActions: React.FC<MessageActionsProps> = ({
       setIsOpen(false);
     } catch (error) {
       console.error("Failed to update message:", error);
-      alert("Failed to update message");
+      await showError("Failed to Update", "Failed to update message"); // ✅ UPDATED
     }
   };
 
   const handleDelete = async () => {
-    if (!confirm("Delete this message?")) return;
+    const confirmed = await showConfirm(
+      "Confirm Delete",
+      "Delete this message?",
+    ); // ✅ UPDATED
+    if (!confirmed) return;
 
     try {
       await deleteMessage(conversationId, messageId);
@@ -66,7 +72,7 @@ export const MessageActions: React.FC<MessageActionsProps> = ({
       setIsOpen(false);
     } catch (error) {
       console.error("Failed to delete message:", error);
-      alert("Failed to delete message");
+      await showError("Failed to Delete", "Failed to delete message"); // ✅ UPDATED
     }
   };
 

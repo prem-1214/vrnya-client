@@ -2,6 +2,7 @@ import { Routes, Route, Navigate, BrowserRouter } from "react-router-dom";
 import { AppProvider } from "./context/AppContext";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import { UploadProvider } from "./context/UploadContext";
+import { ModalProvider } from "./context/ModalContext"; // ✅ NEW: Custom modal
 import AppLayout from "./components/layout/AppLayout";
 
 import ChatPage from "./pages/ChatPage";
@@ -55,37 +56,45 @@ function App() {
     <AuthProvider>
       <AppProvider>
         <UploadProvider>
-          <BrowserRouter>
-            <Routes>
-              {/* Public routes */}
-              <Route path="/waitlist" element={<WaitlistPage />} />
-              <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
-              <Route
-                path="/terms-of-service"
-                element={<TermsOfServicePage />}
-              />
-              {/* <Route path="/login" element={<LoginPage />} /> */}
-              <Route path="/auth/callback" element={<AuthCallbackPage />} />
+          <ModalProvider>
+            {" "}
+            {/* ✅ NEW: Wrap app with modal provider */}
+            <BrowserRouter>
+              <Routes>
+                {/* Public routes */}
+                <Route path="/waitlist" element={<WaitlistPage />} />
+                <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
+                <Route
+                  path="/terms-of-service"
+                  element={<TermsOfServicePage />}
+                />
+                {/* <Route path="/login" element={<LoginPage />} /> */}
+                <Route path="/auth/callback" element={<AuthCallbackPage />} />
 
-              {/* Protected routes */}
-              <Route
-                element={
-                  <ProtectedRoute>
-                    <AppLayout />
-                  </ProtectedRoute>
-                }
-              >
-                <Route path="/" element={<ChatPage />} />
-                <Route path="/chat/:id" element={<ChatPage />} />
-                <Route path="/search" element={<SearchPage />} />
-                <Route path="/index" element={<IndexPage />} />
-                <Route path="/files" element={<FilesPage />} />
-                <Route path="/document/:id" element={<DocumentViewerPage />} />
-                <Route path="/settings" element={<SettingsPage />} />
-                <Route path="/admin" element={<AdminPage />} />
-              </Route>
-            </Routes>
-          </BrowserRouter>
+                {/* Protected routes */}
+                <Route
+                  element={
+                    <ProtectedRoute>
+                      <AppLayout />
+                    </ProtectedRoute>
+                  }
+                >
+                  <Route path="/" element={<ChatPage />} />
+                  <Route path="/chat/:id" element={<ChatPage />} />
+                  <Route path="/search" element={<SearchPage />} />
+                  <Route path="/index" element={<IndexPage />} />
+                  <Route path="/files" element={<FilesPage />} />
+                  <Route
+                    path="/document/:id"
+                    element={<DocumentViewerPage />}
+                  />
+                  <Route path="/settings" element={<SettingsPage />} />
+                  <Route path="/admin" element={<AdminPage />} />
+                </Route>
+              </Routes>
+            </BrowserRouter>
+          </ModalProvider>{" "}
+          {/* ✅ NEW */}
         </UploadProvider>
       </AppProvider>
     </AuthProvider>
