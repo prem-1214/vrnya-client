@@ -177,8 +177,8 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
             <span
               className={
                 isUser
-                  ? "text-(--message-user-text) opacity-70"
-                  : "text-(--color-text-muted)"
+                  ? "text-gray-600 dark:text-gray-300"
+                  : "text-gray-600 dark:text-gray-400"
               }
             >
               {message.timestamp.toLocaleTimeString([], {
