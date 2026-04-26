@@ -32,10 +32,6 @@ export const ModalProvider: React.FC<{ children: React.ReactNode }> = ({
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [config, setConfig] = useState<ModalConfig | null>(null);
-  const [promise, setPromise] = useState<{
-    resolve: (value: boolean) => void;
-    reject: (reason?: any) => void;
-  } | null>(null);
 
   const closeModal = useCallback(() => {
     setIsOpen(false);
@@ -170,7 +166,7 @@ export const ModalComponent: React.FC<ModalComponentProps> = ({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
-            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40"
+            className="fixed inset-0 bg-black/40 z-40"
           />
 
           {/* Modal */}
@@ -182,31 +178,35 @@ export const ModalComponent: React.FC<ModalComponentProps> = ({
             className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-50 w-full max-w-md"
           >
             <div
-              className={`rounded-2xl shadow-2xl overflow-hidden ${
+              className={`rounded-2xl shadow-2xl overflow-hidden border ${
                 config.type === "error"
-                  ? "bg-red-950/90 border border-red-500/30"
-                  : "bg-card border border-input"
+                  ? "bg-red-50 dark:bg-red-950 border-red-200 dark:border-red-800"
+                  : "bg-white dark:bg-slate-900 border-gray-200 dark:border-slate-700"
               }`}
             >
               {/* Header */}
               <div
                 className={`px-6 py-4 flex items-center justify-between ${
                   config.type === "error"
-                    ? "bg-red-900/50 border-b border-red-500/20"
-                    : "border-b border-input bg-muted/50"
+                    ? "bg-red-100 dark:bg-red-900 border-b border-red-200 dark:border-red-800"
+                    : "bg-gray-50 dark:bg-slate-800 border-b border-gray-200 dark:border-slate-700"
                 }`}
               >
                 <h2
                   className={`text-lg font-semibold ${
-                    config.type === "error" ? "text-red-100" : "text-foreground"
+                    config.type === "error"
+                      ? "text-red-900 dark:text-red-100"
+                      : "text-gray-900 dark:text-white"
                   }`}
                 >
                   {config.type === "error" && "⚠️ "} {config.title}
                 </h2>
                 <button
                   onClick={onClose}
-                  className={`p-1 rounded hover:bg-muted/50 transition-colors ${
-                    config.type === "error" ? "text-red-200" : ""
+                  className={`p-1 rounded hover:bg-gray-200 dark:hover:bg-slate-700 transition-colors ${
+                    config.type === "error"
+                      ? "text-red-700 dark:text-red-300"
+                      : "text-gray-600 dark:text-gray-400"
                   }`}
                 >
                   <X size={18} />
@@ -218,8 +218,8 @@ export const ModalComponent: React.FC<ModalComponentProps> = ({
                 <p
                   className={`text-sm leading-relaxed ${
                     config.type === "error"
-                      ? "text-red-100"
-                      : "text-muted-foreground"
+                      ? "text-red-800 dark:text-red-200"
+                      : "text-gray-700 dark:text-gray-300"
                   }`}
                 >
                   {config.message}
@@ -230,15 +230,15 @@ export const ModalComponent: React.FC<ModalComponentProps> = ({
               <div
                 className={`px-6 py-4 flex gap-3 justify-end border-t ${
                   config.type === "error"
-                    ? "border-red-500/20 bg-red-900/30"
-                    : "border-input bg-muted/20"
+                    ? "bg-red-50 dark:bg-red-950/50 border-red-200 dark:border-red-800"
+                    : "bg-gray-50 dark:bg-slate-800/50 border-gray-200 dark:border-slate-700"
                 }`}
               >
                 {config.type === "confirm" && (
                   <button
                     onClick={handleCancel}
                     disabled={isLoading}
-                    className="px-4 py-2 rounded-lg bg-muted text-foreground hover:bg-muted/80 disabled:opacity-50 font-medium text-sm transition-colors"
+                    className="px-4 py-2 rounded-lg bg-gray-200 dark:bg-slate-700 text-gray-900 dark:text-gray-100 hover:bg-gray-300 dark:hover:bg-slate-600 disabled:opacity-50 font-medium text-sm transition-colors"
                   >
                     {config.cancelText || "Cancel"}
                   </button>
@@ -248,8 +248,8 @@ export const ModalComponent: React.FC<ModalComponentProps> = ({
                   disabled={isLoading}
                   className={`px-4 py-2 rounded-lg font-medium text-sm transition-colors disabled:opacity-50 ${
                     config.type === "error"
-                      ? "bg-red-600 text-white hover:bg-red-700"
-                      : "bg-accent text-accent-foreground hover:bg-accent/90"
+                      ? "bg-red-600 dark:bg-red-700 text-white hover:bg-red-700 dark:hover:bg-red-600"
+                      : "bg-blue-600 dark:bg-blue-700 text-white hover:bg-blue-700 dark:hover:bg-blue-600"
                   }`}
                 >
                   {isLoading ? "..." : config.confirmText || "OK"}
