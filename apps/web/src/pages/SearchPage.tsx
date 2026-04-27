@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Search, Info, Sparkles, X } from "lucide-react";
 import { searchFiles, getImageDownloadUrl } from "../api/client";
@@ -81,9 +81,6 @@ const SearchPage: React.FC = () => {
     name: string;
   } | null>(null);
   const [imageUrls, setImageUrls] = useState<Record<string, string>>({});
-  const [loadingImageIds, setLoadingImageIds] = useState<Set<string>>(
-    new Set(),
-  );
   const navigate = useNavigate();
   const { reduceMotion, itemTransition, fadeSlide } = useMotionSettings();
   const filterChipClass = (isActive: boolean) =>
@@ -93,28 +90,18 @@ const SearchPage: React.FC = () => {
         : "border-(--color-border) bg-transparent font-medium text-(--color-text-secondary) hover:border-(--color-accent) hover:text-(--color-text-primary)"
     }`;
 
-  // Separate images and documents
-  const { documentResults, imageResults } = useMemo(() => {
-    return {
-      documentResults: results.filter((r) => !r.isImage),
-      imageResults: results.filter((r) => r.isImage),
-    };
-  }, [results]);
-
   // Load image URLs for grid display
   useEffect(() => {
     const loadImageUrls = async () => {
       const newUrls: Record<string, string> = {};
-      const loadingIds = new Set<string>();
 
-      for (const image of imageResults) {
-        if (image.id && !imageUrls[image.id]) {
-          loadingIds.add(image.id);
+      for (const result of results) {
+        if (result.isImage && result.id && !imageUrls[result.id]) {
           try {
-            const { downloadUrl } = await getImageDownloadUrl(image.id);
-            newUrls[image.id] = downloadUrl;
+            const { downloadUrl } = await getImageDownloadUrl(result.id);
+            newUrls[result.id] = downloadUrl;
           } catch (error) {
-            console.error(`Failed to load image URL for ${image.id}:`, error);
+            console.error(`Failed to load image URL for ${result.id}:`, error);
           }
         }
       }
@@ -122,13 +109,12 @@ const SearchPage: React.FC = () => {
       if (Object.keys(newUrls).length > 0) {
         setImageUrls((prev) => ({ ...prev, ...newUrls }));
       }
-      setLoadingImageIds(new Set());
     };
 
-    if (imageResults.length > 0) {
+    if (results.length > 0) {
       loadImageUrls();
     }
-  }, [imageResults]);
+  }, [results]);
 
   useEffect(() => {
     const delayDebounce = setTimeout(async () => {
@@ -226,120 +212,108 @@ const SearchPage: React.FC = () => {
         ))}
       </div>
 
-      <div className="mx-auto w-full max-w-[1000px]">
+      <div className="mx-auto w-full max-w-[1200px]">
         <AnimatePresence>
-          {/* Images Grid */}
-          {imageResults.length > 0 && (
+          {/* Unified Grid for Images and Documents */}
+          {results.length > 0 && (
             <motion.div
-              key="images-section"
+              key="results-grid"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              className="mb-8 grid grid-cols-[repeat(auto-fill,minmax(180px,1fr))] gap-4"
+              className="grid grid-cols-[repeat(auto-fill,minmax(280px,1fr))] gap-4"
             >
-              {imageResults.map((result: SearchResult, idx: number) => (
+              {results.map((result: SearchResult, idx: number) => (
                 <motion.button
-                  key={`${result.id}-img-${idx}`}
+                  key={`${result.id}-${idx}`}
                   variants={fadeSlide(10)}
                   initial="hidden"
                   animate="visible"
                   exit="exit"
                   transition={itemTransition(idx)}
-                  className="flex min-h-56 cursor-pointer flex-col gap-2 rounded-lg border border-(--glass-border) bg-(--color-bg-surface) p-3 text-left shadow-(--shadow-sm) transition-all duration-150 hover:-translate-y-0.5 hover:border-[rgba(90,169,255,0.28)] hover:bg-(--color-bg-hover) hover:shadow-[0_6px_20px_rgba(0,0,0,0.15)]"
-                  onClick={() => handleImagePreview(result)}
+                  className="flex min-h-64 cursor-pointer flex-col gap-3 rounded-lg border border-(--glass-border) bg-(--color-bg-surface) p-4 text-left shadow-(--shadow-sm) transition-all duration-150 hover:-translate-y-0.5 hover:border-[rgba(90,169,255,0.28)] hover:bg-(--color-bg-hover) hover:shadow-[0_6px_20px_rgba(0,0,0,0.15)]"
+                  onClick={() =>
+                    result.isImage
+                      ? handleImagePreview(result)
+                      : handleOpenResult(result)
+                  }
                   type="button"
-                  aria-label={`Preview image ${result.name || "image"}`}
+                  aria-label={`${result.isImage ? "Preview image" : "Open document"} ${result.name || "result"}`}
                 >
+                  {/* Header with badge and similarity */}
                   <div className="flex items-center justify-between gap-2">
                     <span className="shrink-0 rounded-sm bg-(--color-accent) px-1.5 py-0.5 text-[10px] font-bold text-black uppercase leading-tight">
-                      IMAGE
+                      {result.isImage ? "IMAGE" : "FILE"}
                     </span>
                     <div className="shrink-0 rounded-full bg-(--color-accent-subtle) px-1.5 py-0.5 text-[9px] font-bold text-(--color-accent) uppercase">
                       {(result.similarity * 100).toFixed(0)}%
                     </div>
                   </div>
 
-                  <div className="flex flex-1 flex-col items-center justify-center overflow-hidden rounded-md border border-dashed border-(--glass-border)">
-                    {imageUrls[result.id || ""] ? (
-                      <img
-                        src={imageUrls[result.id || ""]}
-                        alt={result.name}
-                        className="h-full w-full object-cover"
-                      />
-                    ) : (
-                      <div className="flex h-full w-full items-center justify-center bg-[linear-gradient(135deg,rgba(90,169,255,0.1),rgba(168,85,247,0.1))]">
-                        <div className="text-2xl opacity-40">🖼️</div>
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="line-clamp-2 text-center text-[13px] font-medium text-(--color-text-primary)">
-                    {result.name}
-                  </div>
-                </motion.button>
-              ))}
-            </motion.div>
-          )}
-
-          {/* Documents List */}
-          {documentResults.length > 0 && (
-            <motion.div
-              key="documents-section"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="flex flex-col gap-4"
-            >
-              {documentResults.map((result: SearchResult, idx: number) => (
-                <motion.button
-                  key={`${result.id}-doc-${idx}`}
-                  variants={fadeSlide(10)}
-                  initial="hidden"
-                  animate="visible"
-                  exit="exit"
-                  transition={itemTransition(idx)}
-                  className="flex min-h-40 cursor-pointer flex-col gap-4 rounded-lg border border-(--glass-border) bg-(--color-bg-surface) p-4 text-left shadow-(--shadow-sm) transition-all duration-150 hover:-translate-y-0.5 hover:border-[rgba(90,169,255,0.28)] hover:bg-(--color-bg-hover) hover:shadow-[0_6px_20px_rgba(0,0,0,0.15)]"
-                  onClick={() => handleOpenResult(result)}
-                  type="button"
-                  aria-label={`Open search result ${result.name || "document"}`}
-                >
-                  <div className="flex items-start justify-between gap-3 overflow-hidden">
-                    <div className="min-w-0 flex-1">
-                      <span className="block overflow-hidden text-ellipsis whitespace-nowrap text-[0.95rem] font-semibold text-(--color-text-primary)">
-                        {result.name || "unknown"}
-                      </span>
-                      <span className="block overflow-hidden text-ellipsis whitespace-nowrap text-xs text-(--color-text-secondary)">
-                        {result.path || ""}
-                      </span>
-                    </div>
-                    <div className="shrink-0 whitespace-nowrap rounded-full bg-(--color-accent-subtle) px-2 py-0.5 text-[10px] font-bold text-(--color-accent) uppercase">
-                      {(result.similarity * 100).toFixed(0)}% Match
-                    </div>
-                  </div>
-                  <div className="line-clamp-4 flex-1 text-sm leading-6 text-(--color-text-secondary)">
-                    <p className="m-0">
-                      {highlightMatches(
-                        getSnippet(result.content, query),
-                        query,
+                  {/* Content Preview Area */}
+                  {result.isImage ? (
+                    /* Image Preview */
+                    <div className="flex flex-1 flex-col items-center justify-center overflow-hidden rounded-md border border-dashed border-(--glass-border)">
+                      {imageUrls[result.id || ""] ? (
+                        <img
+                          src={imageUrls[result.id || ""]}
+                          alt={result.name}
+                          className="h-full w-full object-cover"
+                        />
+                      ) : (
+                        <div className="flex h-full w-full items-center justify-center bg-[linear-gradient(135deg,rgba(90,169,255,0.1),rgba(168,85,247,0.1))]">
+                          <div className="text-2xl opacity-40">🖼️</div>
+                        </div>
                       )}
-                    </p>
-                  </div>
-                  <div className="flex items-center justify-between border-t border-(--glass-border) pt-2 text-[10px] text-(--color-text-muted)">
-                    <div className="flex items-center gap-1">
-                      <Info size={12} />
-                      <span>Click to open at matching section</span>
                     </div>
-                    {result.id && (
-                      <button
-                        className="flex cursor-pointer items-center gap-1 rounded border-0 bg-transparent px-2 py-1 text-xs text-(--color-accent)"
-                        aria-label="Open AI view for this document"
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          navigate(`/document/${result.id}`);
-                        }}
-                      >
-                        <Sparkles size={14} />
-                        <span className="text-xs">AI View</span>
-                      </button>
+                  ) : (
+                    /* Document Preview */
+                    <div className="flex flex-1 flex-col gap-2 overflow-hidden">
+                      <div className="min-w-0">
+                        <span className="block overflow-hidden text-ellipsis whitespace-nowrap text-sm font-semibold text-(--color-text-primary)">
+                          {result.name || "Untitled"}
+                        </span>
+                        <span className="block overflow-hidden text-ellipsis whitespace-nowrap text-xs text-(--color-text-secondary)">
+                          {result.path || ""}
+                        </span>
+                      </div>
+                      <p className="line-clamp-3 flex-1 text-xs leading-5 text-(--color-text-secondary)">
+                        {highlightMatches(
+                          getSnippet(result.content, query),
+                          query,
+                        )}
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Footer with name/action */}
+                  <div className="border-t border-(--glass-border) pt-2">
+                    {result.isImage ? (
+                      <div className="line-clamp-2 text-center text-[12px] font-medium text-(--color-text-primary)">
+                        {result.name}
+                      </div>
+                    ) : (
+                      <div className="flex items-center justify-between gap-1">
+                        <div className="min-w-0 flex-1">
+                          <span className="text-[10px] text-(--color-text-muted) flex items-center gap-1">
+                            <Info size={10} />
+                            Click to open
+                          </span>
+                        </div>
+                        {result.id && (
+                          <button
+                            className="flex shrink-0 cursor-pointer items-center gap-1 rounded border-0 bg-transparent px-1 py-0.5 text-[9px] text-(--color-accent) hover:text-(--color-accent)"
+                            aria-label="Open AI view"
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              navigate(`/document/${result.id}`);
+                            }}
+                          >
+                            <Sparkles size={12} />
+                            <span>AI</span>
+                          </button>
+                        )}
+                      </div>
                     )}
                   </div>
                 </motion.button>
