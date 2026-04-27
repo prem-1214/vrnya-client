@@ -93,6 +93,15 @@ const UploadedFilesPanel: React.FC = () => {
 
   const renderBadge = (file: UploadedFile) => {
     const isIndexing = indexingIds.has(file.id);
+    const isImage = [
+      ".jpg",
+      ".jpeg",
+      ".png",
+      ".gif",
+      ".webp",
+      ".bmp",
+      ".svg",
+    ].includes(file.extension.toLowerCase());
 
     if (isIndexing) {
       return (
@@ -102,6 +111,24 @@ const UploadedFilesPanel: React.FC = () => {
       );
     }
 
+    // For images, check indexed_at (images don't have chunks)
+    if (isImage) {
+      if (file.indexed_at) {
+        return (
+          <span className="flex items-center gap-1 rounded-xl border border-green-500/20 bg-green-500/10 px-2.5 py-1 text-[11px] font-semibold text-green-500">
+            <CheckCircle2 size={12} /> Indexed
+          </span>
+        );
+      } else {
+        return (
+          <span className="flex items-center gap-1 rounded-xl border border-gray-400/20 bg-gray-400/10 px-2.5 py-1 text-[11px] font-semibold text-gray-400">
+            <HelpCircle size={12} /> Not Indexed
+          </span>
+        );
+      }
+    }
+
+    // For documents, check chunk_count
     if (file.chunk_count > 0) {
       return (
         <span className="flex items-center gap-1 rounded-xl border border-green-500/20 bg-green-500/10 px-2.5 py-1 text-[11px] font-semibold text-green-500">
