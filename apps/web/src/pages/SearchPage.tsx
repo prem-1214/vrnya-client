@@ -300,18 +300,25 @@ const SearchPage: React.FC = () => {
                           </span>
                         </div>
                         {result.id && (
-                          <button
-                            className="flex shrink-0 cursor-pointer items-center gap-1 rounded border-0 bg-transparent px-1 py-0.5 text-[9px] text-(--color-accent) hover:text-(--color-accent)"
+                          <div
+                            className="flex shrink-0 cursor-pointer items-center gap-1 rounded border-0 bg-transparent px-1 py-0.5 text-[9px] text-(--color-accent) hover:text-(--color-accent) transition-colors"
+                            role="button"
+                            tabIndex={0}
                             aria-label="Open AI view"
-                            type="button"
                             onClick={(e) => {
                               e.stopPropagation();
                               navigate(`/document/${result.id}`);
                             }}
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter" || e.key === " ") {
+                                e.stopPropagation();
+                                navigate(`/document/${result.id}`);
+                              }
+                            }}
                           >
                             <Sparkles size={12} />
                             <span>AI</span>
-                          </button>
+                          </div>
                         )}
                       </div>
                     )}
