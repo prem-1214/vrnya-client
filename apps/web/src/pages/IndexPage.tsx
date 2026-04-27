@@ -59,6 +59,15 @@ const ACCEPTED_TYPES = [
   "text/x-yaml",
   ".yaml",
   ".yml",
+  "image/png",
+  ".png",
+  "image/jpeg",
+  ".jpg",
+  ".jpeg",
+  "image/webp",
+  ".webp",
+  "image/gif",
+  ".gif",
 ].join(",");
 
 const STAGE_LABELS: Record<UploadItem["stage"], string> = {
@@ -623,7 +632,7 @@ const IndexPage: React.FC = () => {
             Drag &amp; drop files here to vault them, or click to browse.
           </p>
           <div className="mt-2 text-sm text-(--color-text-muted)">
-            PDF, DOCX, TXT, MD, CSV, JSON, HTML — max 50MB per file
+            PDF, DOCX, TXT, MD, CSV, JSON, HTML, PNG, JPG, WEBP, GIF — max 50MB per file
           </div>
         </div>
         <div className="relative z-10 mt-4 flex items-center gap-1.5 rounded-full border-0 bg-(--color-accent) px-9 py-4 text-base font-semibold text-white shadow-[0_4px_14px_rgba(108,99,255,0.4)]">

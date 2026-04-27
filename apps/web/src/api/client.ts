@@ -163,6 +163,7 @@ export interface SearchResult {
   similarity: number;
   name?: string;
   path?: string;
+  isImage?: boolean;
 }
 
 export interface SearchResponse {
@@ -402,11 +403,14 @@ export const sendVoiceMessage = (audioBlob: Blob) => {
   });
 };
 
-export const searchFiles = (q: string, extensions?: string[]) => {
+export const searchFiles = (q: string, extensions?: string[], type?: "image") => {
   const params = new URLSearchParams({ q });
 
   if (extensions && extensions.length > 0) {
     params.append("extensions", extensions.join(","));
+  }
+  if (type) {
+    params.append("type", type);
   }
   return apiFetch<SearchResponse>(`/api/v1/search?${params.toString()}`);
 };

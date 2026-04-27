@@ -10,6 +10,7 @@ import { useMotionSettings } from "../lib/motion";
 
 const FILE_TYPE_FILTERS = [
   { label: "All", extensions: [] as string[] },
+  { label: "Images", extensions: [] as string[], type: "image" as const },
   { label: "PDF", extensions: [".pdf"] },
   { label: "Text", extensions: [".txt"] },
   { label: "Markdown", extensions: [".md"] },
@@ -91,10 +92,13 @@ const SearchPage: React.FC = () => {
       }
       setIsLoading(true);
       try {
-        const filterExts = FILE_TYPE_FILTERS[activeFilter].extensions;
+        const filterObj = FILE_TYPE_FILTERS[activeFilter];
+        const filterExts = filterObj.extensions;
         const data = await searchFiles(
           query,
           filterExts.length > 0 ? [...filterExts] : undefined,
+          // @ts-ignore - The type property is only on the Images filter
+          filterObj.type
         );
         setResults(data.results);
       } catch (error) {
@@ -187,12 +191,26 @@ const SearchPage: React.FC = () => {
                     </div>
                   </div>
                   <div className="line-clamp-4 flex-1 text-sm leading-6 text-(--color-text-secondary)">
-                    <p className="m-0">
-                      {highlightMatches(
-                        getSnippet(result.content, query),
-                        query,
-                      )}
-                    </p>
+                    {result.isImage ? (
+                      <div className="flex items-start gap-2">
+                        <span className="shrink-0 rounded-[4px] bg-(--color-accent) px-[6px] py-[2px] text-[10px] font-bold text-black uppercase leading-tight">
+                          IMAGE
+                        </span>
+                        <p className="m-0 flex-1">
+                          {highlightMatches(
+                            getSnippet(result.content, query),
+                            query,
+                          )}
+                        </p>
+                      </div>
+                    ) : (
+                      <p className="m-0">
+                        {highlightMatches(
+                          getSnippet(result.content, query),
+                          query,
+                        )}
+                      </p>
+                    )}
                   </div>
                   <div className="flex items-center justify-between border-t border-(--glass-border) pt-2 text-[10px] text-(--color-text-muted)">
                     <div className="flex items-center gap-1">

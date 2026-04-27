@@ -19,6 +19,10 @@ const ACCEPTED_TYPES = [
   "text/csv",
   "application/json",
   "text/html",
+  "image/png",
+  "image/jpeg",
+  "image/webp",
+  "image/gif",
 ].join(",");
 
 const STAGE_LABELS: Record<UploadStage, string> = {
@@ -147,7 +151,7 @@ const R2UploadModal: React.FC<R2UploadModalProps> = ({
                     </span>
                   </p>
                   <p className="text-xs text-(--color-text-muted)">
-                    PDF, DOCX, TXT, MD, CSV, JSON, HTML — max 50MB
+                    PDF, DOCX, TXT, MD, CSV, JSON, HTML, PNG, JPG, WEBP, GIF — max 50MB
                   </p>
                   <input
                     ref={fileInputRef}
