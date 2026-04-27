@@ -146,9 +146,11 @@ const SearchPage: React.FC = () => {
           // @ts-ignore - The type property is only on the Images filter
           filterObj.type,
         );
-        // Merge results and images
+        // Merge results and images only when:
+        // 1. "All" filter is selected (activeFilter === 0)
+        // 2. "Images" filter is selected (activeFilter === 1)
         const allResults = [...(data.results || [])];
-        if (data.images) {
+        if ((activeFilter === 0 || activeFilter === 1) && data.images) {
           allResults.push(...data.images);
         }
         setResults(allResults);
