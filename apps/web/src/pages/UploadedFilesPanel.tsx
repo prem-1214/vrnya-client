@@ -9,33 +9,203 @@ import {
   HelpCircle,
   RefreshCw,
   Trash2,
+  ChevronRight,
+  Folder,
+  FolderOpen,
 } from "lucide-react";
 import {
   listUploadedFiles,
   type UploadedFile,
   indexR2File,
   deleteUploadedFile,
+  getUserFolders,
+  createFolder,
 } from "../api/client";
 import { motion, AnimatePresence } from "framer-motion";
-import { useMotionSettings } from "../lib/motion";
 import { useModal } from "../context/ModalContext"; // ✅ NEW: Custom modal
+
+// Tree node types
+type TreeNode = {
+  name: string;
+  path: string;
+  type: "folder" | "file";
+  children?: TreeNode[];
+  file?: UploadedFile;
+};
+
+// Build tree structure from flat file list and include empty folders
+function buildFileTree(
+  files: UploadedFile[],
+  emptyFolders: string[] = [],
+): TreeNode[] {
+  const tree: Record<string, TreeNode> = {};
+
+  // Add all files
+  files.forEach((file) => {
+    // Handle missing path - treat as root-level file
+    const filePath = file.path || file.name;
+    const parts = filePath.split("/").filter((p: string) => p);
+
+    // Create all parent folders
+    parts.slice(0, -1).forEach((part: string) => {
+      let currentPath = "";
+      parts.slice(0, parts.indexOf(part) + 1).forEach((p: string) => {
+        currentPath = currentPath ? `${currentPath}/${p}` : p;
+      });
+
+      if (!tree[currentPath]) {
+        tree[currentPath] = {
+          name: part,
+          path: currentPath,
+          type: "folder",
+          children: [],
+        };
+      }
+    });
+
+    // Add the file (use the filePath we already determined with fallback)
+    tree[filePath] = {
+      name: file.name,
+      path: filePath,
+      type: "file",
+      file,
+    };
+  });
+
+  // Add empty folders that were created but have no files yet
+  emptyFolders.forEach((folderPath: string) => {
+    if (!tree[folderPath]) {
+      const parts = folderPath.split("/").filter((p: string) => p);
+      const folderName = parts[parts.length - 1];
+
+      tree[folderPath] = {
+        name: folderName,
+        path: folderPath,
+        type: "folder",
+        children: [],
+      };
+    }
+  });
+
+  // Build hierarchy
+  const root: TreeNode[] = [];
+  Object.values(tree).forEach((node) => {
+    const parentPath = node.path.substring(0, node.path.lastIndexOf("/"));
+    if (!parentPath) {
+      root.push(node);
+    } else if (tree[parentPath]) {
+      if (!tree[parentPath].children) {
+        tree[parentPath].children = [];
+      }
+      tree[parentPath].children.push(node);
+    }
+  });
+
+  // Sort each level: folders first, then files
+  const sortTree = (nodes: TreeNode[]) => {
+    nodes.sort((a: TreeNode, b: TreeNode) => {
+      if (a.type === b.type) {
+        return a.name.localeCompare(b.name);
+      }
+      return a.type === "folder" ? -1 : 1;
+    });
+    nodes.forEach((node: TreeNode) => {
+      if (node.children) {
+        sortTree(node.children);
+      }
+    });
+  };
+
+  sortTree(root);
+  return root;
+}
 
 const UploadedFilesPanel: React.FC = () => {
   const [files, setFiles] = useState<UploadedFile[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [indexingIds, setIndexingIds] = useState<Set<string>>(new Set());
-  const { itemTransition, fadeSlide } = useMotionSettings();
+  const [expandedFolders, setExpandedFolders] = useState<Set<string>>(
+    new Set(),
+  );
+  const [folders, setFolders] = useState<string[]>([]);
+  const [showNewFolderModal, setShowNewFolderModal] = useState(false);
+  const [newFolderName, setNewFolderName] = useState("");
+  const [newFolderParent, setNewFolderParent] = useState("");
+  const [isCreatingFolder, setIsCreatingFolder] = useState(false);
   const { showError, showConfirm } = useModal(); // ✅ NEW: Use modal
 
   const navigate = useNavigate();
+
+  const toggleFolder = (path: string) => {
+    setExpandedFolders((prev) => {
+      const next = new Set(prev);
+      if (next.has(path)) {
+        next.delete(path);
+      } else {
+        next.add(path);
+      }
+      return next;
+    });
+  };
+
+  const handleCreateFolder = async () => {
+    if (!newFolderName.trim()) {
+      showError("Invalid Name", "Folder name cannot be empty");
+      return;
+    }
+
+    // Validate folder name (no special characters)
+    if (!/^[a-zA-Z0-9._\-]+$/.test(newFolderName.trim())) {
+      showError(
+        "Invalid Name",
+        "Folder name can only contain letters, numbers, dots, dashes, and underscores",
+      );
+      return;
+    }
+
+    setIsCreatingFolder(true);
+    try {
+      const folderPath = newFolderParent
+        ? `${newFolderParent}/${newFolderName}`
+        : newFolderName;
+
+      // Call API to create folder (persists to DB)
+      await createFolder(folderPath);
+
+      // Add to local expanded folders
+      setExpandedFolders((prev) => new Set(prev).add(folderPath));
+
+      // Refresh folders from backend
+      const foldersResponse = await getUserFolders();
+      setFolders(foldersResponse.folders);
+
+      // Visual feedback
+      showError("✓ Success", `Folder "${folderPath}" created.`);
+
+      // Close modal and reset
+      setShowNewFolderModal(false);
+      setNewFolderName("");
+      setNewFolderParent("");
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "Failed to create folder";
+      showError("Error", message);
+    } finally {
+      setIsCreatingFolder(false);
+    }
+  };
 
   const fetchFiles = async () => {
     setIsLoading(true);
     setError(null);
     try {
-      const response = await listUploadedFiles();
-      setFiles(response.files);
+      const [filesResponse, foldersResponse] = await Promise.all([
+        listUploadedFiles(),
+        getUserFolders().catch(() => ({ folders: [] })),
+      ]);
+      setFiles(filesResponse.files);
+      setFolders(foldersResponse.folders || []);
     } catch (err: unknown) {
       const message =
         err instanceof Error ? err.message : "Failed to load uploaded files";
@@ -158,9 +328,114 @@ const UploadedFilesPanel: React.FC = () => {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + " " + sizes[i];
   };
 
+  const renderTreeNode = (node: TreeNode, depth: number = 0) => {
+    if (node.type === "folder") {
+      const isExpanded = expandedFolders.has(node.path);
+      const hasChildren = node.children && node.children.length > 0;
+
+      return (
+        <div key={node.path}>
+          <motion.div
+            className="flex cursor-pointer select-none items-center gap-2 px-4 py-2 text-sm hover:bg-(--color-bg-hover) transition-colors"
+            style={{ paddingLeft: 8 + depth * 16 + "px" }}
+            onClick={() => toggleFolder(node.path)}
+          >
+            {hasChildren && (
+              <motion.div
+                animate={{ rotate: isExpanded ? 90 : 0 }}
+                transition={{ duration: 0.2 }}
+              >
+                <ChevronRight size={16} className="text-(--color-text-muted)" />
+              </motion.div>
+            )}
+            {!hasChildren && <div className="w-4" />}
+
+            {isExpanded ? (
+              <FolderOpen size={16} className="text-(--color-accent)" />
+            ) : (
+              <Folder size={16} className="text-(--color-text-muted)" />
+            )}
+            <span className="font-medium text-(--color-text-primary)">
+              {node.name}
+            </span>
+          </motion.div>
+
+          <AnimatePresence>
+            {isExpanded && hasChildren && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                exit={{ opacity: 0, height: 0 }}
+                transition={{ duration: 0.2 }}
+              >
+                {node.children?.map((child) =>
+                  renderTreeNode(child, depth + 1),
+                )}
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+      );
+    }
+
+    // File node
+    const file = node.file!;
+    return (
+      <motion.div
+        key={file.id}
+        className="flex items-center justify-between gap-4 border-b border-(--glass-border) bg-(--color-bg-surface) p-4 transition-colors duration-200 hover:bg-(--color-bg-hover)"
+        style={{ paddingLeft: 8 + (depth + 1) * 16 + "px" }}
+        onClick={() => navigate(`/document/${file.id}`)}
+      >
+        <div className="flex min-w-0 flex-1 items-center gap-3 cursor-pointer">
+          <File size={16} className="shrink-0 text-(--color-text-muted)" />
+          <div className="flex min-w-0 flex-col gap-0.5">
+            <span className="overflow-hidden text-ellipsis font-medium text-sm">
+              {file.name}
+            </span>
+            <span className="flex items-center gap-2 text-[11px] text-(--color-text-muted)">
+              {formatSize(file.size)} &bull; {file.extension || "Unknown"}
+              {file.indexed_at &&
+                ` • ${new Date(file.indexed_at).toLocaleDateString()}`}
+            </span>
+          </div>
+        </div>
+
+        <div className="flex items-center justify-end gap-3 shrink-0">
+          <div className="min-w-fit">{renderBadge(file)}</div>
+
+          <div className="flex gap-2">
+            {(file.chunk_count === 0 || !file.indexed_at) && (
+              <button
+                className="cursor-pointer rounded border border-(--color-border) bg-transparent px-2 py-1 text-xs text-(--color-text-secondary) hover:bg-(--color-bg-hover)"
+                onClick={(e) => handleReindex(e, file.id)}
+                disabled={indexingIds.has(file.id)}
+              >
+                Re-index
+              </button>
+            )}
+            <button
+              className="flex cursor-pointer items-center justify-center rounded border-0 bg-transparent p-1 text-(--color-text-muted) transition-colors duration-200 hover:bg-(--color-bg-hover) hover:text-(--color-error)"
+              onClick={(e) => handleDelete(e, file.id)}
+              title="Delete Document"
+            >
+              <Trash2 size={16} />
+            </button>
+          </div>
+        </div>
+      </motion.div>
+    );
+  };
+
   return (
     <div className="flex flex-1 flex-col overflow-hidden">
-      <div className="mb-4 flex justify-end">
+      <div className="mb-4 flex gap-2 justify-end">
+        <button
+          className="cursor-pointer rounded-sm border border-(--color-border) bg-(--color-bg-surface) px-3 py-2 text-sm text-(--color-text-muted) shadow-(--shadow-sm) transition-all duration-300 hover:bg-(--color-bg-hover) hover:text-(--color-text-primary)"
+          onClick={() => setShowNewFolderModal(true)}
+        >
+          + New Folder
+        </button>
         <button
           className="cursor-pointer rounded-sm border border-(--color-border) bg-(--color-bg-surface) p-2 text-(--color-text-muted) shadow-(--shadow-sm) transition-all duration-300 hover:bg-(--color-bg-hover) hover:text-(--color-text-primary)"
           onClick={fetchFiles}
@@ -168,12 +443,6 @@ const UploadedFilesPanel: React.FC = () => {
         >
           <RefreshCw size={16} className={isLoading ? "animate-spin" : ""} />
         </button>
-      </div>
-
-      <div className="grid grid-cols-[minmax(0,1fr)_120px_80px] px-4 pb-1 text-[10px] font-bold tracking-widest text-(--color-text-muted) uppercase">
-        <span>Name</span>
-        <span className="text-right">Index Status</span>
-        <span className="text-right">Actions</span>
       </div>
 
       <div className="flex-1 overflow-y-auto rounded-lg border border-(--glass-border) bg-(--color-bg-surface) shadow-(--shadow-md)">
@@ -221,62 +490,74 @@ const UploadedFilesPanel: React.FC = () => {
               key="list"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              className="flex flex-col"
+              className="flex flex-col divide-y divide-glass-border"
             >
-              {files.map((file, idx) => (
-                <motion.div
-                  key={file.id}
-                  variants={fadeSlide(8)}
-                  initial="hidden"
-                  animate="visible"
-                  exit="exit"
-                  transition={itemTransition(idx)}
-                  className="grid cursor-pointer grid-cols-[minmax(0,1fr)_120px_80px] items-center border-b border-(--glass-border) bg-(--color-bg-surface) p-4 text-sm transition-colors duration-200 last:border-b-0 hover:bg-(--color-bg-hover)"
-                  onClick={() => navigate(`/document/${file.id}`)}
-                >
-                  <div className="flex min-w-0 flex-1 items-center gap-4">
-                    <File size={18} className="text-(--color-text-muted)" />
-                    <div className="flex min-w-0 flex-col gap-0.5">
-                      <span className="overflow-hidden text-ellipsis font-medium">
-                        {file.name}
-                      </span>
-                      <span className="flex items-center gap-2 text-[11px] text-(--color-text-muted)">
-                        {formatSize(file.size)} &bull;{" "}
-                        {file.extension || "Unknown"}
-                        {file.indexed_at &&
-                          ` • ${new Date(file.indexed_at).toLocaleDateString()}`}
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center justify-end">
-                    {renderBadge(file)}
-                  </div>
-
-                  <div className="flex justify-end gap-2">
-                    {(file.chunk_count === 0 || !file.indexed_at) && (
-                      <button
-                        className="cursor-pointer rounded border border-(--color-border) bg-transparent px-2 py-1 text-xs text-(--color-text-secondary)"
-                        onClick={(e) => handleReindex(e, file.id)}
-                        disabled={indexingIds.has(file.id)}
-                      >
-                        Re-index
-                      </button>
-                    )}
-                    <button
-                      className="flex cursor-pointer items-center justify-center rounded border-0 bg-transparent p-1 text-(--color-text-muted) transition-colors duration-200 hover:bg-(--color-bg-hover) hover:text-(--color-error)"
-                      onClick={(e) => handleDelete(e, file.id)}
-                      title="Delete Document"
-                    >
-                      <Trash2 size={16} />
-                    </button>
-                  </div>
-                </motion.div>
-              ))}
+              {buildFileTree(files, folders).map((node) =>
+                renderTreeNode(node),
+              )}
             </motion.div>
           )}
         </AnimatePresence>
       </div>
+
+      {/* New Folder Modal */}
+      <AnimatePresence>
+        {showNewFolderModal && (
+          <motion.div
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setShowNewFolderModal(false)}
+          >
+            <motion.div
+              className="w-96 rounded-lg bg-(--color-bg-surface) p-6 shadow-lg"
+              initial={{ scale: 0.95 }}
+              animate={{ scale: 1 }}
+              exit={{ scale: 0.95 }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <h2 className="mb-4 text-lg font-semibold">Create New Folder</h2>
+
+              {newFolderParent && (
+                <div className="mb-3 text-sm text-(--color-text-muted)">
+                  Location:{" "}
+                  <span className="font-mono">{newFolderParent}/</span>
+                </div>
+              )}
+
+              <input
+                type="text"
+                placeholder="Folder name"
+                value={newFolderName}
+                onChange={(e) => setNewFolderName(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") handleCreateFolder();
+                  if (e.key === "Escape") setShowNewFolderModal(false);
+                }}
+                className="w-full rounded border border-(--color-border) bg-(--color-bg-input) px-3 py-2 text-(--color-text-primary) outline-none placeholder:text-(--color-text-muted) focus:border-(--color-accent)"
+                autoFocus
+              />
+
+              <div className="mt-6 flex justify-end gap-3">
+                <button
+                  className="rounded border border-(--color-border) bg-transparent px-4 py-2 text-(--color-text-secondary) hover:bg-(--color-bg-hover)"
+                  onClick={() => setShowNewFolderModal(false)}
+                >
+                  Cancel
+                </button>
+                <button
+                  className="rounded border-0 bg-(--color-accent) px-4 py-2 text-white hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
+                  onClick={handleCreateFolder}
+                  disabled={isCreatingFolder || !newFolderName.trim()}
+                >
+                  {isCreatingFolder ? "Creating..." : "Create"}
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

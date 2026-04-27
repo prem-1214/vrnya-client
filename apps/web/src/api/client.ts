@@ -531,10 +531,23 @@ export interface UploadedFile {
   storage_type: "r2" | "local";
   indexed_at: string | null;
   chunk_count: number;
+  path?: string;
 }
 
 export const listUploadedFiles = () =>
   apiFetch<{ files: UploadedFile[] }>("/api/v1/documents");
+
+export const getUserFolders = () =>
+  apiFetch<{ folders: string[] }>("/api/v1/documents/folders");
+
+export const createFolder = (folderPath: string) =>
+  apiFetch<{ success: boolean; folderPath: string }>(
+    "/api/v1/documents/folders",
+    {
+      method: "POST",
+      body: JSON.stringify({ folderPath }),
+    },
+  );
 
 export const chatWithDocument = (fileId: string, question: string) =>
   apiFetch<{ text: string; path?: string; conversationId: string }>(
@@ -665,6 +678,7 @@ export const presignUpload = (payload: {
   fileName: string;
   mimeType: string;
   fileSizeBytes: number;
+  folderPath?: string;
 }) =>
   apiFetch<PresignUploadResponse>("/api/v1/upload/presign", {
     method: "POST",
@@ -675,6 +689,7 @@ export const confirmUpload = (payload: {
   fileName: string;
   mimeType: string;
   fileSizeBytes: number;
+  folderPath?: string;
 }) =>
   apiFetch<ConfirmUploadResponse>("/api/v1/upload/confirm", {
     method: "POST",
