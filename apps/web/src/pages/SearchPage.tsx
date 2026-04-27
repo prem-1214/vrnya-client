@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { Search, Info, Sparkles } from "lucide-react";
-import { searchFiles } from "../api/client";
+import { Search, Info, Sparkles, X } from "lucide-react";
+import { searchFiles, getImageDownloadUrl } from "../api/client";
 import type { SearchResult } from "../api/client";
 import { motion, AnimatePresence } from "framer-motion";
 import { openPathInShell } from "../platform/shell";
@@ -75,6 +75,15 @@ const SearchPage: React.FC = () => {
   const [results, setResults] = useState<SearchResult[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [activeFilter, setActiveFilter] = useState(0);
+  const [imagePreview, setImagePreview] = useState<{
+    url: string;
+    caption: string;
+    name: string;
+  } | null>(null);
+  const [imageUrls, setImageUrls] = useState<Record<string, string>>({});
+  const [loadingImageIds, setLoadingImageIds] = useState<Set<string>>(
+    new Set(),
+  );
   const navigate = useNavigate();
   const { reduceMotion, itemTransition, fadeSlide } = useMotionSettings();
   const filterChipClass = (isActive: boolean) =>
@@ -83,6 +92,43 @@ const SearchPage: React.FC = () => {
         ? "border-(--color-accent) bg-(--color-accent) font-semibold text-white"
         : "border-(--color-border) bg-transparent font-medium text-(--color-text-secondary) hover:border-(--color-accent) hover:text-(--color-text-primary)"
     }`;
+
+  // Separate images and documents
+  const { documentResults, imageResults } = useMemo(() => {
+    return {
+      documentResults: results.filter((r) => !r.isImage),
+      imageResults: results.filter((r) => r.isImage),
+    };
+  }, [results]);
+
+  // Load image URLs for grid display
+  useEffect(() => {
+    const loadImageUrls = async () => {
+      const newUrls: Record<string, string> = {};
+      const loadingIds = new Set<string>();
+
+      for (const image of imageResults) {
+        if (image.id && !imageUrls[image.id]) {
+          loadingIds.add(image.id);
+          try {
+            const { downloadUrl } = await getImageDownloadUrl(image.id);
+            newUrls[image.id] = downloadUrl;
+          } catch (error) {
+            console.error(`Failed to load image URL for ${image.id}:`, error);
+          }
+        }
+      }
+
+      if (Object.keys(newUrls).length > 0) {
+        setImageUrls((prev) => ({ ...prev, ...newUrls }));
+      }
+      setLoadingImageIds(new Set());
+    };
+
+    if (imageResults.length > 0) {
+      loadImageUrls();
+    }
+  }, [imageResults]);
 
   useEffect(() => {
     const delayDebounce = setTimeout(async () => {
@@ -98,9 +144,14 @@ const SearchPage: React.FC = () => {
           query,
           filterExts.length > 0 ? [...filterExts] : undefined,
           // @ts-ignore - The type property is only on the Images filter
-          filterObj.type
+          filterObj.type,
         );
-        setResults(data.results);
+        // Merge results and images
+        const allResults = [...(data.results || [])];
+        if (data.images) {
+          allResults.push(...data.images);
+        }
+        setResults(allResults);
       } catch (error) {
         console.error("Search failed:", error);
       } finally {
@@ -118,8 +169,6 @@ const SearchPage: React.FC = () => {
       return;
     }
 
-    // Pass the matched chunk text as navigation state so DocumentViewerPage
-    // can scroll to and highlight that exact section.
     navigate(`/document/${result.id}`, {
       state: {
         highlightText: result.content,
@@ -128,45 +177,118 @@ const SearchPage: React.FC = () => {
     });
   };
 
+  const handleImagePreview = async (result: SearchResult) => {
+    if (!result.id) return;
+    try {
+      const { downloadUrl } = await getImageDownloadUrl(result.id);
+      setImagePreview({
+        url: downloadUrl,
+        caption: result.content,
+        name: result.name || "Image",
+      });
+    } catch (error) {
+      console.error("Failed to load image preview:", error);
+    }
+  };
+
   return (
     <PageShell
       title="Semantic Search"
       subtitle="Search indexed files by meaning, then open them in the document viewer"
       contentClassName="flex min-h-full flex-col gap-8 p-8"
     >
-        <div className="mx-auto flex w-full max-w-[800px] items-center gap-4 rounded-lg border border-(--glass-border) bg-(--color-bg-surface) px-6 py-4 shadow-(--shadow-sm) transition-all duration-200 focus-within:-translate-y-0.5 focus-within:border-(--color-accent) focus-within:shadow-(--shadow-accent)">
-          <Search className="text-(--color-text-muted)" size={20} />
-          <input
-            type="text"
-            placeholder="Search across all indexed files..."
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            autoFocus
-            className="flex-1 border-0 bg-transparent font-sans text-md text-(--color-text-primary) outline-none"
-          />
-          {isLoading && (
-            <div className="h-4 w-4 animate-spin rounded-full border-2 border-(--color-accent-subtle) border-t-(--color-accent)" />
-          )}
-        </div>
+      <div className="mx-auto flex w-full max-w-[800px] items-center gap-4 rounded-lg border border-(--glass-border) bg-(--color-bg-surface) px-6 py-4 shadow-(--shadow-sm) transition-all duration-200 focus-within:-translate-y-0.5 focus-within:border-(--color-accent) focus-within:shadow-(--shadow-accent)">
+        <Search className="text-(--color-text-muted)" size={20} />
+        <input
+          type="text"
+          placeholder="Search across all indexed files..."
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          autoFocus
+          className="flex-1 border-0 bg-transparent font-sans text-md text-(--color-text-primary) outline-none"
+        />
+        {isLoading && (
+          <div className="h-4 w-4 animate-spin rounded-full border-2 border-(--color-accent-subtle) border-t-(--color-accent)" />
+        )}
+      </div>
 
-        <div className="mt-4 flex flex-wrap gap-2">
-          {FILE_TYPE_FILTERS.map((filter, idx) => (
-            <button
-              key={filter.label}
-              className={filterChipClass(activeFilter === idx)}
-              onClick={() => setActiveFilter(idx)}
+      <div className="mt-4 flex flex-wrap gap-2">
+        {FILE_TYPE_FILTERS.map((filter, idx) => (
+          <button
+            key={filter.label}
+            className={filterChipClass(activeFilter === idx)}
+            onClick={() => setActiveFilter(idx)}
+          >
+            {filter.label}
+          </button>
+        ))}
+      </div>
+
+      <div className="mx-auto w-full max-w-[1000px]">
+        <AnimatePresence>
+          {/* Images Grid */}
+          {imageResults.length > 0 && (
+            <motion.div
+              key="images-section"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="mb-8 grid grid-cols-[repeat(auto-fill,minmax(180px,1fr))] gap-4"
             >
-              {filter.label}
-            </button>
-          ))}
-        </div>
-
-        <div className="mx-auto grid w-full max-w-[1000px] grid-cols-[repeat(auto-fill,minmax(300px,1fr))] gap-6">
-          <AnimatePresence>
-            {results.length > 0 ? (
-              results.map((result: SearchResult, idx: number) => (
+              {imageResults.map((result: SearchResult, idx: number) => (
                 <motion.button
-                  key={`${result.id}-${idx}`}
+                  key={`${result.id}-img-${idx}`}
+                  variants={fadeSlide(10)}
+                  initial="hidden"
+                  animate="visible"
+                  exit="exit"
+                  transition={itemTransition(idx)}
+                  className="flex min-h-56 cursor-pointer flex-col gap-2 rounded-lg border border-(--glass-border) bg-(--color-bg-surface) p-3 text-left shadow-(--shadow-sm) transition-all duration-150 hover:-translate-y-0.5 hover:border-[rgba(90,169,255,0.28)] hover:bg-(--color-bg-hover) hover:shadow-[0_6px_20px_rgba(0,0,0,0.15)]"
+                  onClick={() => handleImagePreview(result)}
+                  type="button"
+                  aria-label={`Preview image ${result.name || "image"}`}
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="shrink-0 rounded-sm bg-(--color-accent) px-1.5 py-0.5 text-[10px] font-bold text-black uppercase leading-tight">
+                      IMAGE
+                    </span>
+                    <div className="shrink-0 rounded-full bg-(--color-accent-subtle) px-1.5 py-0.5 text-[9px] font-bold text-(--color-accent) uppercase">
+                      {(result.similarity * 100).toFixed(0)}%
+                    </div>
+                  </div>
+
+                  <div className="flex flex-1 flex-col items-center justify-center overflow-hidden rounded-md border border-dashed border-(--glass-border)">
+                    {imageUrls[result.id || ""] ? (
+                      <img
+                        src={imageUrls[result.id || ""]}
+                        alt={result.name}
+                        className="h-full w-full object-cover"
+                      />
+                    ) : (
+                      <div className="flex h-full w-full items-center justify-center bg-[linear-gradient(135deg,rgba(90,169,255,0.1),rgba(168,85,247,0.1))]">
+                        <div className="text-2xl opacity-40">🖼️</div>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="line-clamp-2 text-center text-[13px] font-medium text-(--color-text-primary)">
+                    {result.name}
+                  </div>
+                </motion.button>
+              ))}
+            </motion.div>
+          )}
+
+          {/* Documents List */}
+          {documentResults.length > 0 && (
+            <motion.div
+              key="documents-section"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="flex flex-col gap-4"
+            >
+              {documentResults.map((result: SearchResult, idx: number) => (
+                <motion.button
+                  key={`${result.id}-doc-${idx}`}
                   variants={fadeSlide(10)}
                   initial="hidden"
                   animate="visible"
@@ -191,26 +313,12 @@ const SearchPage: React.FC = () => {
                     </div>
                   </div>
                   <div className="line-clamp-4 flex-1 text-sm leading-6 text-(--color-text-secondary)">
-                    {result.isImage ? (
-                      <div className="flex items-start gap-2">
-                        <span className="shrink-0 rounded-[4px] bg-(--color-accent) px-[6px] py-[2px] text-[10px] font-bold text-black uppercase leading-tight">
-                          IMAGE
-                        </span>
-                        <p className="m-0 flex-1">
-                          {highlightMatches(
-                            getSnippet(result.content, query),
-                            query,
-                          )}
-                        </p>
-                      </div>
-                    ) : (
-                      <p className="m-0">
-                        {highlightMatches(
-                          getSnippet(result.content, query),
-                          query,
-                        )}
-                      </p>
-                    )}
+                    <p className="m-0">
+                      {highlightMatches(
+                        getSnippet(result.content, query),
+                        query,
+                      )}
+                    </p>
                   </div>
                   <div className="flex items-center justify-between border-t border-(--glass-border) pt-2 text-[10px] text-(--color-text-muted)">
                     <div className="flex items-center gap-1">
@@ -233,27 +341,71 @@ const SearchPage: React.FC = () => {
                     )}
                   </div>
                 </motion.button>
-              ))
-            ) : query.trim() && !isLoading ? (
-              <div className="col-span-full p-12 text-center text-(--color-text-muted)">
-                <p className="mb-1">No matches found for "{query}"</p>
-                <span className="text-sm">
-                  Try indexing more folders or rephrasing your search.
-                </span>
+              ))}
+            </motion.div>
+          )}
+
+          {query.trim() && results.length === 0 && !isLoading ? (
+            <div className="rounded-lg border border-(--glass-border) bg-(--color-bg-surface) p-12 text-center text-(--color-text-muted) shadow-(--shadow-sm)">
+              <p className="mb-1">No matches found for "{query}"</p>
+              <span className="text-sm">
+                Try indexing more folders or rephrasing your search.
+              </span>
+            </div>
+          ) : null}
+
+          {!query.trim() && (
+            <div className="rounded-lg border border-(--glass-border) bg-(--color-bg-surface) p-12 text-center text-(--color-text-muted) shadow-(--shadow-sm)">
+              <Search
+                size={48}
+                className={`mb-4 inline opacity-20 ${reduceMotion ? "" : "transition-transform duration-300"}`}
+              />
+              <p>Start typing to search your brain</p>
+            </div>
+          )}
+        </AnimatePresence>
+      </div>
+
+      {/* Image Preview Modal */}
+      <AnimatePresence>
+        {imagePreview && (
+          <motion.div
+            key="image-preview"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm"
+            onClick={() => setImagePreview(null)}
+          >
+            <motion.div
+              className="relative max-h-[90vh] max-w-[90%] overflow-hidden rounded-lg border border-(--glass-border) bg-(--color-bg-surface) shadow-2xl"
+              onClick={(e) => e.stopPropagation()}
+              initial={{ scale: 0.8 }}
+              animate={{ scale: 1 }}
+              exit={{ scale: 0.8 }}
+            >
+              <button
+                className="absolute right-3 top-3 z-10 flex h-10 w-10 items-center justify-center rounded-full bg-black/50 text-white transition-all hover:bg-black/80 hover:scale-110"
+                onClick={() => setImagePreview(null)}
+                type="button"
+                aria-label="Close image preview"
+              >
+                <X size={24} />
+              </button>
+              <img
+                src={imagePreview.url}
+                alt={imagePreview.name}
+                className="max-h-[70vh] max-w-full object-contain bg-black/20"
+              />
+              <div className="border-t border-(--glass-border) p-4">
+                <h3 className="text-sm font-semibold text-(--color-text-primary)">
+                  {imagePreview.name}
+                </h3>
               </div>
-            ) : (
-              !query.trim() && (
-                <div className="col-span-full p-12 text-center text-(--color-text-muted)">
-                  <Search
-                    size={48}
-                    className={`mb-4 inline opacity-20 ${reduceMotion ? "" : "transition-transform duration-300"}`}
-                  />
-                  <p>Start typing to search your brain</p>
-                </div>
-              )
-            )}
-          </AnimatePresence>
-        </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </PageShell>
   );
 };

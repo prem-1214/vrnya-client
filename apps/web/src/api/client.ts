@@ -168,6 +168,7 @@ export interface SearchResult {
 
 export interface SearchResponse {
   results: SearchResult[];
+  images?: SearchResult[];
 }
 
 export interface IndexResponse {
@@ -403,7 +404,11 @@ export const sendVoiceMessage = (audioBlob: Blob) => {
   });
 };
 
-export const searchFiles = (q: string, extensions?: string[], type?: "image") => {
+export const searchFiles = (
+  q: string,
+  extensions?: string[],
+  type?: "image",
+) => {
   const params = new URLSearchParams({ q });
 
   if (extensions && extensions.length > 0) {
@@ -414,6 +419,11 @@ export const searchFiles = (q: string, extensions?: string[], type?: "image") =>
   }
   return apiFetch<SearchResponse>(`/api/v1/search?${params.toString()}`);
 };
+
+export const getImageDownloadUrl = (fileId: string) =>
+  apiFetch<{ downloadUrl: string; expiresInSeconds: number }>(
+    `/api/v1/upload/${fileId}/download-url`,
+  );
 
 export const indexPath = (path: string) =>
   apiFetch<IndexResponse>("/api/v1/index", {
