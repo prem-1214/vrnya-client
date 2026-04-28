@@ -13,6 +13,7 @@ import {
   Folder,
   FolderOpen,
   Upload,
+  Plus,
 } from "lucide-react";
 import {
   listUploadedFiles,
@@ -374,6 +375,22 @@ const UploadedFilesPanel: React.FC = () => {
               {node.name}
             </span>
 
+            {/* Create Subfolder button */}
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setNewFolderParent(node.path);
+                setShowNewFolderModal(true);
+              }}
+              className="opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-(--color-bg-surface) rounded"
+              title="Create subfolder"
+            >
+              <Plus
+                size={16}
+                className="text-(--color-text-muted) hover:text-(--color-accent)"
+              />
+            </button>
+
             {/* Upload button for folder */}
             <button
               onClick={(e) => {
@@ -544,7 +561,11 @@ const UploadedFilesPanel: React.FC = () => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            onClick={() => setShowNewFolderModal(false)}
+            onClick={() => {
+              setShowNewFolderModal(false);
+              setNewFolderParent("");
+              setNewFolderName("");
+            }}
           >
             <motion.div
               className="w-96 rounded-lg bg-(--color-bg-surface) p-6 shadow-lg"
@@ -569,7 +590,11 @@ const UploadedFilesPanel: React.FC = () => {
                 onChange={(e) => setNewFolderName(e.target.value)}
                 onKeyDown={(e) => {
                   if (e.key === "Enter") handleCreateFolder();
-                  if (e.key === "Escape") setShowNewFolderModal(false);
+                  if (e.key === "Escape") {
+                    setShowNewFolderModal(false);
+                    setNewFolderParent("");
+                    setNewFolderName("");
+                  }
                 }}
                 className="w-full rounded border border-(--color-border) bg-(--color-bg-input) px-3 py-2 text-(--color-text-primary) outline-none placeholder:text-(--color-text-muted) focus:border-(--color-accent)"
                 autoFocus
@@ -578,7 +603,11 @@ const UploadedFilesPanel: React.FC = () => {
               <div className="mt-6 flex justify-end gap-3">
                 <button
                   className="rounded border border-(--color-border) bg-transparent px-4 py-2 text-(--color-text-secondary) hover:bg-(--color-bg-hover)"
-                  onClick={() => setShowNewFolderModal(false)}
+                  onClick={() => {
+                    setShowNewFolderModal(false);
+                    setNewFolderParent("");
+                    setNewFolderName("");
+                  }}
                 >
                   Cancel
                 </button>
