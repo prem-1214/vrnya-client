@@ -27,6 +27,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useModal } from "../context/ModalContext"; // ✅ NEW: Custom modal
 import { useUploadContext } from "../context/UploadContext";
 import R2UploadModal from "../components/upload/R2UploadModal";
+import ImagePreviewModal from "../components/ImagePreviewModal";
 
 // Tree node types
 type TreeNode = {
@@ -138,6 +139,9 @@ const UploadedFilesPanel: React.FC = () => {
   const [newFolderParent, setNewFolderParent] = useState("");
   const [isCreatingFolder, setIsCreatingFolder] = useState(false);
   const [showUploadModal, setShowUploadModal] = useState(false);
+  const [showImagePreview, setShowImagePreview] = useState(false);
+  const [previewFileId, setPreviewFileId] = useState<string | null>(null);
+  const [previewFileName, setPreviewFileName] = useState("");
   const { showError, showConfirm } = useModal(); // ✅ NEW: Use modal
   const { setTargetFolder } = useUploadContext();
 
@@ -151,6 +155,29 @@ const UploadedFilesPanel: React.FC = () => {
   const handleUploadDefault = () => {
     setTargetFolder(null);
     setShowUploadModal(true);
+  };
+
+  const isImageFile = (extension: string): boolean => {
+    const imageExtensions = [
+      ".jpg",
+      ".jpeg",
+      ".png",
+      ".gif",
+      ".webp",
+      ".bmp",
+      ".svg",
+    ];
+    return imageExtensions.includes(extension.toLowerCase());
+  };
+
+  const handleFileClick = (file: UploadedFile) => {
+    if (isImageFile(file.extension)) {
+      setPreviewFileId(file.id);
+      setPreviewFileName(file.name);
+      setShowImagePreview(true);
+    } else {
+      navigate(`/document/${file.id}`);
+    }
   };
 
   const toggleFolder = (path: string) => {
@@ -432,7 +459,7 @@ const UploadedFilesPanel: React.FC = () => {
         key={file.id}
         className="flex items-center justify-between gap-4 border-b border-(--glass-border) bg-(--color-bg-surface) p-4 transition-colors duration-200 hover:bg-(--color-bg-hover)"
         style={{ paddingLeft: 8 + (depth + 1) * 16 + "px" }}
-        onClick={() => navigate(`/document/${file.id}`)}
+        onClick={() => handleFileClick(file)}
       >
         <div className="flex min-w-0 flex-1 items-center gap-3 cursor-pointer">
           <File size={16} className="shrink-0 text-(--color-text-muted)" />
@@ -638,6 +665,21 @@ const UploadedFilesPanel: React.FC = () => {
               setTimeout(() => {
                 fetchFiles();
               }, 1000);
+            }}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* Image Preview Modal */}
+      <AnimatePresence>
+        {showImagePreview && previewFileId && (
+          <ImagePreviewModal
+            fileId={previewFileId}
+            fileName={previewFileName}
+            onClose={() => {
+              setShowImagePreview(false);
+              setPreviewFileId(null);
+              setPreviewFileName("");
             }}
           />
         )}
