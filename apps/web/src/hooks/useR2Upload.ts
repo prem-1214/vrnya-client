@@ -55,6 +55,23 @@ const getMimeTypeFromFile = (file: File): string => {
 
 export function useR2Upload() {
   const [items, setItems] = useState<UploadItem[]>([]);
+  const [currentState, setCurrentState] = useState<{
+    stage: UploadStage;
+    fileName: string;
+    uploadProgress: number;
+    indexProgress: number;
+    fileId: string | null;
+    jobId: string | null;
+    error: string | null;
+  }>({
+    stage: "idle",
+    fileName: "",
+    uploadProgress: 0,
+    indexProgress: 0,
+    fileId: null,
+    jobId: null,
+    error: null,
+  });
   const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const itemsRef = useRef<UploadItem[]>(items);
 
@@ -120,7 +137,7 @@ export function useR2Upload() {
   }, []);
 
   const uploadSingle = useCallback(
-    async (file: File) => {
+    async (file: File, folderPath?: string) => {
       const id = makeId();
 
       // Client-side validation
@@ -166,11 +183,12 @@ export function useR2Upload() {
           return;
         }
 
-        // Step 1: Presign
+        // Step 1: Presign (include folderPath if provided)
         const { uploadUrl, r2Key } = await presignUpload({
           fileName: file.name,
           mimeType,
           fileSizeBytes: file.size,
+          folderPath,
         });
 
         // Step 2: Upload to R2
@@ -184,13 +202,14 @@ export function useR2Upload() {
           mimeType,
         );
 
-        // Step 3: Confirm
+        // Step 3: Confirm (include folderPath if provided)
         updateItem(id, { stage: "confirming", uploadProgress: 100 });
         const result = await confirmUpload({
           r2Key,
           fileName: file.name,
           mimeType,
           fileSizeBytes: file.size,
+          folderPath,
         });
 
         // Step 4: Move to indexing (BullMQ job is running in background)
@@ -208,10 +227,10 @@ export function useR2Upload() {
   );
 
   const uploadMultiple = useCallback(
-    (files: FileList | File[]) => {
+    (files: FileList | File[], folderPath?: string) => {
       const fileArray = Array.from(files);
       fileArray.forEach((file) => {
-        uploadSingle(file); // fire all in parallel
+        uploadSingle(file, folderPath); // fire all in parallel with same folderPath
       });
     },
     [uploadSingle],
@@ -232,7 +251,57 @@ export function useR2Upload() {
   );
   const isIdle = items.length === 0;
 
+  // Single upload wrapper for modal (tracks currentState)
+  const upload = useCallback(
+    (file: File, folderPath?: string) => {
+      setCurrentState({
+        stage: "presigning",
+        fileName: file.name,
+        uploadProgress: 0,
+        indexProgress: 0,
+        fileId: null,
+        jobId: null,
+        error: null,
+      });
+      uploadSingle(file, folderPath);
+    },
+    [uploadSingle],
+  );
+
+  const reset = useCallback(() => {
+    setCurrentState({
+      stage: "idle",
+      fileName: "",
+      uploadProgress: 0,
+      indexProgress: 0,
+      fileId: null,
+      jobId: null,
+      error: null,
+    });
+  }, []);
+
+  // Watch for items changes and update currentState
+  useEffect(() => {
+    if (items.length > 0) {
+      const lastItem = items[items.length - 1];
+      setCurrentState({
+        stage: lastItem.stage,
+        fileName: lastItem.fileName,
+        uploadProgress: lastItem.uploadProgress,
+        indexProgress: lastItem.indexProgress,
+        fileId: lastItem.fileId,
+        jobId: lastItem.jobId,
+        error: lastItem.error,
+      });
+    }
+  }, [items]);
+
   return {
+    // New single-upload API (for modal)
+    state: currentState,
+    upload,
+    reset,
+    // Existing multi-upload API (for batch uploads)
     items,
     uploadMultiple,
     dismissItem,

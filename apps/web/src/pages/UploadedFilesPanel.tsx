@@ -12,6 +12,7 @@ import {
   ChevronRight,
   Folder,
   FolderOpen,
+  Upload,
 } from "lucide-react";
 import {
   listUploadedFiles,
@@ -23,6 +24,8 @@ import {
 } from "../api/client";
 import { motion, AnimatePresence } from "framer-motion";
 import { useModal } from "../context/ModalContext"; // ✅ NEW: Custom modal
+import { useUploadContext } from "../context/UploadContext";
+import R2UploadModal from "../components/upload/R2UploadModal";
 
 // Tree node types
 type TreeNode = {
@@ -133,9 +136,21 @@ const UploadedFilesPanel: React.FC = () => {
   const [newFolderName, setNewFolderName] = useState("");
   const [newFolderParent, setNewFolderParent] = useState("");
   const [isCreatingFolder, setIsCreatingFolder] = useState(false);
+  const [showUploadModal, setShowUploadModal] = useState(false);
   const { showError, showConfirm } = useModal(); // ✅ NEW: Use modal
+  const { setTargetFolder } = useUploadContext();
 
   const navigate = useNavigate();
+
+  const handleUploadFolder = (folderPath: string) => {
+    setTargetFolder(folderPath);
+    setShowUploadModal(true);
+  };
+
+  const handleUploadDefault = () => {
+    setTargetFolder(null);
+    setShowUploadModal(true);
+  };
 
   const toggleFolder = (path: string) => {
     setExpandedFolders((prev) => {
@@ -336,7 +351,7 @@ const UploadedFilesPanel: React.FC = () => {
       return (
         <div key={node.path}>
           <motion.div
-            className="flex cursor-pointer select-none items-center gap-2 px-4 py-2 text-sm hover:bg-(--color-bg-hover) transition-colors"
+            className="flex cursor-pointer select-none items-center gap-2 px-4 py-2 text-sm hover:bg-(--color-bg-hover) transition-colors group"
             style={{ paddingLeft: 8 + depth * 16 + "px" }}
             onClick={() => toggleFolder(node.path)}
           >
@@ -355,9 +370,24 @@ const UploadedFilesPanel: React.FC = () => {
             ) : (
               <Folder size={16} className="text-(--color-text-muted)" />
             )}
-            <span className="font-medium text-(--color-text-primary)">
+            <span className="font-medium text-(--color-text-primary) flex-1">
               {node.name}
             </span>
+
+            {/* Upload button for folder */}
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                handleUploadFolder(node.path);
+              }}
+              className="opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-(--color-bg-surface) rounded"
+              title="Upload files to this folder"
+            >
+              <Upload
+                size={16}
+                className="text-(--color-text-muted) hover:text-(--color-accent)"
+              />
+            </button>
           </motion.div>
 
           <AnimatePresence>
@@ -430,6 +460,12 @@ const UploadedFilesPanel: React.FC = () => {
   return (
     <div className="flex flex-1 flex-col overflow-hidden">
       <div className="mb-4 flex gap-2 justify-end">
+        <button
+          className="cursor-pointer rounded-sm border border-(--color-border) bg-(--color-accent) text-white px-3 py-2 text-sm shadow-(--shadow-sm) transition-all duration-300 hover:opacity-90"
+          onClick={handleUploadDefault}
+        >
+          ⬆ Upload
+        </button>
         <button
           className="cursor-pointer rounded-sm border border-(--color-border) bg-(--color-bg-surface) px-3 py-2 text-sm text-(--color-text-muted) shadow-(--shadow-sm) transition-all duration-300 hover:bg-(--color-bg-hover) hover:text-(--color-text-primary)"
           onClick={() => setShowNewFolderModal(true)}
@@ -556,6 +592,25 @@ const UploadedFilesPanel: React.FC = () => {
               </div>
             </motion.div>
           </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Upload Modal */}
+      <AnimatePresence>
+        {showUploadModal && (
+          <R2UploadModal
+            onClose={() => {
+              setShowUploadModal(false);
+              setTargetFolder(null);
+              fetchFiles(); // Refresh files after upload
+            }}
+            onSuccess={() => {
+              // Refresh files to show newly uploaded file
+              setTimeout(() => {
+                fetchFiles();
+              }, 1000);
+            }}
+          />
         )}
       </AnimatePresence>
     </div>

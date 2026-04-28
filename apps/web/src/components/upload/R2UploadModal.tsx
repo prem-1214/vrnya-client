@@ -10,6 +10,7 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import { useR2Upload, type UploadStage } from "../../hooks/useR2Upload";
 import { useDialogA11y } from "../../hooks/useDialogA11y";
+import { useUploadContext } from "../../context/UploadContext";
 
 const ACCEPTED_TYPES = [
   "application/pdf",
@@ -44,17 +45,16 @@ const R2UploadModal: React.FC<R2UploadModalProps> = ({
   onSuccess,
 }) => {
   const { state, upload, reset } = useR2Upload();
+  const { targetFolder } = useUploadContext();
   const [dragOver, setDragOver] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
 
   const handleFile = useCallback(
     (file: File) => {
-      upload(file).then(() => {
-        // onSuccess is called after done state is set
-      });
+      upload(file, targetFolder || undefined);
     },
-    [upload],
+    [upload, targetFolder],
   );
 
   // Watch for done state to call onSuccess
@@ -143,7 +143,10 @@ const R2UploadModal: React.FC<R2UploadModalProps> = ({
                   onClick={() => fileInputRef.current?.click()}
                   aria-label="Choose file to upload to cloud"
                 >
-                  <Upload size={36} className="text-(--color-accent) opacity-80" />
+                  <Upload
+                    size={36}
+                    className="text-(--color-accent) opacity-80"
+                  />
                   <p className="text-md text-(--color-text-secondary)">
                     Drag & drop a file here, or{" "}
                     <span className="cursor-pointer text-(--color-accent) underline">
@@ -151,7 +154,8 @@ const R2UploadModal: React.FC<R2UploadModalProps> = ({
                     </span>
                   </p>
                   <p className="text-xs text-(--color-text-muted)">
-                    PDF, DOCX, TXT, MD, CSV, JSON, HTML, PNG, JPG, WEBP, GIF — max 50MB
+                    PDF, DOCX, TXT, MD, CSV, JSON, HTML, PNG, JPG, WEBP, GIF —
+                    max 50MB
                   </p>
                   <input
                     ref={fileInputRef}
@@ -170,10 +174,7 @@ const R2UploadModal: React.FC<R2UploadModalProps> = ({
                 animate={{ opacity: 1, scale: 1 }}
                 className="flex flex-col items-center gap-2 py-6 text-center"
               >
-                <CheckCircle
-                  size={44}
-                  className="text-(--color-success)"
-                />
+                <CheckCircle size={44} className="text-(--color-success)" />
                 <p className="text-lg font-semibold text-(--color-text-primary)">
                   Upload Complete
                 </p>
@@ -205,10 +206,7 @@ const R2UploadModal: React.FC<R2UploadModalProps> = ({
                 animate={{ opacity: 1, scale: 1 }}
                 className="flex flex-col items-center gap-2 py-6 text-center"
               >
-                <AlertCircle
-                  size={44}
-                  className="text-(--color-error)"
-                />
+                <AlertCircle size={44} className="text-(--color-error)" />
                 <p className="text-lg font-semibold text-(--color-text-primary)">
                   Upload Failed
                 </p>
@@ -230,7 +228,10 @@ const R2UploadModal: React.FC<R2UploadModalProps> = ({
                 animate={{ opacity: 1 }}
                 className="flex flex-col items-center gap-4 py-6"
               >
-                <Loader2 size={36} className="animate-spin text-(--color-accent)" />
+                <Loader2
+                  size={36}
+                  className="animate-spin text-(--color-accent)"
+                />
                 <p className="text-md font-medium text-(--color-text-primary)">
                   {STAGE_LABELS[state.stage]}
                 </p>
