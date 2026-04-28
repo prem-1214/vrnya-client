@@ -306,10 +306,20 @@ export const joinWaitlist = (payload: {
 export const getConfig = () =>
   apiFetch<Record<string, string>>("/api/v1/config");
 
-export const sendMessage = (message: string, conversationId?: string | null) =>
+export interface DocumentContext {
+  id: string;
+  name: string;
+  path: string;
+}
+
+export const sendMessage = (
+  message: string,
+  conversationId?: string | null,
+  documents?: DocumentContext[],
+) =>
   apiFetch<ChatResponse>("/api/v1/chat", {
     method: "POST",
-    body: JSON.stringify({ message, conversationId }),
+    body: JSON.stringify({ message, conversationId, documents }),
   });
 
 export async function sendMessageStream(
@@ -317,6 +327,7 @@ export async function sendMessageStream(
   conversationId: string | null | undefined,
   onEvent: (event: ChatStreamEvent) => void,
   signal?: AbortSignal,
+  documents?: DocumentContext[],
 ): Promise<void> {
   const res = await fetch(`${BASE_URL}/api/v1/chat/stream`, {
     method: "POST",
@@ -326,7 +337,7 @@ export async function sendMessageStream(
         ? { Authorization: `Bearer ${tokenStore.get()}` }
         : {}),
     },
-    body: JSON.stringify({ message, conversationId }),
+    body: JSON.stringify({ message, conversationId, documents }),
     signal,
   });
 
@@ -408,6 +419,7 @@ export const searchFiles = (
   q: string,
   extensions?: string[],
   type?: "image",
+  mode?: "filename" | "content",
 ) => {
   const params = new URLSearchParams({ q });
 
@@ -416,6 +428,9 @@ export const searchFiles = (
   }
   if (type) {
     params.append("type", type);
+  }
+  if (mode) {
+    params.append("mode", mode);
   }
   return apiFetch<SearchResponse>(`/api/v1/search?${params.toString()}`);
 };

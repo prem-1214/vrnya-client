@@ -4,6 +4,7 @@ import {
   sendMessageStream,
   listMessages,
   type ChatStatus,
+  type DocumentContext,
 } from "../api/client";
 
 export interface AgentSource {
@@ -183,7 +184,7 @@ export const useChat = () => {
   );
 
   const send = useCallback(
-    async (content: string) => {
+    async (content: string, documents?: DocumentContext[]) => {
       if (!content.trim()) return;
 
       abortControllerRef.current?.abort();
@@ -288,6 +289,7 @@ export const useChat = () => {
                 }
               },
               controller.signal,
+              documents,
             );
             break;
           } catch (err: unknown) {

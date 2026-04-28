@@ -8,6 +8,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import MemoryStatusChip from "../components/chat/MemoryStatusChip";
 import PageShell from "../components/layout/PageShell";
 import { useResizablePane } from "../hooks/useResizablePane";
+import type { MentionedDocument } from "../components/chat/DocumentMentionAutocomplete";
 
 const ChatPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -87,6 +88,22 @@ const ChatPage: React.FC = () => {
     lastConversationId.current = conversationId;
   }, [conversationId, id, navigate]);
 
+  // Wrapper for send to include attached documents
+  const handleSendWithDocuments = (
+    message: string,
+    attachedDocuments?: MentionedDocument[],
+  ) => {
+    // Convert MentionedDocument to DocumentContext format
+    const documentContext = attachedDocuments?.map((doc) => ({
+      id: doc.id,
+      name: doc.name,
+      path: doc.path,
+    }));
+
+    // Send message with documents as a separate parameter
+    send(message, documentContext);
+  };
+
   return (
     <PageShell
       title="Agent Workspace"
@@ -133,7 +150,7 @@ const ChatPage: React.FC = () => {
           />
 
           <ChatInput
-            onSend={send}
+            onSend={handleSendWithDocuments}
             onVoiceResult={({ transcript, agentResponse }) =>
               sendVoice(transcript, agentResponse)
             }
