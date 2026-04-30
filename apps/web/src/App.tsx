@@ -17,6 +17,7 @@ import AuthCallbackPage from "./pages/AuthCallbackPage";
 import WaitlistPage from "./pages/WaitlistPage";
 import PrivacyPolicyPage from "./pages/PrivacyPolicyPage";
 import TermsOfServicePage from "./pages/TermsOfServicePage";
+import NotFoundPage from "./pages/NotFoundPage";
 import { Loader2 } from "lucide-react";
 import { type ReactNode } from "react";
 
@@ -91,6 +92,7 @@ function App() {
                   <Route path="/settings" element={<SettingsPage />} />
                   <Route path="/admin" element={<AdminPage />} />
                 </Route>
+                <Route path="*" element={<NotFoundPage />} />
               </Routes>
             </BrowserRouter>
           </ModalProvider>{" "}
