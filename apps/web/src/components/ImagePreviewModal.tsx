@@ -41,14 +41,14 @@ const ImagePreviewModal: React.FC<ImagePreviewModalProps> = ({
   return (
     <AnimatePresence>
       <motion.div
-        className="fixed inset-0 z-50 flex items-center justify-center bg-black/70"
+        className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 md:p-6"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         onClick={onClose}
       >
         <motion.div
-          className="relative flex flex-col items-center justify-center max-w-4xl max-h-screen"
+          className="relative flex w-full max-w-5xl max-h-[92vh] flex-col items-center"
           initial={{ scale: 0.9 }}
           animate={{ scale: 1 }}
           exit={{ scale: 0.9 }}
@@ -57,7 +57,7 @@ const ImagePreviewModal: React.FC<ImagePreviewModalProps> = ({
           {/* Close button */}
           <button
             onClick={onClose}
-            className="absolute -top-12 right-0 p-2 text-white hover:bg-white/10 rounded-lg transition-colors"
+            className="absolute right-0 top-12 z-10 rounded-lg p-2 text-white transition-colors hover:bg-white/10"
             title="Close"
           >
             <X size={24} />
@@ -65,7 +65,7 @@ const ImagePreviewModal: React.FC<ImagePreviewModalProps> = ({
 
           {/* Image or Loading/Error state */}
           {isLoading && (
-            <div className="flex items-center justify-center w-96 h-96">
+            <div className="flex h-96 w-96 items-center justify-center">
               <Loader2 size={48} className="text-white animate-spin" />
             </div>
           )}
@@ -78,13 +78,15 @@ const ImagePreviewModal: React.FC<ImagePreviewModalProps> = ({
           )}
 
           {imageUrl && !isLoading && (
-            <div className="flex flex-col items-center gap-4">
-              <img
-                src={imageUrl}
-                alt={fileName}
-                className="max-w-4xl max-h-screen object-contain rounded-lg shadow-2xl"
-              />
-              <p className="text-white text-sm text-(--color-text-muted)">
+            <div className="flex w-full flex-1 flex-col items-center gap-3 overflow-hidden pt-12">
+              <div className="flex w-full flex-1 items-center justify-center overflow-auto rounded-lg bg-black/20 p-2 md:p-3">
+                <img
+                  src={imageUrl}
+                  alt={fileName}
+                  className="h-auto max-h-[78vh] w-auto max-w-full object-contain rounded-lg shadow-2xl"
+                />
+              </div>
+              <p className="text-sm text-white/85">
                 {fileName}
               </p>
             </div>
