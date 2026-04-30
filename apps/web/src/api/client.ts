@@ -564,6 +564,12 @@ export const createFolder = (folderPath: string) =>
     },
   );
 
+export const resolveDocuments = (ids: string[]) =>
+  apiFetch<{ documents: DocumentContext[] }>("/api/v1/documents/resolve", {
+    method: "POST",
+    body: JSON.stringify({ ids }),
+  });
+
 export const chatWithDocument = (fileId: string, question: string) =>
   apiFetch<{ text: string; path?: string; conversationId: string }>(
     `/api/v1/documents/${fileId}/chat`,

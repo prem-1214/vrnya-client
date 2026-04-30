@@ -28,102 +28,7 @@ import { useModal } from "../context/ModalContext"; // ✅ NEW: Custom modal
 import { useUploadContext } from "../context/UploadContext";
 import R2UploadModal from "../components/upload/R2UploadModal";
 import ImagePreviewModal from "../components/ImagePreviewModal";
-
-// Tree node types
-type TreeNode = {
-  name: string;
-  path: string;
-  type: "folder" | "file";
-  children?: TreeNode[];
-  file?: UploadedFile;
-};
-
-// Build tree structure from flat file list and include empty folders
-function buildFileTree(
-  files: UploadedFile[],
-  emptyFolders: string[] = [],
-): TreeNode[] {
-  const tree: Record<string, TreeNode> = {};
-
-  // Add all files
-  files.forEach((file) => {
-    // Handle missing path - treat as root-level file
-    const filePath = file.path || file.name;
-    const parts = filePath.split("/").filter((p: string) => p);
-
-    // Create all parent folders
-    parts.slice(0, -1).forEach((part: string) => {
-      let currentPath = "";
-      parts.slice(0, parts.indexOf(part) + 1).forEach((p: string) => {
-        currentPath = currentPath ? `${currentPath}/${p}` : p;
-      });
-
-      if (!tree[currentPath]) {
-        tree[currentPath] = {
-          name: part,
-          path: currentPath,
-          type: "folder",
-          children: [],
-        };
-      }
-    });
-
-    // Add the file (use the filePath we already determined with fallback)
-    tree[filePath] = {
-      name: file.name,
-      path: filePath,
-      type: "file",
-      file,
-    };
-  });
-
-  // Add empty folders that were created but have no files yet
-  emptyFolders.forEach((folderPath: string) => {
-    if (!tree[folderPath]) {
-      const parts = folderPath.split("/").filter((p: string) => p);
-      const folderName = parts[parts.length - 1];
-
-      tree[folderPath] = {
-        name: folderName,
-        path: folderPath,
-        type: "folder",
-        children: [],
-      };
-    }
-  });
-
-  // Build hierarchy
-  const root: TreeNode[] = [];
-  Object.values(tree).forEach((node) => {
-    const parentPath = node.path.substring(0, node.path.lastIndexOf("/"));
-    if (!parentPath) {
-      root.push(node);
-    } else if (tree[parentPath]) {
-      if (!tree[parentPath].children) {
-        tree[parentPath].children = [];
-      }
-      tree[parentPath].children.push(node);
-    }
-  });
-
-  // Sort each level: folders first, then files
-  const sortTree = (nodes: TreeNode[]) => {
-    nodes.sort((a: TreeNode, b: TreeNode) => {
-      if (a.type === b.type) {
-        return a.name.localeCompare(b.name);
-      }
-      return a.type === "folder" ? -1 : 1;
-    });
-    nodes.forEach((node: TreeNode) => {
-      if (node.children) {
-        sortTree(node.children);
-      }
-    });
-  };
-
-  sortTree(root);
-  return root;
-}
+import { buildFileTree, type FileTreeNode as TreeNode } from "../components/sidebar/fileTree";
 
 const UploadedFilesPanel: React.FC = () => {
   const [files, setFiles] = useState<UploadedFile[]>([]);
@@ -142,7 +47,7 @@ const UploadedFilesPanel: React.FC = () => {
   const [showImagePreview, setShowImagePreview] = useState(false);
   const [previewFileId, setPreviewFileId] = useState<string | null>(null);
   const [previewFileName, setPreviewFileName] = useState("");
-  const { showError, showConfirm } = useModal(); // ✅ NEW: Use modal
+  const { showAlert, showError, showConfirm } = useModal(); // ✅ NEW: Use modal
   const { setTargetFolder } = useUploadContext();
 
   const navigate = useNavigate();
@@ -224,7 +129,7 @@ const UploadedFilesPanel: React.FC = () => {
       setFolders(foldersResponse.folders);
 
       // Visual feedback
-      showError("✓ Success", `Folder "${folderPath}" created.`);
+      showAlert("Folder created", `Folder "${folderPath}" was created.`);
 
       // Close modal and reset
       setShowNewFolderModal(false);
@@ -501,6 +406,8 @@ const UploadedFilesPanel: React.FC = () => {
     );
   };
 
+  const treeNodes = buildFileTree(files, folders);
+
   return (
     <div className="flex flex-1 flex-col overflow-hidden">
       <div className="mb-4 flex gap-2 justify-end">
@@ -556,7 +463,7 @@ const UploadedFilesPanel: React.FC = () => {
                 Try Again
               </button>
             </motion.div>
-          ) : files.length === 0 ? (
+          ) : treeNodes.length === 0 ? (
             <motion.div
               key="empty"
               initial={{ opacity: 0 }}
@@ -572,9 +479,7 @@ const UploadedFilesPanel: React.FC = () => {
               animate={{ opacity: 1 }}
               className="flex flex-col divide-y divide-glass-border"
             >
-              {buildFileTree(files, folders).map((node) =>
-                renderTreeNode(node),
-              )}
+              {treeNodes.map((node) => renderTreeNode(node))}
             </motion.div>
           )}
         </AnimatePresence>

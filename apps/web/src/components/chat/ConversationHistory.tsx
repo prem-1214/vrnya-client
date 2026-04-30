@@ -11,12 +11,14 @@ interface ConversationHistoryProps {
   activeId: string | null;
   onSelect: (id: string) => void;
   onNewChat: () => void;
+  compact?: boolean;
 }
 
 const ConversationHistory: React.FC<ConversationHistoryProps> = ({
   activeId,
   onSelect,
   onNewChat,
+  compact = false,
 }) => {
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -78,12 +80,16 @@ const ConversationHistory: React.FC<ConversationHistoryProps> = ({
 
   return (
     <div className="flex flex-col h-full bg-transparent">
-      <div className="p-3 flex flex-col gap-3">
+      <div className={`${compact ? "p-2" : "p-3"} flex flex-col gap-2`}>
         <button
           onClick={onNewChat}
-          className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl bg-(--color-accent) hover:bg-(--color-accent-hover) text-white font-bold text-sm transition-all shadow-[0_4px_12px_rgba(59,130,246,0.3)] hover:scale-[1.02] active:scale-[0.98]"
+          className={`flex w-full items-center justify-center gap-2 rounded-xl bg-(--color-accent) text-white transition-all hover:bg-(--color-accent-hover) ${
+            compact
+              ? "py-2 text-xs font-semibold"
+              : "py-2.5 text-sm font-bold shadow-[0_4px_12px_rgba(59,130,246,0.3)] hover:scale-[1.02] active:scale-[0.98]"
+          }`}
         >
-          <Plus size={18} />
+          <Plus size={compact ? 14 : 18} />
           New Chat
         </button>
 
@@ -101,12 +107,12 @@ const ConversationHistory: React.FC<ConversationHistoryProps> = ({
             placeholder="Search chats..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full bg-(--color-bg-hover) border border-transparent focus:border-(--color-accent-subtle) rounded-lg py-1.5 pl-9 pr-3 text-xs outline-none transition-all placeholder:text-(--color-text-muted)"
+            className={`w-full rounded-lg border border-transparent bg-(--color-bg-hover) outline-none transition-all placeholder:text-(--color-text-muted) focus:border-(--color-accent-subtle) ${compact ? "py-1 pl-8 pr-2 text-[11px]" : "py-1.5 pl-9 pr-3 text-xs"}`}
           />
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto px-2 pb-4 scrollbar-thin">
+      <div className={`flex-1 overflow-y-auto scrollbar-thin ${compact ? "px-1.5 pb-2" : "px-2 pb-4"}`}>
         {isLoading ? (
           <div className="flex items-center justify-center py-8">
             <Loader2
@@ -136,11 +142,11 @@ const ConversationHistory: React.FC<ConversationHistoryProps> = ({
                       onSelect(chat.id);
                     }
                   }}
-                  className={`group relative flex w-full items-center gap-3 rounded-xl p-3 text-left transition-all duration-200 ${
+                  className={`group relative flex w-full items-center rounded-xl text-left transition-all duration-200 ${
                     isActive
                       ? "bg-(--color-accent-subtle) text-(--color-accent)"
                       : "text-(--color-text-primary) hover:bg-(--color-bg-hover)"
-                  }`}
+                  } ${compact ? "gap-2 p-2" : "gap-3 p-3"}`}
                   role="button"
                   tabIndex={0}
                   aria-label={`Open conversation ${chat.title || "Untitled Chat"}`}
@@ -154,7 +160,7 @@ const ConversationHistory: React.FC<ConversationHistoryProps> = ({
                     }
                   />
                   <div className="flex-1 flex flex-col min-w-0">
-                    <span className="text-xs font-bold truncate leading-tight">
+                    <span className={`${compact ? "text-[11px]" : "text-xs"} truncate font-bold leading-tight`}>
                       {chat.title || "Untitiled Chat"}
                     </span>
                     <span className="text-[10px] font-medium opacity-60 mt-0.5">

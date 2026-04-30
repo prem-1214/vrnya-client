@@ -32,7 +32,7 @@ const STAGE_LABELS: Record<UploadStage, string> = {
   uploading: "Uploading to cloud...",
   confirming: "Registering file...",
   done: "Done!",
-  error: "Upload failed",
+  error: "Upload or indexing failed",
 };
 
 interface R2UploadModalProps {
@@ -83,6 +83,7 @@ const R2UploadModal: React.FC<R2UploadModalProps> = ({
     state.stage !== "idle" && state.stage !== "error" && state.stage !== "done";
   const isDone = state.stage === "done";
   const isError = state.stage === "error";
+  const didUploadSucceed = Boolean(state.fileId);
   useDialogA11y({ isOpen: true, onClose, initialFocusRef: closeButtonRef });
 
   return (
@@ -206,20 +207,40 @@ const R2UploadModal: React.FC<R2UploadModalProps> = ({
                 animate={{ opacity: 1, scale: 1 }}
                 className="flex flex-col items-center gap-2 py-6 text-center"
               >
-                <AlertCircle size={44} className="text-(--color-error)" />
+                <AlertCircle
+                  size={44}
+                  className={
+                    didUploadSucceed
+                      ? "text-(--color-warning)"
+                      : "text-(--color-error)"
+                  }
+                />
                 <p className="text-lg font-semibold text-(--color-text-primary)">
-                  Upload Failed
+                  {didUploadSucceed
+                    ? "Upload Complete, Indexing Failed"
+                    : "Upload Failed"}
                 </p>
                 <p className="max-w-[340px] text-sm text-(--color-text-muted)">
                   {state.error}
                 </p>
-                <button
-                  className="cursor-pointer rounded-sm border-0 bg-(--color-accent) px-4 py-2 text-sm font-medium text-white transition-colors duration-200 hover:bg-(--color-accent-hover)"
-                  onClick={reset}
-                  type="button"
-                >
-                  Try Again
-                </button>
+                <div className="mt-2 flex gap-2">
+                  <button
+                    className="cursor-pointer rounded-sm border-0 bg-(--color-accent) px-4 py-2 text-sm font-medium text-white transition-colors duration-200 hover:bg-(--color-accent-hover)"
+                    onClick={reset}
+                    type="button"
+                  >
+                    Try Again
+                  </button>
+                  {didUploadSucceed && (
+                    <button
+                      className="cursor-pointer rounded-sm border border-(--color-border) bg-(--color-bg-surface) px-4 py-2 text-sm font-medium text-(--color-text-secondary) transition-colors duration-200 hover:bg-(--color-bg-hover)"
+                      onClick={onClose}
+                      type="button"
+                    >
+                      Close
+                    </button>
+                  )}
+                </div>
               </motion.div>
             ) : (
               <motion.div

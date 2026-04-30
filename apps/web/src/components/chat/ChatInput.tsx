@@ -4,7 +4,39 @@ import VoiceRecorder from "./VoiceRecorder";
 import DocumentMentionAutocomplete, {
   type MentionedDocument,
 } from "./DocumentMentionAutocomplete";
-import { generateFile, searchFiles } from "../../api/client";
+import { generateFile, resolveDocuments, searchFiles } from "../../api/client";
+
+const DRAG_MIME_TYPE = "application/x-vrnya-doc-ref";
+const PLAIN_TEXT_PREFIX = "vrnya-doc-ref:";
+
+type DragPayload = {
+  type: "vrnya/doc-ref";
+  docs: Array<{
+    id: string;
+    name: string;
+    path: string;
+  }>;
+  folder?: {
+    name: string;
+    path: string;
+  };
+};
+
+type AttachmentChip = {
+  id: string;
+  label: string;
+  mentionName: string;
+  kind: "file" | "folder";
+  documents: MentionedDocument[];
+};
+
+const escapeRegExp = (value: string) =>
+  value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+const hasExactMention = (text: string, name: string) => {
+  const pattern = new RegExp(`(^|\\s)@${escapeRegExp(name)}(?=\\s|$)`);
+  return pattern.test(text);
+};
 
 interface VoiceResult {
   transcript: string;
@@ -38,9 +70,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
 }) => {
   const [input, setInput] = useState("");
   const [isProcessingVoice, setIsProcessingVoice] = useState(false);
-  const [attachedDocuments, setAttachedDocuments] = useState<
-    MentionedDocument[]
-  >([]);
+  const [attachmentChips, setAttachmentChips] = useState<AttachmentChip[]>([]);
   const [isMentionOpen, setIsMentionOpen] = useState(false);
   const [mentionQuery, setMentionQuery] = useState("");
   const [mentionResults, setMentionResults] = useState<MentionedDocument[]>([]);
@@ -52,6 +82,18 @@ const ChatInput: React.FC<ChatInputProps> = ({
   } | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const mentionStartIndexRef = useRef(-1);
+
+  const attachedDocuments = React.useMemo(() => {
+    const unique = new Map<string, MentionedDocument>();
+    attachmentChips.forEach((chip) => {
+      chip.documents.forEach((doc) => {
+        if (!unique.has(doc.id)) {
+          unique.set(doc.id, doc);
+        }
+      });
+    });
+    return Array.from(unique.values());
+  }, [attachmentChips]);
 
   // Search for documents when mention query changes
   useEffect(() => {
@@ -118,6 +160,12 @@ const ChatInput: React.FC<ChatInputProps> = ({
     const newInput = e.target.value;
     setInput(newInput);
 
+    // Keep attachment chips in sync with exact @mention tokens.
+    // If user deletes/edits the mention in the textarea, remove the attachment.
+    setAttachmentChips((prev) =>
+      prev.filter((chip) => hasExactMention(newInput, chip.mentionName)),
+    );
+
     // Check for @ mentions
     const textarea = e.target;
     const cursorPosition = textarea.selectionStart;
@@ -166,9 +214,21 @@ const ChatInput: React.FC<ChatInputProps> = ({
     setInput(newInput);
 
     // Add document to attached list if not already there
-    setAttachedDocuments((prev) => {
-      const exists = prev.some((d) => d.path === doc.path);
-      return exists ? prev : [...prev, doc];
+    setAttachmentChips((prev) => {
+      const exists = prev.some((chip) =>
+        chip.documents.some((item) => item.id === doc.id),
+      );
+      if (exists) return prev;
+      return [
+        ...prev,
+        {
+          id: `file-${doc.id}`,
+          label: doc.name,
+          mentionName: doc.name,
+          kind: "file",
+          documents: [doc],
+        },
+      ];
     });
 
     // Close mention autocomplete and clear query
@@ -186,14 +246,124 @@ const ChatInput: React.FC<ChatInputProps> = ({
     }, 0);
   };
 
-  const handleRemoveDocument = (docPath: string) => {
-    setAttachedDocuments((prev) => prev.filter((d) => d.path !== docPath));
+  const appendMentionsAndAttach = (
+    docs: MentionedDocument[],
+    folderMeta?: { name: string; path: string },
+  ) => {
+    if (!docs.length) return;
 
-    // Also remove the @name from input
-    const docName = attachedDocuments.find((d) => d.path === docPath)?.name;
-    if (docName) {
-      setInput((prev) => prev.replace(new RegExp(`@${docName}\\s*`), ""));
+    if (folderMeta) {
+      const folderChipId = `folder-${folderMeta.path}`;
+      setAttachmentChips((prev) => {
+        const remaining = prev.filter((chip) => chip.id !== folderChipId);
+        return [
+          ...remaining,
+          {
+            id: folderChipId,
+            label: folderMeta.name,
+            mentionName: folderMeta.name,
+            kind: "folder",
+            documents: docs,
+          },
+        ];
+      });
+
+      setInput((prev) => {
+        const mentionToken = `@${folderMeta.name}`;
+        if (hasExactMention(prev, folderMeta.name)) return prev;
+        return prev.trim() ? `${prev.trim()} ${mentionToken} ` : `${mentionToken} `;
+      });
+      return;
     }
+
+    docs.forEach((doc) => {
+      setAttachmentChips((prev) => {
+        const exists = prev.some((chip) =>
+          chip.documents.some((item) => item.id === doc.id),
+        );
+        if (exists) return prev;
+        return [
+          ...prev,
+          {
+            id: `file-${doc.id}`,
+            label: doc.name,
+            mentionName: doc.name,
+            kind: "file",
+            documents: [doc],
+          },
+        ];
+      });
+    });
+
+    setInput((prev) => {
+      const mentionsToAdd = docs
+        .filter((doc) => !hasExactMention(prev, doc.name))
+        .map((doc) => `@${doc.name}`)
+        .join(" ");
+
+      if (!mentionsToAdd) return prev;
+      return prev.trim() ? `${prev.trim()} ${mentionsToAdd} ` : `${mentionsToAdd} `;
+    });
+  };
+
+  const handleDropToComposer = async (event: React.DragEvent<HTMLDivElement>) => {
+    event.preventDefault();
+
+    try {
+      const directPayload = event.dataTransfer.getData(DRAG_MIME_TYPE);
+      const plainPayload = event.dataTransfer.getData("text/plain");
+      const payloadRaw = directPayload
+        ? directPayload
+        : plainPayload.startsWith(PLAIN_TEXT_PREFIX)
+          ? plainPayload.slice(PLAIN_TEXT_PREFIX.length)
+          : "";
+
+      if (!payloadRaw) return;
+
+      const payload = JSON.parse(payloadRaw) as DragPayload;
+      if (payload.type !== "vrnya/doc-ref" || !Array.isArray(payload.docs)) {
+        return;
+      }
+
+      const ids = payload.docs
+        .map((doc) => doc.id)
+        .filter((id): id is string => Boolean(id));
+      if (!ids.length) return;
+
+      const resolved = await resolveDocuments(ids);
+      const resolvedDocs: MentionedDocument[] = resolved.documents.map((doc) => ({
+        id: doc.id,
+        name: doc.name,
+        path: doc.path,
+      }));
+
+      appendMentionsAndAttach(resolvedDocs, payload.folder);
+    } catch (error) {
+      console.error("Failed to process dropped document reference:", error);
+    }
+  };
+
+  const handleComposerDragOver = (event: React.DragEvent<HTMLDivElement>) => {
+    if (
+      event.dataTransfer.types.includes(DRAG_MIME_TYPE) ||
+      event.dataTransfer.types.includes("text/plain")
+    ) {
+      event.preventDefault();
+      event.dataTransfer.dropEffect = "copy";
+    }
+  };
+
+  const handleRemoveAttachment = (chipId: string) => {
+    const chip = attachmentChips.find((item) => item.id === chipId);
+    if (!chip) return;
+
+    setAttachmentChips((prev) => prev.filter((item) => item.id !== chipId));
+
+    const tokenRegex = new RegExp(
+      `(^|\\s)@${escapeRegExp(chip.mentionName)}(?=\\s|$)\\s*`,
+      "g",
+    );
+    setInput((prev) => prev.replace(tokenRegex, " ").replace(/\s{2,}/g, " ").trimStart());
   };
 
   const handleSend = () => {
@@ -206,7 +376,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
         onSend(input.trim(), attachedDocuments);
       }
       setInput("");
-      setAttachedDocuments([]);
+      setAttachmentChips([]);
     }
   };
 
@@ -256,6 +426,41 @@ const ChatInput: React.FC<ChatInputProps> = ({
       }
     }
 
+    // Cursor-style atomic backspace for inserted @mentions:
+    // pressing backspace right after "@FileName " removes whole token + chip.
+    if (e.key === "Backspace" && textareaRef.current) {
+      const textarea = textareaRef.current;
+      const cursor = textarea.selectionStart;
+      const beforeCursor = input.slice(0, cursor);
+
+      for (const chip of attachmentChips) {
+        const tokenWithSpace = `@${chip.mentionName} `;
+        const token = `@${chip.mentionName}`;
+        if (
+          beforeCursor.endsWith(tokenWithSpace) ||
+          beforeCursor.endsWith(token)
+        ) {
+          e.preventDefault();
+          const matchedToken = beforeCursor.endsWith(tokenWithSpace)
+            ? tokenWithSpace
+            : token;
+          const start = cursor - matchedToken.length;
+          const nextInput = `${input.slice(0, start)}${input.slice(cursor)}`;
+
+          setInput(nextInput);
+          setAttachmentChips((prev) =>
+            prev.filter((attached) => attached.id !== chip.id),
+          );
+
+          setTimeout(() => {
+            textarea.selectionStart = start;
+            textarea.selectionEnd = start;
+          }, 0);
+          return;
+        }
+      }
+    }
+
     // Normal enter to send
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
@@ -270,20 +475,23 @@ const ChatInput: React.FC<ChatInputProps> = ({
       }`}
     >
       {/* Attached Documents Display */}
-      {attachedDocuments.length > 0 && (
+      {attachmentChips.length > 0 && (
         <div className="mx-auto w-full max-w-[920px]">
           <div className="flex flex-wrap gap-2">
-            {attachedDocuments.map((doc) => (
+            {attachmentChips.map((chip) => (
               <div
-                key={doc.path}
-                className="flex items-center gap-2 rounded-lg bg-(--color-accent) bg-opacity-15 px-3 py-1.5 text-(--color-accent) text-sm"
+                key={chip.id}
+                className="flex items-center gap-2 rounded-lg bg-(--color-accent) px-3 py-1.5 text-sm text-white shadow-[0_6px_16px_rgba(59,130,246,0.32)]"
               >
-                <span className="font-medium">{doc.name}</span>
+                <span className="font-medium">
+                  {chip.label}
+                  {chip.kind === "folder" ? " (folder)" : ""}
+                </span>
                 <button
                   type="button"
-                  onClick={() => handleRemoveDocument(doc.path)}
+                  onClick={() => handleRemoveAttachment(chip.id)}
                   className="hover:opacity-70 transition-opacity"
-                  aria-label={`Remove ${doc.name}`}
+                  aria-label={`Remove ${chip.label}`}
                 >
                   <X size={14} />
                 </button>
@@ -294,7 +502,11 @@ const ChatInput: React.FC<ChatInputProps> = ({
       )}
 
       {/* Main Input Area */}
-      <div className="glass mx-auto flex w-full max-w-[920px] items-end gap-4 rounded-[18px] border border-(--color-border) bg-[linear-gradient(180deg,rgba(255,255,255,0.035),rgba(255,255,255,0.012)),var(--color-bg-surface)] px-4 py-4 shadow-[0_14px_30px_rgba(0,0,0,0.14)] transition-all duration-300 focus-within:-translate-y-px focus-within:border-(--color-accent) focus-within:shadow-(--shadow-accent) relative">
+      <div
+        className="glass relative mx-auto flex w-full max-w-[920px] items-end gap-4 rounded-[18px] border border-(--color-border) bg-[linear-gradient(180deg,rgba(255,255,255,0.035),rgba(255,255,255,0.012)),var(--color-bg-surface)] px-4 py-4 shadow-[0_14px_30px_rgba(0,0,0,0.14)] transition-all duration-300 focus-within:-translate-y-px focus-within:border-(--color-accent) focus-within:shadow-(--shadow-accent)"
+        onDragOver={handleComposerDragOver}
+        onDrop={(e) => void handleDropToComposer(e)}
+      >
         <div className="flex h-10 items-center text-(--color-text-muted)">
           {isProcessingVoice ? (
             <Loader2 size={18} className="animate-spin" />

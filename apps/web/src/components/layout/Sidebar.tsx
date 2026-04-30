@@ -2,6 +2,9 @@ import { useState } from "react";
 import { NavLink, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import ConversationHistory from "../chat/ConversationHistory";
+import RecentChatsList from "../chat/RecentChatsList";
+import SidebarSection from "../sidebar/SidebarSection";
+import SidebarFilesTree from "../sidebar/SidebarFilesTree";
 import {
   MessageSquare,
   Search,
@@ -77,17 +80,41 @@ const Sidebar: React.FC = () => {
 
         {!isCollapsed && (
           <div className="mt-1.5 flex min-h-0 flex-1 flex-col border-t border-(--glass-border)">
-            <div className="flex items-center justify-between px-3 py-2">
-              <span className="text-[10px] font-bold uppercase tracking-widest text-(--color-text-muted)">
-                History
+            <div className="px-2.5 py-2">
+              <span className="px-1 text-[10px] font-bold uppercase tracking-widest text-(--color-text-muted)">
+                Workspace
               </span>
             </div>
-            <div className="flex-1 min-h-0">
-              <ConversationHistory
-                activeId={activeConversationId}
-                onSelect={(id) => navigate(`/chat/${id}`)}
-                onNewChat={() => navigate("/")}
-              />
+            <div className="flex min-h-0 flex-1 flex-col gap-2 px-2 pb-2">
+              <SidebarSection
+                id="sidebar-recent-chats"
+                title="Recent Chats"
+                defaultOpen={false}
+              >
+                <RecentChatsList
+                  activeId={activeConversationId}
+                  onSelect={(id) => navigate(`/chat/${id}`)}
+                />
+              </SidebarSection>
+
+              <SidebarSection
+                id="sidebar-chat-history"
+                title="Chat History"
+                defaultOpen={false}
+              >
+                <div className="max-h-64 overflow-y-auto pr-1">
+                  <ConversationHistory
+                    activeId={activeConversationId}
+                    onSelect={(id) => navigate(`/chat/${id}`)}
+                    onNewChat={() => navigate("/")}
+                    compact
+                  />
+                </div>
+              </SidebarSection>
+
+              <SidebarSection id="sidebar-files-tree" title="Files" defaultOpen={false}>
+                <SidebarFilesTree />
+              </SidebarSection>
             </div>
           </div>
         )}
