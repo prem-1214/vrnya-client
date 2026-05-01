@@ -21,8 +21,9 @@ type ComposerAttachContextValue = {
   attachFromSidebar: (payload: PendingComposerAttach) => Promise<void>;
 };
 
-const ComposerAttachContext =
-  createContext<ComposerAttachContextValue | null>(null);
+const ComposerAttachContext = createContext<ComposerAttachContextValue | null>(
+  null,
+);
 
 export const ComposerAttachProvider: React.FC<{
   children: React.ReactNode;
