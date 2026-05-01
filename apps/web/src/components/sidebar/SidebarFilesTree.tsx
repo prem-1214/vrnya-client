@@ -1,6 +1,10 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { ChevronRight, File, Folder, FolderOpen, Loader2 } from "lucide-react";
-import { getUserFolders, listUploadedFiles, type UploadedFile } from "../../api/client";
+import {
+  getUserFolders,
+  listUploadedFiles,
+  type UploadedFile,
+} from "../../api/client";
 import { buildFileTree, collectNodeFiles, type FileTreeNode } from "./fileTree";
 
 const DRAG_MIME_TYPE = "application/x-vrnya-doc-ref";
@@ -34,7 +38,9 @@ const SidebarFilesTree: React.FC = () => {
   const [files, setFiles] = useState<UploadedFile[]>([]);
   const [folders, setFolders] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set());
+  const [expandedFolders, setExpandedFolders] = useState<Set<string>>(
+    new Set(),
+  );
 
   useEffect(() => {
     const load = async () => {
@@ -67,7 +73,11 @@ const SidebarFilesTree: React.FC = () => {
 
   const getNodeDocs = (node: FileTreeNode): DragDoc[] => {
     const sourceFiles =
-      node.type === "file" ? (node.file ? [node.file] : []) : collectNodeFiles(node);
+      node.type === "file"
+        ? node.file
+          ? [node.file]
+          : []
+        : collectNodeFiles(node);
 
     return sourceFiles.map((file) => ({
       id: file.id,
@@ -88,10 +98,7 @@ const SidebarFilesTree: React.FC = () => {
         : createDragPayload(docs);
     event.dataTransfer.effectAllowed = "copy";
     event.dataTransfer.setData(DRAG_MIME_TYPE, payload);
-    event.dataTransfer.setData(
-      "text/plain",
-      `${PLAIN_TEXT_PREFIX}${payload}`,
-    );
+    event.dataTransfer.setData("text/plain", `${PLAIN_TEXT_PREFIX}${payload}`);
   };
 
   const toggleFolder = (folderPath: string) => {
