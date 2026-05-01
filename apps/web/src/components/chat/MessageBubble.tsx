@@ -125,20 +125,20 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
       }
       animate={{ opacity: 1, y: 0, scale: 1 }}
       transition={{ duration: 0.2 }}
-      className={`mb-4 flex w-full ${isUser ? "justify-end" : "justify-start"}`}
+      className={`mb-2 flex w-full ${isUser ? "justify-end" : "justify-start"}`}
     >
       <div
-        className={`glass relative min-w-0 max-w-[80%] rounded-[18px] px-4 pb-4 pt-4 shadow-[0_14px_34px_rgba(0,0,0,0.16)] max-[900px]:max-w-full ${
+        className={`relative min-w-0 rounded-[12px] shadow-[0_8px_20px_rgba(0,0,0,0.1)] max-w-[min(92%,26rem)] sm:max-w-[50%] ${
           isUser
-            ? "rounded-br-lg bg-(--color-accent) text-(--message-user-text) shadow-[0_18px_40px_rgba(90,169,255,0.2)]"
-            : "rounded-bl-lg border border-(--glass-border) bg-[linear-gradient(180deg,rgba(255,255,255,0.045),rgba(255,255,255,0.018)),var(--color-bg-surface)] shadow-[0_12px_28px_rgba(0,0,0,0.12)] [backdrop-filter:blur(10px)]"
+            ? "rounded-br-[10px] border border-(--chat-user-bubble-border) bg-(--chat-user-bubble-bg) px-2.5 pb-2 pt-1.5 text-(--chat-user-bubble-fg) shadow-(--chat-user-bubble-shadow)"
+            : "glass border border-(--glass-border) bg-[linear-gradient(180deg,rgba(255,255,255,0.045),rgba(255,255,255,0.018)),var(--color-bg-surface)] px-2.5 pb-2 pt-1.5 shadow-[0_8px_20px_rgba(0,0,0,0.08)] [backdrop-filter:blur(10px)] rounded-bl-[11px] rounded-br-[13px] rounded-t-[13px]"
         }`}
       >
-        <div className="mb-2 flex flex-wrap items-center justify-between gap-4 text-[10px] font-bold tracking-[0.08em] uppercase">
+        <div className="mb-0.5 flex flex-wrap items-center justify-between gap-2 text-[8px] font-bold uppercase tracking-[0.08em]">
           <span
             className={
               isUser
-                ? "text-(--message-user-text) opacity-70"
+                ? "text-(--chat-user-bubble-fg-soft)"
                 : "text-(--color-accent)"
             }
           >
@@ -158,7 +158,7 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
                 title={isSpeaking ? "Stop reading" : "Read aloud"}
                 type="button"
               >
-                {isSpeaking ? <VolumeX size={14} /> : <Volume2 size={14} />}
+                {isSpeaking ? <VolumeX size={13} /> : <Volume2 size={13} />}
               </button>
             )}
             {/* ✅ NEW: Message actions (P3-11) */}
@@ -177,8 +177,8 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
             <span
               className={
                 isUser
-                  ? "text-gray-600 dark:text-gray-300"
-                  : "text-gray-600 dark:text-gray-400"
+                  ? "text-(--chat-user-bubble-fg-soft) opacity-[0.88] tabular-nums"
+                  : "text-(--color-text-muted)"
               }
             >
               {message.timestamp.toLocaleTimeString([], {
@@ -190,11 +190,11 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
         </div>
 
         <div
-          className={`prose min-w-0 whitespace-pre-wrap text-[0.95rem] leading-relaxed ${
+          className={`min-w-0 whitespace-pre-wrap leading-snug [&>*:first-child]:mt-0 [&>*:last-child]:mb-0 ${
             isUser
-              ? "text-(--message-user-text)"
-              : "text-(--color-text-primary)"
-          } [&>*:first-child]:mt-0 [&>*:last-child]:mb-0 [&_p+p]:mt-2 [&_ul]:my-2 [&_ul]:pl-5 [&_ol]:my-2 [&_ol]:pl-5 [&_li+li]:mt-1 [&_h1]:my-2 [&_h1]:leading-tight [&_h2]:my-2 [&_h2]:leading-tight [&_h3]:my-2 [&_h3]:leading-tight [&_pre]:my-2 [&_pre]:max-w-full [&_pre]:overflow-x-auto [&_code]:text-[0.9em] [&_table]:my-2 [&_table]:block [&_table]:max-w-full [&_table]:overflow-x-auto [&_blockquote]:my-2 [&_blockquote]:rounded-r-xl [&_blockquote]:border-l-[3px] [&_blockquote]:border-l-(--color-accent) [&_blockquote]:bg-white/3 [&_blockquote]:px-3 [&_blockquote]:py-2 [&_blockquote]:text-(--color-text-secondary)`}
+              ? "text-[0.8125rem] text-(--chat-user-bubble-fg) [&_a]:text-(--color-accent) [&_a]:underline [&_code]:rounded-[4px] [&_code]:bg-(--inline-code-bg) [&_code]:px-1 [&_code]:py-px [&_code]:font-mono [&_code]:text-[0.8em] [&_pre]:my-1.5 [&_pre]:overflow-x-auto [&_pre]:rounded-md [&_pre]:border [&_pre]:border-(--color-border) [&_pre]:bg-(--pre-bg) [&_pre]:p-1.5 [&_pre]:text-[0.8em] [&_ol]:my-1 [&_ol]:list-decimal [&_ol]:pl-5 [&_ul]:my-1 [&_ul]:list-disc [&_ul]:pl-5 [&_li]:mt-0.5 [&_p+p]:mt-1.5 [&_table]:block [&_table]:max-w-full [&_table]:overflow-x-auto"
+              : "prose text-[0.8125rem] text-(--color-text-primary) [&_p+p]:mt-1 [&_ul]:my-1 [&_ul]:pl-5 [&_ol]:my-1 [&_ol]:pl-5 [&_li+li]:mt-0.5 [&_h1]:my-1 [&_h1]:leading-tight [&_h2]:my-1 [&_h2]:leading-tight [&_h3]:my-1 [&_h3]:leading-tight [&_pre]:my-1 [&_pre]:max-w-full [&_pre]:overflow-x-auto [&_code]:text-[0.8em] [&_table]:my-1 [&_table]:block [&_table]:max-w-full [&_table]:overflow-x-auto [&_blockquote]:my-1 [&_blockquote]:rounded-r-xl [&_blockquote]:border-l-[3px] [&_blockquote]:border-l-(--color-accent) [&_blockquote]:bg-white/3 [&_blockquote]:px-2.5 [&_blockquote]:py-1.5 [&_blockquote]:text-(--color-text-secondary)"
+          }`}
         >
           {message.fileDetails ? (
             <div>
@@ -228,7 +228,7 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
 
         {/* File operation result — single action path (create, rename, etc.) */}
         {actionPath && revealComplete && sources.length === 0 && (
-          <div className="mt-4 flex max-h-[300px] flex-col gap-1 overflow-y-auto border-t border-(--glass-border) pt-2">
+          <div className="mt-2.5 flex max-h-[280px] flex-col gap-1 overflow-y-auto border-t border-(--glass-border) pt-1.5">
             <div className="flex items-center justify-between rounded-md bg-(--panel-soft-bg) px-2 py-1 transition-colors duration-200 hover:bg-(--panel-strong-bg)">
               <span
                 className="max-w-[150px] overflow-hidden text-ellipsis whitespace-nowrap text-[11px] font-semibold text-(--color-text-secondary) max-[900px]:max-w-[120px]"

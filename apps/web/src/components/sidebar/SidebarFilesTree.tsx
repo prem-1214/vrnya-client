@@ -117,8 +117,8 @@ const SidebarFilesTree: React.FC = () => {
         <div key={node.path}>
           <button
             type="button"
-            className="group flex w-full items-center gap-1.5 rounded-md px-2 py-1.5 text-left text-xs text-(--color-text-secondary) transition-colors hover:bg-(--color-bg-hover)"
-            style={{ paddingLeft: `${8 + depth * 14}px` }}
+            className="group flex w-full items-center gap-2 rounded-md px-2 py-2 text-left text-sm text-(--color-text-secondary) transition-colors hover:bg-(--color-bg-hover)"
+            style={{ paddingLeft: `${8 + depth * 15}px` }}
             onClick={() => toggleFolder(node.path)}
             draggable
             onDragStart={(e) => handleDragStart(e, node, nodeDocs)}
@@ -127,21 +127,21 @@ const SidebarFilesTree: React.FC = () => {
           >
             {hasChildren ? (
               <ChevronRight
-                size={13}
+                size={15}
                 className={`shrink-0 transition-transform ${isExpanded ? "rotate-90" : ""}`}
               />
             ) : (
-              <span className="inline-block w-[13px] shrink-0" />
+              <span className="inline-block w-[15px] shrink-0" />
             )}
             {isExpanded ? (
               <FolderOpen
-                size={14}
+                size={16}
                 className="shrink-0"
                 style={{ color: getFolderIconColor(node.path) }}
               />
             ) : (
               <Folder
-                size={14}
+                size={16}
                 className="shrink-0"
                 style={{ color: getFolderIconColor(node.path) }}
               />
@@ -159,14 +159,14 @@ const SidebarFilesTree: React.FC = () => {
       <button
         key={node.path}
         type="button"
-        className="flex w-full items-center gap-1.5 rounded-md px-2 py-1.5 text-left text-xs text-(--color-text-secondary) transition-colors hover:bg-(--color-bg-hover)"
-        style={{ paddingLeft: `${8 + depth * 14}px` }}
+        className="flex w-full items-center gap-2 rounded-md px-2 py-2 text-left text-sm text-(--color-text-secondary) transition-colors hover:bg-(--color-bg-hover)"
+        style={{ paddingLeft: `${8 + depth * 15}px` }}
         draggable
         onDragStart={(e) => handleDragStart(e, node, nodeDocs)}
         title={`Drag ${node.name} into chat`}
         aria-label={`File ${node.name}`}
       >
-        <File size={13} className="shrink-0 text-(--color-text-muted)" />
+        <File size={15} className="shrink-0 text-(--color-text-muted)" />
         <span className="truncate">{node.name}</span>
       </button>
     );
@@ -175,14 +175,14 @@ const SidebarFilesTree: React.FC = () => {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-3">
-        <Loader2 size={14} className="animate-spin text-(--color-text-muted)" />
+        <Loader2 size={17} className="animate-spin text-(--color-text-muted)" />
       </div>
     );
   }
 
   if (!tree.length) {
     return (
-      <p className="px-2 py-2 text-[11px] text-(--color-text-muted)">
+      <p className="px-2 py-2 text-xs text-(--color-text-muted)">
         No uploaded files yet.
       </p>
     );

@@ -85,17 +85,17 @@ const ConversationHistory: React.FC<ConversationHistoryProps> = ({
           onClick={onNewChat}
           className={`flex w-full items-center justify-center gap-2 rounded-xl bg-(--color-accent) text-white transition-all hover:bg-(--color-accent-hover) ${
             compact
-              ? "py-2 text-xs font-semibold"
+              ? "py-2.5 text-sm font-semibold"
               : "py-2.5 text-sm font-bold shadow-[0_4px_12px_rgba(59,130,246,0.3)] hover:scale-[1.02] active:scale-[0.98]"
           }`}
         >
-          <Plus size={compact ? 14 : 18} />
+          <Plus size={compact ? 16 : 18} />
           New Chat
         </button>
 
         <div className="relative group">
           <Search
-            size={14}
+            size={compact ? 16 : 14}
             className="absolute left-3 top-1/2 -translate-y-1/2 text-(--color-text-muted) group-focus-within:text-(--color-accent) transition-colors"
           />
           <label htmlFor="conversation-search" className="sr-only">
@@ -107,7 +107,7 @@ const ConversationHistory: React.FC<ConversationHistoryProps> = ({
             placeholder="Search chats..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className={`w-full rounded-lg border border-transparent bg-(--color-bg-hover) outline-none transition-all placeholder:text-(--color-text-muted) focus:border-(--color-accent-subtle) ${compact ? "py-1 pl-8 pr-2 text-[11px]" : "py-1.5 pl-9 pr-3 text-xs"}`}
+            className={`w-full rounded-lg border border-transparent bg-(--color-bg-hover) outline-none transition-all placeholder:text-(--color-text-muted) focus:border-(--color-accent-subtle) ${compact ? "py-1.5 pl-9 pr-2 text-[13px]" : "py-1.5 pl-9 pr-3 text-xs"}`}
           />
         </div>
       </div>
@@ -122,7 +122,9 @@ const ConversationHistory: React.FC<ConversationHistoryProps> = ({
           </div>
         ) : filtered.length === 0 ? (
           <div className="text-center py-8 px-4">
-            <p className="text-xs font-medium text-(--color-text-muted)">
+            <p
+              className={`font-medium text-(--color-text-muted) ${compact ? "text-sm" : "text-xs"}`}
+            >
               {searchQuery
                 ? "No chats match your search."
                 : "No previous chats found."}
@@ -152,7 +154,7 @@ const ConversationHistory: React.FC<ConversationHistoryProps> = ({
                   aria-label={`Open conversation ${chat.title || "Untitled Chat"}`}
                 >
                   <MessageSquare
-                    size={16}
+                    size={compact ? 18 : 16}
                     className={
                       isActive
                         ? "text-(--color-accent)"
@@ -160,10 +162,14 @@ const ConversationHistory: React.FC<ConversationHistoryProps> = ({
                     }
                   />
                   <div className="flex-1 flex flex-col min-w-0">
-                    <span className={`${compact ? "text-[11px]" : "text-xs"} truncate font-bold leading-tight`}>
-                      {chat.title || "Untitiled Chat"}
+                    <span
+                      className={`${compact ? "text-[13px]" : "text-xs"} truncate font-bold leading-tight`}
+                    >
+                      {chat.title || "Untitled Chat"}
                     </span>
-                    <span className="text-[10px] font-medium opacity-60 mt-0.5">
+                    <span
+                      className={`font-medium opacity-60 mt-0.5 ${compact ? "text-xs" : "text-[10px]"}`}
+                    >
                       {formatTime(chat.updated_at)}
                     </span>
                   </div>
@@ -175,7 +181,7 @@ const ConversationHistory: React.FC<ConversationHistoryProps> = ({
                     aria-label="Delete chat"
                     type="button"
                   >
-                    <Trash2 size={14} />
+                    <Trash2 size={compact ? 16 : 14} />
                   </button>
                 </div>
               );

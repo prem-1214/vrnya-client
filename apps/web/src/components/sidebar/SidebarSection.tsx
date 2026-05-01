@@ -20,16 +20,16 @@ const SidebarSection: React.FC<SidebarSectionProps> = ({
     <section className="min-h-0">
       <button
         type="button"
-        className="flex w-full items-center justify-between rounded-lg px-2 py-1.5 text-left transition-colors hover:bg-(--color-bg-hover)"
+        className="flex w-full items-center justify-between rounded-lg px-2 py-2 text-left transition-colors hover:bg-(--color-bg-hover)"
         onClick={() => setIsOpen((prev) => !prev)}
         aria-expanded={isOpen}
         aria-controls={id}
       >
-        <span className="text-[10px] font-bold uppercase tracking-widest text-(--color-text-muted)">
+        <span className="text-[12px] font-bold uppercase tracking-wider text-(--color-text-muted)">
           {title}
         </span>
         <ChevronDown
-          size={14}
+          size={16}
           className={`text-(--color-text-muted) transition-transform ${isOpen ? "" : "-rotate-90"}`}
         />
       </button>

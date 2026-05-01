@@ -7,7 +7,8 @@ import AppLayout from "./components/layout/AppLayout";
 
 import ChatPage from "./pages/ChatPage";
 import SearchPage from "./pages/SearchPage";
-import IndexPage from "./pages/IndexPage";
+// Index page temporarily hidden from the app UI
+// import IndexPage from "./pages/IndexPage";
 import FilesPage from "./pages/FilesPage";
 import DocumentViewerPage from "./pages/DocumentViewerPage";
 import SettingsPage from "./pages/SettingsPage";
@@ -83,7 +84,8 @@ function App() {
                   <Route path="/" element={<ChatPage />} />
                   <Route path="/chat/:id" element={<ChatPage />} />
                   <Route path="/search" element={<SearchPage />} />
-                  <Route path="/index" element={<IndexPage />} />
+                  {/* Index page commented out — keep old links working */}
+                  <Route path="/index" element={<Navigate to="/" replace />} />
                   <Route path="/files" element={<FilesPage />} />
                   <Route
                     path="/document/:id"

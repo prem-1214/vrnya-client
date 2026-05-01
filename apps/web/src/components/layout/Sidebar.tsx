@@ -8,7 +8,6 @@ import SidebarFilesTree from "../sidebar/SidebarFilesTree";
 import {
   MessageSquare,
   Search,
-  HardDrive,
   Files,
   Clock3,
   ChevronLeft,
@@ -34,7 +33,7 @@ const Sidebar: React.FC = () => {
   const navItems = [
     { to: "/", icon: MessageSquare, label: "Chat" },
     { to: "/search", icon: Search, label: "Search" },
-    { to: "/index", icon: HardDrive, label: "Index" },
+    // Index page commented out across the app
     { to: "/files", icon: Files, label: "Files" },
   ];
 
@@ -63,13 +62,13 @@ const Sidebar: React.FC = () => {
     >
       <nav className="flex min-h-0 flex-1 flex-col" aria-label="Primary app navigation">
         {isCollapsed && (
-          <div className="flex min-h-0 flex-1 flex-col items-center gap-1.5 px-2 py-3">
+          <div className="flex min-h-0 flex-1 flex-col items-center gap-2 px-2 py-3">
             {navItems.map((item) => (
               <button
                 key={item.to}
                 type="button"
                 onClick={() => navigate(item.to)}
-                className={`flex h-9 w-9 items-center justify-center rounded-lg border transition-colors ${
+                className={`flex h-10 w-10 items-center justify-center rounded-lg border transition-colors ${
                   isActiveRoute(item.to)
                     ? "border-(--color-accent-subtle) bg-(--color-accent-subtle) text-(--color-accent)"
                     : "border-(--glass-border) text-(--color-text-secondary) hover:bg-(--color-bg-hover)"
@@ -77,14 +76,14 @@ const Sidebar: React.FC = () => {
                 title={item.label}
                 aria-label={item.label}
               >
-                <item.icon size={16} />
+                <item.icon size={18} />
               </button>
             ))}
 
             <button
               type="button"
               onClick={() => setIsHistoryView((prev) => !prev)}
-              className={`mt-1 flex h-9 w-9 items-center justify-center rounded-lg border transition-colors ${
+              className={`mt-1 flex h-10 w-10 items-center justify-center rounded-lg border transition-colors ${
                 isHistoryView
                   ? "border-(--color-accent-subtle) bg-(--color-accent-subtle) text-(--color-accent)"
                   : "border-(--glass-border) text-(--color-text-muted) hover:bg-(--color-bg-hover)"
@@ -92,46 +91,46 @@ const Sidebar: React.FC = () => {
               title="Chat history"
               aria-label="Chat history"
             >
-              <Clock3 size={16} />
+              <Clock3 size={18} />
             </button>
 
             <button
               type="button"
-              className="mt-auto flex h-9 w-9 items-center justify-center rounded-lg border border-(--glass-border) bg-transparent text-(--color-text-secondary) transition-colors hover:bg-(--color-bg-hover) hover:text-(--color-text-primary)"
+              className="mt-auto flex h-10 w-10 items-center justify-center rounded-lg border border-(--glass-border) bg-transparent text-(--color-text-secondary) transition-colors hover:bg-(--color-bg-hover) hover:text-(--color-text-primary)"
               onClick={() => setIsCollapsed(false)}
               title="Expand sidebar"
               aria-label="Expand sidebar"
             >
-              <ChevronRight size={16} />
+              <ChevronRight size={18} />
             </button>
 
             <button
               type="button"
-              className="flex h-9 w-9 items-center justify-center rounded-lg border border-(--glass-border) bg-transparent text-(--color-text-secondary) transition-colors hover:bg-(--color-bg-hover) hover:text-(--color-text-primary)"
+              className="flex h-10 w-10 items-center justify-center rounded-lg border border-(--glass-border) bg-transparent text-(--color-text-secondary) transition-colors hover:bg-(--color-bg-hover) hover:text-(--color-text-primary)"
               onClick={() => navigate("/settings")}
               title="Settings"
               aria-label="Settings"
             >
-              <Settings size={16} />
+              <Settings size={18} />
             </button>
             <button
               type="button"
-              className="flex h-9 w-9 items-center justify-center rounded-lg border border-(--glass-border) bg-transparent text-(--color-text-secondary) transition-colors hover:bg-(--color-bg-hover) hover:text-(--color-text-primary)"
+              className="flex h-10 w-10 items-center justify-center rounded-lg border border-(--glass-border) bg-transparent text-(--color-text-secondary) transition-colors hover:bg-(--color-bg-hover) hover:text-(--color-text-primary)"
               onClick={handleLogout}
               disabled={isLoggingOut}
               title="Logout"
               aria-label="Logout"
             >
-              <LogOut size={16} />
+              <LogOut size={18} />
             </button>
             <button
               type="button"
-              className="flex h-9 w-9 items-center justify-center rounded-lg border border-(--glass-border) bg-transparent text-(--color-text-secondary) transition-colors hover:bg-(--color-bg-hover) hover:text-(--color-text-primary)"
+              className="flex h-10 w-10 items-center justify-center rounded-lg border border-(--glass-border) bg-transparent text-(--color-text-secondary) transition-colors hover:bg-(--color-bg-hover) hover:text-(--color-text-primary)"
               onClick={() => navigate("/settings")}
               title="Account"
               aria-label="Account"
             >
-              <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[linear-gradient(135deg,var(--color-accent),var(--color-accent-hover))] text-[11px] font-bold text-(--color-bg-primary)">
+              <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[linear-gradient(135deg,var(--color-accent),var(--color-accent-hover))] text-xs font-bold text-(--color-bg-primary)">
                 {initial}
               </span>
             </button>
@@ -139,13 +138,13 @@ const Sidebar: React.FC = () => {
         )}
 
         {!isCollapsed && (
-          <div className="flex items-center gap-1.5 px-2 py-2">
+          <div className="flex items-center gap-2 px-2 py-2">
             {navItems.map((item) => (
               <button
                 key={item.to}
                 type="button"
                 onClick={() => navigate(item.to)}
-                className={`flex h-8 w-8 items-center justify-center rounded-md border transition-colors ${
+                className={`flex h-9 w-9 items-center justify-center rounded-md border transition-colors ${
                   isActiveRoute(item.to)
                     ? "border-(--color-accent-subtle) bg-(--color-accent-subtle) text-(--color-accent)"
                     : "border-(--glass-border) text-(--color-text-secondary) hover:bg-(--color-bg-hover)"
@@ -153,13 +152,13 @@ const Sidebar: React.FC = () => {
                 title={item.label}
                 aria-label={item.label}
               >
-                <item.icon size={15} />
+                <item.icon size={17} />
               </button>
             ))}
             <button
               type="button"
               onClick={() => setIsHistoryView((prev) => !prev)}
-              className={`ml-0.5 flex h-8 w-8 items-center justify-center rounded-md border transition-colors ${
+              className={`ml-0.5 flex h-9 w-9 items-center justify-center rounded-md border transition-colors ${
                 isHistoryView
                   ? "border-(--color-accent-subtle) bg-(--color-accent-subtle) text-(--color-accent)"
                   : "border-(--glass-border) text-(--color-text-muted) hover:bg-(--color-bg-hover)"
@@ -167,16 +166,16 @@ const Sidebar: React.FC = () => {
               title={isHistoryView ? "Show workspace" : "Show chat history"}
               aria-label={isHistoryView ? "Show workspace view" : "Show chat history"}
             >
-              <Clock3 size={15} />
+              <Clock3 size={17} />
             </button>
             <button
               type="button"
-              className="ml-auto flex h-8 w-8 items-center justify-center rounded-md border border-(--glass-border) text-(--color-text-secondary) transition-colors hover:bg-(--color-bg-hover)"
+              className="ml-auto flex h-9 w-9 items-center justify-center rounded-md border border-(--glass-border) text-(--color-text-secondary) transition-colors hover:bg-(--color-bg-hover)"
               onClick={() => setIsCollapsed(true)}
               title="Collapse sidebar"
               aria-label="Collapse sidebar"
             >
-              <ChevronLeft size={15} />
+              <ChevronLeft size={17} />
             </button>
           </div>
         )}
@@ -205,7 +204,7 @@ const Sidebar: React.FC = () => {
         {!isCollapsed && isHistoryView && (
           <div className="mt-1.5 flex min-h-0 flex-1 flex-col border-t border-(--glass-border)">
             <div className="px-2.5 py-2">
-              <span className="px-1 text-[10px] font-bold uppercase tracking-widest text-(--color-text-muted)">
+              <span className="px-1 text-[12px] font-bold uppercase tracking-wider text-(--color-text-muted)">
                 Chat History
               </span>
             </div>
@@ -232,8 +231,8 @@ const Sidebar: React.FC = () => {
             title="Settings"
             type="button"
           >
-            <Settings size={16} className="shrink-0" />
-            {!isCollapsed && <span>Settings</span>}
+            <Settings size={18} className="shrink-0" />
+            {!isCollapsed && <span className="text-base">Settings</span>}
           </button>
           <button
             className={`min-h-10 flex w-full cursor-pointer items-center rounded-lg border border-(--glass-border) bg-transparent text-(--color-text-secondary) transition-all duration-200 ease-in-out hover:bg-(--color-bg-hover) hover:text-(--color-text-primary) ${
@@ -244,9 +243,11 @@ const Sidebar: React.FC = () => {
             title="Logout"
             type="button"
           >
-            <LogOut size={16} className="shrink-0" />
+            <LogOut size={18} className="shrink-0" />
             {!isCollapsed && (
-              <span>{isLoggingOut ? "Logging out..." : "Logout"}</span>
+              <span className="text-base">
+                {isLoggingOut ? "Logging out..." : "Logout"}
+              </span>
             )}
           </button>
         </div>
@@ -254,15 +255,15 @@ const Sidebar: React.FC = () => {
         <div
           className={`flex items-center overflow-hidden whitespace-nowrap ${isCollapsed ? "justify-center" : "gap-4"}`}
         >
-          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[linear-gradient(135deg,var(--color-accent),var(--color-accent-hover))] text-(--color-bg-primary) text-sm font-bold shadow-[0_4px_12px_rgba(59,130,246,0.2)]">
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[linear-gradient(135deg,var(--color-accent),var(--color-accent-hover))] text-(--color-bg-primary) text-base font-bold shadow-[0_4px_12px_rgba(59,130,246,0.2)]">
             {initial}
           </div>
           {!isCollapsed && (
             <div className="flex flex-col">
-              <span className="text-sm font-semibold text-(--color-text-primary)">
+              <span className="text-base font-semibold text-(--color-text-primary)">
                 {displayName}
               </span>
-              <span className="text-xs text-(--color-text-muted) w-36 overflow-hidden text-ellipsis">
+              <span className="text-sm text-(--color-text-muted) w-36 overflow-hidden text-ellipsis">
                 {user?.email || "Local User"}
               </span>
             </div>

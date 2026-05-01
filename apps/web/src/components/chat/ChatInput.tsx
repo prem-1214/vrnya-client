@@ -470,13 +470,13 @@ const ChatInput: React.FC<ChatInputProps> = ({
 
   return (
     <div
-      className={`flex flex-col gap-2 px-4 pb-4 transition-all duration-300 md:px-6 md:pb-6 ${
+      className={`flex flex-col gap-2 px-4 pb-[5px] transition-all duration-300 md:px-6 ${
         dockToBottom ? "mt-auto" : "mt-6"
       }`}
     >
       {/* Attached Documents Display */}
       {attachmentChips.length > 0 && (
-        <div className="mx-auto w-full max-w-[920px]">
+        <div className="mx-auto w-full max-w-[1048px]">
           <div className="flex flex-wrap gap-2">
             {attachmentChips.map((chip) => (
               <div
@@ -501,9 +501,10 @@ const ChatInput: React.FC<ChatInputProps> = ({
         </div>
       )}
 
+      <div className="mx-auto mt-[10px] flex w-full max-w-[1048px] flex-col gap-1">
       {/* Main Input Area */}
       <div
-        className="glass relative mx-auto flex w-full max-w-[920px] items-end gap-4 rounded-[18px] border border-(--color-border) bg-[linear-gradient(180deg,rgba(255,255,255,0.035),rgba(255,255,255,0.012)),var(--color-bg-surface)] px-4 py-4 shadow-[0_14px_30px_rgba(0,0,0,0.14)] transition-all duration-300 focus-within:-translate-y-px focus-within:border-(--color-accent) focus-within:shadow-(--shadow-accent)"
+        className="glass relative flex w-full items-end gap-3 rounded-[16px] border border-(--color-border) bg-[linear-gradient(180deg,rgba(255,255,255,0.035),rgba(255,255,255,0.012)),var(--color-bg-surface)] px-4 py-3 shadow-[0_14px_30px_rgba(0,0,0,0.14)] transition-all duration-300 focus-within:-translate-y-px focus-within:border-(--color-accent) focus-within:shadow-(--shadow-accent)"
         onDragOver={handleComposerDragOver}
         onDrop={(e) => void handleDropToComposer(e)}
       >
@@ -537,7 +538,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
           onChange={handleInputChange}
           onKeyDown={handleKeyDown}
           disabled={disabled || isProcessingVoice}
-          className="max-h-[200px] min-w-0 flex-1 resize-none border-0 bg-transparent py-2.5 font-sans text-sm leading-relaxed text-(--color-text-primary) outline-none placeholder:text-(--color-text-muted)"
+          className="max-h-[200px] min-w-0 flex-1 resize-none border-0 bg-transparent py-2 font-sans text-[0.8125rem] leading-relaxed text-(--color-text-primary) outline-none placeholder:text-(--color-text-muted)"
         />
         <div className="flex items-center gap-2 pr-2">
           <VoiceRecorder
@@ -588,7 +589,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
           )}
         </div>
       </div>
-      <div className="mx-auto flex w-full max-w-[920px] flex-wrap justify-center gap-4 text-[10px] tracking-[0.05em] text-(--color-text-muted) uppercase md:gap-6">
+      <div className="flex w-full flex-wrap justify-center gap-4 text-[10px] tracking-[0.05em] text-(--color-text-muted) uppercase md:gap-6">
         <span>
           <b className="text-(--color-text-secondary)">Shift + Enter</b> for new
           line
@@ -596,6 +597,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
         <span>
           <b className="text-(--color-text-secondary)">Enter</b> to send
         </span>
+      </div>
       </div>
     </div>
   );

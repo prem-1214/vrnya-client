@@ -84,6 +84,12 @@
     --inline-code-bg: rgba(255, 255, 255, 0.04);
     --pre-bg: rgba(7, 14, 24, 0.88);
     --message-user-text: #08101c;
+
+    --chat-user-bubble-bg: color-mix(in srgb, var(--color-accent) 22%, var(--color-bg-secondary));
+    --chat-user-bubble-border: rgba(122, 180, 235, 0.32);
+    --chat-user-bubble-fg: var(--color-text-primary);
+    --chat-user-bubble-fg-soft: var(--color-text-secondary);
+    --chat-user-bubble-shadow: 0 8px 22px rgba(0, 0, 0, 0.2);
 }
 
 :root[data-theme="light"] {
@@ -139,6 +145,16 @@
     --inline-code-bg: rgba(16, 33, 59, 0.06);
     --pre-bg: #eff4fb;
     --message-user-text: #ffffff;
+
+    --chat-user-bubble-bg: color-mix(
+        in srgb,
+        var(--color-accent) 12%,
+        var(--color-bg-surface)
+    );
+    --chat-user-bubble-border: rgba(37, 99, 235, 0.22);
+    --chat-user-bubble-fg: var(--color-text-primary);
+    --chat-user-bubble-fg-soft: var(--color-text-secondary);
+    --chat-user-bubble-shadow: 0 8px 20px rgba(40, 62, 97, 0.064);
 }
 
 @layer base {

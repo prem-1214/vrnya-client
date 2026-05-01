@@ -43,7 +43,7 @@ const MessageList: React.FC<MessageListProps> = ({
 
   return (
     <div
-      className="flex min-h-0 min-w-0 flex-1 flex-col gap-2 overflow-y-auto px-4 pb-4 pt-6 md:px-6 md:pb-6"
+      className="flex min-h-0 min-w-0 flex-1 flex-col gap-1.5 overflow-y-auto px-4 pb-4 pt-4 md:px-6 md:pb-6"
       ref={scrollRef}
     >
       {isHistoryLoading ? (
@@ -66,29 +66,31 @@ const MessageList: React.FC<MessageListProps> = ({
           </div>
         </div>
       ) : (
-        messages.map((msg, idx) => (
-          <MessageBubble
-            key={idx}
-            message={msg}
-            disableAnimation={Boolean(msg.created_at)}
-            onOpenPreview={onOpenPreview}
-            onAnimationProgress={scrollToBottom}
-            conversationId={conversationId} // ✅ NEW
-            onMessageUpdated={onMessageUpdated} // ✅ NEW
-            onMessageDeleted={onMessageDeleted} // ✅ NEW
-          />
-        ))
+        <div className="mx-auto flex w-full min-w-0 max-w-[1048px] flex-col gap-1.5">
+          {messages.map((msg, idx) => (
+            <MessageBubble
+              key={idx}
+              message={msg}
+              disableAnimation={Boolean(msg.created_at)}
+              onOpenPreview={onOpenPreview}
+              onAnimationProgress={scrollToBottom}
+              conversationId={conversationId}
+              onMessageUpdated={onMessageUpdated}
+              onMessageDeleted={onMessageDeleted}
+            />
+          ))}
+        </div>
       )}
       {isTyping && !isHistoryLoading && (
-        <div className="mx-auto mb-6 flex w-full max-w-[920px]">
-          <div className="glass flex items-center gap-1 rounded-lg border border-(--glass-border) bg-(--color-bg-surface) px-4 py-2 shadow-(--shadow-sm)">
+        <div className="mx-auto flex w-full max-w-[1048px] justify-start pl-0 pr-0">
+          <div className="glass flex items-center gap-1 rounded-lg border border-(--glass-border) bg-(--color-bg-surface) px-3 py-1.5 shadow-(--shadow-sm)">
             <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-(--color-accent) opacity-60 [animation-delay:0ms]" />
             <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-(--color-accent) opacity-60 [animation-delay:200ms]" />
             <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-(--color-accent) opacity-60 [animation-delay:400ms]" />
           </div>
         </div>
       )}
-      <div ref={bottomRef} aria-hidden="true" />
+      <div ref={bottomRef} className="mx-auto w-full max-w-[1048px]" aria-hidden="true" />
     </div>
   );
 };

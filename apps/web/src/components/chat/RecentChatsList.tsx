@@ -29,7 +29,7 @@ const RecentChatsList: React.FC<RecentChatsListProps> = ({
 
   if (!conversations.length) {
     return (
-      <p className="px-2 py-1 text-[11px] text-(--color-text-muted)">
+      <p className="px-2 py-1 text-xs text-(--color-text-muted)">
         No recent chats yet.
       </p>
     );
@@ -44,14 +44,14 @@ const RecentChatsList: React.FC<RecentChatsListProps> = ({
             key={chat.id}
             type="button"
             onClick={() => onSelect(chat.id)}
-            className={`flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left text-xs transition-colors ${
+            className={`flex w-full items-center gap-2.5 rounded-lg px-2 py-2 text-left text-sm transition-colors ${
               isActive
                 ? "bg-(--color-accent-subtle) text-(--color-accent)"
                 : "text-(--color-text-secondary) hover:bg-(--color-bg-hover)"
             }`}
             aria-label={`Open recent chat ${chat.title || "Untitled Chat"}`}
           >
-            <MessageSquare size={13} className="shrink-0" />
+            <MessageSquare size={16} className="shrink-0" />
             <span className="truncate">{chat.title || "Untitled Chat"}</span>
           </button>
         );
