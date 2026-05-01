@@ -29,7 +29,10 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useModal } from "../context/ModalContext"; // ✅ NEW: Custom modal
 import { useUploadContext } from "../context/UploadContext";
 import ImagePreviewModal from "../components/ImagePreviewModal";
-import { buildFileTree, type FileTreeNode as TreeNode } from "../components/sidebar/fileTree";
+import {
+  buildFileTree,
+  type FileTreeNode as TreeNode,
+} from "../components/sidebar/fileTree";
 
 const ACCEPTED_UPLOAD_TYPES = [
   "application/pdf",
