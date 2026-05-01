@@ -98,7 +98,11 @@ const SidebarFilesTree: React.FC = () => {
 
   const getNodeDocs = (node: FileTreeNode): DragDoc[] => {
     const sourceFiles =
-      node.type === "file" ? (node.file ? [node.file] : []) : collectNodeFiles(node);
+      node.type === "file"
+        ? node.file
+          ? [node.file]
+          : []
+        : collectNodeFiles(node);
 
     return sourceFiles.map((file) => ({
       id: file.id,
@@ -119,10 +123,7 @@ const SidebarFilesTree: React.FC = () => {
         : createDragPayload(docs);
     event.dataTransfer.effectAllowed = "copy";
     event.dataTransfer.setData(DRAG_MIME_TYPE, payload);
-    event.dataTransfer.setData(
-      "text/plain",
-      `${PLAIN_TEXT_PREFIX}${payload}`,
-    );
+    event.dataTransfer.setData("text/plain", `${PLAIN_TEXT_PREFIX}${payload}`);
   };
 
   const toggleFolder = (folderPath: string) => {
