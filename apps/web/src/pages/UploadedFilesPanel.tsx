@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useMemo, useRef, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   File,
@@ -14,6 +14,8 @@ import {
   FolderOpen,
   Upload,
   Plus,
+  X,
+  Sparkles,
 } from "lucide-react";
 import {
   listUploadedFiles,
@@ -26,9 +28,43 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import { useModal } from "../context/ModalContext"; // ✅ NEW: Custom modal
 import { useUploadContext } from "../context/UploadContext";
-import R2UploadModal from "../components/upload/R2UploadModal";
 import ImagePreviewModal from "../components/ImagePreviewModal";
 import { buildFileTree, type FileTreeNode as TreeNode } from "../components/sidebar/fileTree";
+
+const ACCEPTED_UPLOAD_TYPES = [
+  "application/pdf",
+  ".pdf",
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  ".docx",
+  "text/plain",
+  ".txt",
+  "text/markdown",
+  ".md",
+  "text/csv",
+  ".csv",
+  "application/json",
+  ".json",
+  "text/html",
+  ".html",
+  "text/css",
+  ".css",
+  "text/javascript",
+  "application/javascript",
+  ".js",
+  "application/x-yaml",
+  "text/x-yaml",
+  ".yaml",
+  ".yml",
+  "image/png",
+  ".png",
+  "image/jpeg",
+  ".jpg",
+  ".jpeg",
+  "image/webp",
+  ".webp",
+  "image/gif",
+  ".gif",
+].join(",");
 
 const UploadedFilesPanel: React.FC = () => {
   const [files, setFiles] = useState<UploadedFile[]>([]);
@@ -43,24 +79,65 @@ const UploadedFilesPanel: React.FC = () => {
   const [newFolderName, setNewFolderName] = useState("");
   const [newFolderParent, setNewFolderParent] = useState("");
   const [isCreatingFolder, setIsCreatingFolder] = useState(false);
-  const [showUploadModal, setShowUploadModal] = useState(false);
+  const [pendingUploadFolder, setPendingUploadFolder] = useState<string | null>(
+    null,
+  );
   const [showImagePreview, setShowImagePreview] = useState(false);
   const [previewFileId, setPreviewFileId] = useState<string | null>(null);
   const [previewFileName, setPreviewFileName] = useState("");
   const { showAlert, showError, showConfirm } = useModal(); // ✅ NEW: Use modal
-  const { setTargetFolder } = useUploadContext();
+  const {
+    items: uploadItems,
+    uploadMultiple,
+    dismissItem,
+    clearCompleted,
+    hasCompleted,
+    setTargetFolder,
+  } = useUploadContext();
+  const uploadInputRef = useRef<HTMLInputElement>(null);
 
   const navigate = useNavigate();
 
   const handleUploadFolder = (folderPath: string) => {
     setTargetFolder(folderPath);
-    setShowUploadModal(true);
+    setPendingUploadFolder(folderPath);
+    uploadInputRef.current?.click();
   };
 
   const handleUploadDefault = () => {
     setTargetFolder(null);
-    setShowUploadModal(true);
+    setPendingUploadFolder(null);
+    uploadInputRef.current?.click();
   };
+
+  const handleUploadInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files || e.target.files.length === 0) return;
+    uploadMultiple(e.target.files, pendingUploadFolder || undefined);
+    e.target.value = "";
+    setPendingUploadFolder(null);
+    setTargetFolder(null);
+  };
+
+  const stageLabel = (item: (typeof uploadItems)[number]): string => {
+    if (item.stage === "uploading") return `Uploading ${item.uploadProgress}%`;
+    if (item.stage === "indexing") return `Indexing ${item.indexProgress}%`;
+    if (item.stage === "confirming") return "Registering file...";
+    if (item.stage === "presigning") return "Preparing upload...";
+    if (item.stage === "done") return "Indexed";
+    if (item.stage === "error") {
+      if (item.fileId) return "Upload complete, indexing failed";
+      return "Upload failed";
+    }
+    return item.stage;
+  };
+
+  const uploadQueue = useMemo(
+    () =>
+      uploadItems.filter(
+        (item) => item.stage !== "done" || item.stage === "error",
+      ),
+    [uploadItems],
+  );
 
   const isImageFile = (extension: string): boolean => {
     const imageExtensions = [
@@ -166,6 +243,17 @@ const UploadedFilesPanel: React.FC = () => {
   useEffect(() => {
     fetchFiles();
   }, []);
+
+  useEffect(() => {
+    const hasFinishedItem = uploadItems.some(
+      (item) => item.stage === "done" || item.stage === "error",
+    );
+    if (!hasFinishedItem) return;
+    const refresh = setTimeout(() => {
+      void fetchFiles();
+    }, 700);
+    return () => clearTimeout(refresh);
+  }, [uploadItems]);
 
   const handleReindex = async (e: React.MouseEvent, fileId: string) => {
     e.stopPropagation();
@@ -410,6 +498,15 @@ const UploadedFilesPanel: React.FC = () => {
 
   return (
     <div className="flex flex-1 flex-col overflow-hidden">
+      <input
+        ref={uploadInputRef}
+        type="file"
+        multiple
+        accept={ACCEPTED_UPLOAD_TYPES}
+        className="hidden"
+        onChange={handleUploadInputChange}
+      />
+
       <div className="mb-4 flex gap-2 justify-end">
         <button
           className="cursor-pointer rounded-sm border border-(--color-border) bg-(--color-accent) text-white px-3 py-2 text-sm shadow-(--shadow-sm) transition-all duration-300 hover:opacity-90"
@@ -431,6 +528,78 @@ const UploadedFilesPanel: React.FC = () => {
           <RefreshCw size={16} className={isLoading ? "animate-spin" : ""} />
         </button>
       </div>
+
+      {uploadQueue.length > 0 && (
+        <div className="mb-3 flex flex-col gap-2 rounded-lg border border-(--glass-border) bg-(--panel-soft-bg) p-3 shadow-(--shadow-sm)">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-semibold uppercase tracking-wide text-(--color-text-secondary)">
+              Upload Queue ({uploadQueue.length})
+            </span>
+            {hasCompleted && (
+              <button
+                type="button"
+                className="rounded border border-(--color-border) px-2 py-1 text-[11px] text-(--color-text-muted) hover:bg-(--color-bg-hover)"
+                onClick={clearCompleted}
+              >
+                Clear Completed
+              </button>
+            )}
+          </div>
+
+          <div className="max-h-40 space-y-1.5 overflow-y-auto pr-1">
+            {uploadQueue.map((item) => (
+              <div
+                key={item.id}
+                className="flex items-center justify-between gap-3 rounded-md border border-(--glass-border) bg-(--color-bg-surface) px-2.5 py-2"
+              >
+                <div className="min-w-0">
+                  <p className="truncate text-xs font-medium text-(--color-text-primary)">
+                    {item.fileName}
+                  </p>
+                  {item.stage === "error" && item.error && (
+                    <p className="truncate text-[11px] text-(--color-error)">
+                      {item.error}
+                    </p>
+                  )}
+                </div>
+
+                <div className="flex shrink-0 items-center gap-2">
+                  <span
+                    className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] ${
+                      item.stage === "done"
+                        ? "bg-[rgba(52,211,153,0.15)] text-(--color-success)"
+                        : item.stage === "error"
+                          ? "bg-[rgba(248,113,113,0.15)] text-(--color-error)"
+                          : "bg-(--color-accent-subtle) text-(--color-accent)"
+                    }`}
+                  >
+                    {item.stage === "done" ? (
+                      <CheckCircle2 size={10} />
+                    ) : item.stage === "error" ? (
+                      <AlertCircle size={10} />
+                    ) : item.stage === "indexing" ? (
+                      <Sparkles size={10} />
+                    ) : (
+                      <Loader2 size={10} className="animate-spin" />
+                    )}
+                    {stageLabel(item)}
+                  </span>
+                  {(item.stage === "done" || item.stage === "error") && (
+                    <button
+                      type="button"
+                      className="text-(--color-text-muted) hover:text-(--color-text-primary)"
+                      onClick={() => dismissItem(item.id)}
+                      title="Dismiss"
+                    >
+                      <X size={14} />
+                    </button>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       <div className="flex-1 overflow-y-auto rounded-lg border border-(--glass-border) bg-(--color-bg-surface) shadow-(--shadow-md)">
         <AnimatePresence mode="wait">
@@ -553,25 +722,6 @@ const UploadedFilesPanel: React.FC = () => {
               </div>
             </motion.div>
           </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Upload Modal */}
-      <AnimatePresence>
-        {showUploadModal && (
-          <R2UploadModal
-            onClose={() => {
-              setShowUploadModal(false);
-              setTargetFolder(null);
-              fetchFiles(); // Refresh files after upload
-            }}
-            onSuccess={() => {
-              // Refresh files to show newly uploaded file
-              setTimeout(() => {
-                fetchFiles();
-              }, 1000);
-            }}
-          />
         )}
       </AnimatePresence>
 

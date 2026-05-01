@@ -103,7 +103,9 @@ export function useR2Upload() {
             } else if (status.state === "failed") {
               updateItem(item.id, {
                 stage: "error",
-                error: status.failedReason ?? "Indexing failed",
+                error: status.failedReason
+                  ? `Indexing failed: ${status.failedReason}`
+                  : "Upload succeeded, but indexing failed.",
               });
             } else {
               updateItem(item.id, {
@@ -139,6 +141,7 @@ export function useR2Upload() {
   const uploadSingle = useCallback(
     async (file: File, folderPath?: string) => {
       const id = makeId();
+      let currentPhase: "presigning" | "uploading" | "confirming" = "presigning";
 
       // Client-side validation
       if (file.size > MAX_FILE_SIZE_BYTES) {
@@ -192,6 +195,7 @@ export function useR2Upload() {
         });
 
         // Step 2: Upload to R2
+        currentPhase = "uploading";
         updateItem(id, { stage: "uploading" });
         await uploadFileToR2(
           uploadUrl,
@@ -203,6 +207,7 @@ export function useR2Upload() {
         );
 
         // Step 3: Confirm (include folderPath if provided)
+        currentPhase = "confirming";
         updateItem(id, { stage: "confirming", uploadProgress: 100 });
         const result = await confirmUpload({
           r2Key,
@@ -219,8 +224,15 @@ export function useR2Upload() {
           jobId: result.jobId ?? null,
         });
       } catch (err: unknown) {
-        const message = err instanceof Error ? err.message : "Upload failed";
-        updateItem(id, { stage: "error", error: message });
+        const message =
+          err instanceof Error ? err.message : "Unexpected upload error";
+        const formattedMessage =
+          currentPhase === "uploading"
+            ? `Upload failed: ${message}`
+            : currentPhase === "confirming"
+              ? `Upload succeeded, but indexing setup failed: ${message}`
+              : `Failed to start upload: ${message}`;
+        updateItem(id, { stage: "error", error: formattedMessage });
       }
     },
     [updateItem],

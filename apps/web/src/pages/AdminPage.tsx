@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { useAuth } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
-import { AlertCircle, Check, Loader2 } from "lucide-react";
+import { AlertCircle, Check, Loader2, Shield, RefreshCw } from "lucide-react";
 import { BASE_URL, tokenStore } from "../api/client";
+import PageShell from "../components/layout/PageShell";
 
 interface WaitlistEntry {
   id: string;
@@ -183,257 +184,156 @@ const AdminPage: React.FC = () => {
   }
 
   return (
-    <div style={{ padding: "2rem", maxWidth: "1200px", margin: "0 auto" }}>
-      <h1 style={{ fontSize: "2rem", marginBottom: "1rem" }}>Admin Panel</h1>
-
-      {message && (
-        <div
-          style={{
-            padding: "1rem",
-            marginBottom: "2rem",
-            borderRadius: "0.5rem",
-            backgroundColor:
-              message.type === "success"
-                ? "rgba(34, 197, 94, 0.1)"
-                : "rgba(239, 68, 68, 0.1)",
-            border:
-              message.type === "success"
-                ? "1px solid rgb(34, 197, 94)"
-                : "1px solid rgb(239, 68, 68)",
-            color:
-              message.type === "success"
-                ? "rgb(34, 197, 94)"
-                : "rgb(239, 68, 68)",
-            display: "flex",
-            alignItems: "center",
-            gap: "0.5rem",
-          }}
-        >
-          {message.type === "success" ? (
-            <Check size={20} />
-          ) : (
-            <AlertCircle size={20} />
-          )}
-          {message.text}
-        </div>
-      )}
-
-      <div
-        style={{
-          backgroundColor: "var(--color-bg-surface)",
-          borderRadius: "0.75rem",
-          padding: "1.5rem",
-          marginBottom: "2rem",
-        }}
-      >
-        <h2 style={{ marginBottom: "1rem" }}>Grant Beta Access</h2>
-        <div style={{ display: "flex", gap: "0.5rem" }}>
-          <input
-            type="email"
-            placeholder="Enter user email"
-            value={emailInput}
-            onChange={(e) => setEmailInput(e.target.value)}
-            style={{
-              flex: 1,
-              padding: "0.75rem",
-              border: "1px solid var(--color-border)",
-              borderRadius: "0.5rem",
-              backgroundColor: "var(--color-bg-primary)",
-              color: "var(--color-text-primary)",
-            }}
-          />
+    <PageShell
+      title="Admin Panel"
+      subtitle="Manage waitlist and beta access"
+      actions={
+        <div className="flex items-center gap-2">
+          <Shield size={16} className="text-(--color-accent)" />
           <button
-            onClick={() => {
-              if (emailInput) {
-                grantAccess(emailInput);
-                setEmailInput("");
-              }
-            }}
-            disabled={!emailInput}
-            style={{
-              padding: "0.75rem 1.5rem",
-              backgroundColor: "var(--color-accent)",
-              color: "white",
-              border: "none",
-              borderRadius: "0.5rem",
-              cursor: emailInput ? "pointer" : "not-allowed",
-              opacity: emailInput ? 1 : 0.5,
-            }}
+            type="button"
+            onClick={() => void refreshWaitlist()}
+            className="flex items-center gap-1 rounded-md border border-(--color-border) bg-(--color-bg-surface) px-2.5 py-1.5 text-xs text-(--color-text-secondary) transition-colors hover:bg-(--color-bg-hover) hover:text-(--color-text-primary)"
           >
-            Grant Access
+            <RefreshCw size={13} />
+            Refresh
           </button>
         </div>
-      </div>
-
-      <div>
-        <h2 style={{ marginBottom: "1rem" }}>
-          Waitlist Signups ({waitlist.length})
-        </h2>
-
-        {isLoading ? (
-          <div style={{ textAlign: "center", padding: "2rem" }}>
-            <Loader2
-              size={24}
-              style={{ animation: "spin 1s linear infinite", margin: "0 auto" }}
-            />
-          </div>
-        ) : waitlist.length === 0 ? (
-          <p style={{ color: "var(--color-text-secondary)" }}>
-            No waitlist signups yet
-          </p>
-        ) : (
+      }
+      bodyClassName="overflow-y-auto"
+      contentClassName="mx-auto w-full max-w-[1200px] p-6 md:p-8"
+    >
+      <div className="space-y-4">
+        {message && (
           <div
-            style={{
-              overflowX: "auto",
-              border: "1px solid var(--color-border)",
-              borderRadius: "0.75rem",
-            }}
+            className={`flex items-center gap-2 rounded-lg border px-4 py-3 text-sm ${
+              message.type === "success"
+                ? "border-green-500/30 bg-green-500/10 text-green-400"
+                : "border-red-500/30 bg-red-500/10 text-red-400"
+            }`}
           >
-            <table
-              style={{
-                width: "100%",
-                borderCollapse: "collapse",
-                fontSize: "0.875rem",
-              }}
-            >
-              <thead>
-                <tr
-                  style={{
-                    backgroundColor: "var(--color-bg-surface)",
-                    borderBottom: "1px solid var(--color-border)",
-                  }}
-                >
-                  <th
-                    style={{
-                      padding: "0.75rem",
-                      textAlign: "left",
-                      fontWeight: "600",
-                    }}
-                  >
-                    Email
-                  </th>
-                  <th
-                    style={{
-                      padding: "0.75rem",
-                      textAlign: "left",
-                      fontWeight: "600",
-                    }}
-                  >
-                    Name
-                  </th>
-                  <th
-                    style={{
-                      padding: "0.75rem",
-                      textAlign: "left",
-                      fontWeight: "600",
-                    }}
-                  >
-                    Profession
-                  </th>
-                  <th
-                    style={{
-                      padding: "0.75rem",
-                      textAlign: "left",
-                      fontWeight: "600",
-                    }}
-                  >
-                    Status
-                  </th>
-                  <th
-                    style={{
-                      padding: "0.75rem",
-                      textAlign: "left",
-                      fontWeight: "600",
-                    }}
-                  >
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {waitlist.map((entry) => (
-                  <tr
-                    key={entry.id}
-                    style={{
-                      borderBottom: "1px solid var(--color-border)",
-                    }}
-                  >
-                    <td style={{ padding: "0.75rem" }}>{entry.email}</td>
-                    <td style={{ padding: "0.75rem" }}>{entry.name || "-"}</td>
-                    <td style={{ padding: "0.75rem" }}>
-                      {entry.profession || "-"}
-                    </td>
-                    <td
-                      style={{
-                        padding: "0.75rem",
-                        color:
-                          entry.status === "converted"
-                            ? "var(--color-accent)"
-                            : "var(--color-text-secondary)",
-                      }}
-                    >
-                      {entry.status}
-                    </td>
-                    <td style={{ padding: "0.75rem" }}>
-                      <div style={{ display: "flex", gap: "0.5rem" }}>
-                        {entry.status !== "converted" && (
-                          <button
-                            onClick={() => grantAccess(entry.email)}
-                            disabled={grantingEmail === entry.email}
-                            style={{
-                              padding: "0.5rem 1rem",
-                              backgroundColor: "var(--color-accent)",
-                              color: "white",
-                              border: "none",
-                              borderRadius: "0.375rem",
-                              cursor: "pointer",
-                              fontSize: "0.75rem",
-                            }}
-                          >
-                            {grantingEmail === entry.email ? (
-                              <Loader2
-                                size={14}
-                                style={{ animation: "spin 1s linear infinite" }}
-                              />
-                            ) : (
-                              "Grant"
-                            )}
-                          </button>
-                        )}
-                        {entry.status === "converted" && (
-                          <button
-                            onClick={() => revokeAccess(entry.email)}
-                            disabled={revokingEmail === entry.email}
-                            style={{
-                              padding: "0.5rem 1rem",
-                              backgroundColor: "#ef4444",
-                              color: "white",
-                              border: "none",
-                              borderRadius: "0.375rem",
-                              cursor: "pointer",
-                              fontSize: "0.75rem",
-                            }}
-                          >
-                            {revokingEmail === entry.email ? (
-                              <Loader2
-                                size={14}
-                                style={{ animation: "spin 1s linear infinite" }}
-                              />
-                            ) : (
-                              "Revoke"
-                            )}
-                          </button>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+            {message.type === "success" ? <Check size={18} /> : <AlertCircle size={18} />}
+            <span>{message.text}</span>
           </div>
         )}
+
+        <section className="glass rounded-xl border border-(--glass-border) p-4 md:p-5">
+          <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-(--color-text-secondary)">
+            Grant Beta Access
+          </h2>
+          <div className="flex flex-col gap-2 sm:flex-row">
+            <input
+              type="email"
+              placeholder="Enter user email"
+              value={emailInput}
+              onChange={(e) => setEmailInput(e.target.value)}
+              className="flex-1 rounded-lg border border-(--color-border) bg-(--color-bg-secondary) px-3 py-2 text-sm text-(--color-text-primary) outline-none transition-colors placeholder:text-(--color-text-muted) focus:border-(--color-accent)"
+            />
+            <button
+              type="button"
+              onClick={() => {
+                if (emailInput.trim()) {
+                  void grantAccess(emailInput.trim());
+                  setEmailInput("");
+                }
+              }}
+              disabled={!emailInput.trim()}
+              className="rounded-lg bg-(--color-accent) px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-(--color-accent-hover) disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              Grant Access
+            </button>
+          </div>
+        </section>
+
+        <section className="glass rounded-xl border border-(--glass-border)">
+          <div className="flex items-center justify-between border-b border-(--color-border-subtle) px-4 py-3">
+            <h2 className="text-sm font-semibold uppercase tracking-wide text-(--color-text-secondary)">
+              Waitlist Signups
+            </h2>
+            <span className="rounded-full bg-(--color-accent-subtle) px-2 py-0.5 text-xs text-(--color-accent)">
+              {waitlist.length}
+            </span>
+          </div>
+
+          {isLoading ? (
+            <div className="flex items-center justify-center py-10 text-(--color-text-secondary)">
+              <Loader2 size={22} className="animate-spin" />
+            </div>
+          ) : waitlist.length === 0 ? (
+            <div className="px-4 py-8 text-sm text-(--color-text-muted)">
+              No waitlist signups yet.
+            </div>
+          ) : (
+            <div className="max-h-[60vh] overflow-auto">
+              <table className="w-full min-w-[860px] border-collapse text-sm">
+                <thead className="sticky top-0 bg-(--color-bg-surface)">
+                  <tr className="border-b border-(--color-border)">
+                    <th className="px-4 py-2.5 text-left font-semibold text-(--color-text-secondary)">Email</th>
+                    <th className="px-4 py-2.5 text-left font-semibold text-(--color-text-secondary)">Name</th>
+                    <th className="px-4 py-2.5 text-left font-semibold text-(--color-text-secondary)">Profession</th>
+                    <th className="px-4 py-2.5 text-left font-semibold text-(--color-text-secondary)">Status</th>
+                    <th className="px-4 py-2.5 text-left font-semibold text-(--color-text-secondary)">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {waitlist.map((entry) => (
+                    <tr
+                      key={entry.id}
+                      className="border-b border-(--color-border-subtle) align-top transition-colors hover:bg-(--color-bg-hover)"
+                    >
+                      <td className="px-4 py-2.5 text-(--color-text-primary)">{entry.email}</td>
+                      <td className="px-4 py-2.5 text-(--color-text-primary)">{entry.name || "-"}</td>
+                      <td className="px-4 py-2.5 text-(--color-text-secondary)">{entry.profession || "-"}</td>
+                      <td className="px-4 py-2.5">
+                        <span
+                          className={`rounded-full px-2 py-0.5 text-xs ${
+                            entry.status === "converted"
+                              ? "bg-(--color-accent-subtle) text-(--color-accent)"
+                              : "bg-(--color-bg-hover) text-(--color-text-muted)"
+                          }`}
+                        >
+                          {entry.status}
+                        </span>
+                      </td>
+                      <td className="px-4 py-2.5">
+                        <div className="flex gap-2">
+                          {entry.status !== "converted" && (
+                            <button
+                              type="button"
+                              onClick={() => void grantAccess(entry.email)}
+                              disabled={grantingEmail === entry.email}
+                              className="inline-flex items-center gap-1 rounded-md bg-(--color-accent) px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-(--color-accent-hover) disabled:cursor-not-allowed disabled:opacity-60"
+                            >
+                              {grantingEmail === entry.email ? (
+                                <Loader2 size={12} className="animate-spin" />
+                              ) : null}
+                              Grant
+                            </button>
+                          )}
+                          {entry.status === "converted" && (
+                            <button
+                              type="button"
+                              onClick={() => void revokeAccess(entry.email)}
+                              disabled={revokingEmail === entry.email}
+                              className="inline-flex items-center gap-1 rounded-md bg-red-500/90 px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-red-500 disabled:cursor-not-allowed disabled:opacity-60"
+                            >
+                              {revokingEmail === entry.email ? (
+                                <Loader2 size={12} className="animate-spin" />
+                              ) : null}
+                              Revoke
+                            </button>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </section>
       </div>
-    </div>
+    </PageShell>
   );
 };
 
