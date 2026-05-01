@@ -5,6 +5,11 @@ import DocumentMentionAutocomplete, {
   type MentionedDocument,
 } from "./DocumentMentionAutocomplete";
 import { generateFile, resolveDocuments, searchFiles } from "../../api/client";
+import {
+  useComposerAttach,
+  type ComposerAttachHandler,
+  type PendingComposerAttach,
+} from "../../context/ComposerAttachContext";
 
 const DRAG_MIME_TYPE = "application/x-vrnya-doc-ref";
 const PLAIN_TEXT_PREFIX = "vrnya-doc-ref:";
@@ -56,6 +61,9 @@ interface ChatInputProps {
   onToggleAutoSpeak?: () => void;
   disabled: boolean;
   dockToBottom?: boolean;
+  /** From router state when navigating from sidebar @ while composer was unmounted */
+  pendingSidebarAttach?: PendingComposerAttach;
+  onPendingSidebarAttachConsumed?: () => void;
 }
 
 const ChatInput: React.FC<ChatInputProps> = ({
@@ -67,7 +75,10 @@ const ChatInput: React.FC<ChatInputProps> = ({
   onToggleAutoSpeak,
   disabled,
   dockToBottom = false,
+  pendingSidebarAttach,
+  onPendingSidebarAttachConsumed,
 }) => {
+  const { registerAttachHandler } = useComposerAttach();
   const [input, setInput] = useState("");
   const [isProcessingVoice, setIsProcessingVoice] = useState(false);
   const [attachmentChips, setAttachmentChips] = useState<AttachmentChip[]>([]);
@@ -305,6 +316,57 @@ const ChatInput: React.FC<ChatInputProps> = ({
       return prev.trim() ? `${prev.trim()} ${mentionsToAdd} ` : `${mentionsToAdd} `;
     });
   };
+
+  const appendMentionsRef = useRef(appendMentionsAndAttach);
+  appendMentionsRef.current = appendMentionsAndAttach;
+
+  useEffect(() => {
+    const handler: ComposerAttachHandler = async (payload) => {
+      const ids = payload.docIds.filter(Boolean);
+      if (!ids.length) return;
+      const resolved = await resolveDocuments(ids);
+      const resolvedDocs: MentionedDocument[] = resolved.documents.map(
+        (doc) => ({
+          id: doc.id,
+          name: doc.name,
+          path: doc.path,
+        }),
+      );
+      appendMentionsRef.current(resolvedDocs, payload.folder);
+    };
+    registerAttachHandler(handler);
+    return () => registerAttachHandler(null);
+  }, [registerAttachHandler]);
+
+  useEffect(() => {
+    if (!pendingSidebarAttach?.docIds?.length || !onPendingSidebarAttachConsumed) {
+      return;
+    }
+    let cancelled = false;
+    void (async () => {
+      try {
+        const ids = pendingSidebarAttach.docIds.filter(Boolean);
+        if (!ids.length) return;
+        const resolved = await resolveDocuments(ids);
+        if (cancelled) return;
+        const resolvedDocs: MentionedDocument[] = resolved.documents.map(
+          (doc) => ({
+            id: doc.id,
+            name: doc.name,
+            path: doc.path,
+          }),
+        );
+        appendMentionsRef.current(resolvedDocs, pendingSidebarAttach.folder);
+      } catch (e) {
+        console.error("Failed to apply pending sidebar attachments:", e);
+      } finally {
+        if (!cancelled) onPendingSidebarAttachConsumed();
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [pendingSidebarAttach, onPendingSidebarAttachConsumed]);
 
   const handleDropToComposer = async (event: React.DragEvent<HTMLDivElement>) => {
     event.preventDefault();

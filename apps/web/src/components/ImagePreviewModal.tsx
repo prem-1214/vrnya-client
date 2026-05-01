@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Loader2, AlertCircle } from "lucide-react";
 import { getImageDownloadUrl } from "../api/client";
@@ -38,10 +39,10 @@ const ImagePreviewModal: React.FC<ImagePreviewModalProps> = ({
     loadImage();
   }, [fileId]);
 
-  return (
+  return createPortal(
     <AnimatePresence>
       <motion.div
-        className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 md:p-6"
+        className="fixed inset-0 z-[1200] flex items-center justify-center bg-black/70 p-4 md:p-6"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
@@ -56,6 +57,7 @@ const ImagePreviewModal: React.FC<ImagePreviewModalProps> = ({
         >
           {/* Close button */}
           <button
+            type="button"
             onClick={onClose}
             className="absolute right-0 top-12 z-10 rounded-lg p-2 text-white transition-colors hover:bg-white/10"
             title="Close"
@@ -66,14 +68,14 @@ const ImagePreviewModal: React.FC<ImagePreviewModalProps> = ({
           {/* Image or Loading/Error state */}
           {isLoading && (
             <div className="flex h-96 w-96 items-center justify-center">
-              <Loader2 size={48} className="text-white animate-spin" />
+              <Loader2 size={48} className="animate-spin text-white" />
             </div>
           )}
 
           {error && (
-            <div className="flex flex-col items-center justify-center w-96 h-96 bg-red-500/10 rounded-lg border border-red-500/20">
-              <AlertCircle size={48} className="text-red-400 mb-4" />
-              <p className="text-red-400 text-center px-4">{error}</p>
+            <div className="flex h-96 w-96 flex-col items-center justify-center rounded-lg border border-red-500/20 bg-red-500/10">
+              <AlertCircle size={48} className="mb-4 text-red-400" />
+              <p className="px-4 text-center text-red-400">{error}</p>
             </div>
           )}
 
@@ -83,7 +85,7 @@ const ImagePreviewModal: React.FC<ImagePreviewModalProps> = ({
                 <img
                   src={imageUrl}
                   alt={fileName}
-                  className="h-auto max-h-[78vh] w-auto max-w-full object-contain rounded-lg shadow-2xl"
+                  className="h-auto max-h-[78vh] w-auto max-w-full rounded-lg object-contain shadow-2xl"
                 />
               </div>
               <p className="text-sm text-white/85">{fileName}</p>
@@ -91,7 +93,8 @@ const ImagePreviewModal: React.FC<ImagePreviewModalProps> = ({
           )}
         </motion.div>
       </motion.div>
-    </AnimatePresence>
+    </AnimatePresence>,
+    document.body,
   );
 };
 

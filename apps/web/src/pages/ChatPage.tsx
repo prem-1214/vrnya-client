@@ -1,10 +1,11 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useCallback } from "react";
 import MessageList from "../components/chat/MessageList";
 import ChatInput from "../components/chat/ChatInput";
 import ChatPreviewPanel from "../components/chat/ChatPreviewPanel";
 import { useChat, type AgentSource } from "../hooks/useChat";
 import { useSpeech } from "../hooks/useSpeech";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
+import type { PendingComposerAttach } from "../context/ComposerAttachContext";
 import MemoryStatusChip from "../components/chat/MemoryStatusChip";
 import PageShell from "../components/layout/PageShell";
 import { useResizablePane } from "../hooks/useResizablePane";
@@ -13,6 +14,22 @@ import type { MentionedDocument } from "../components/chat/DocumentMentionAutoco
 const ChatPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
+
+  const pendingSidebarAttach =
+    (location.state as { pendingComposerAttach?: PendingComposerAttach } | null)
+      ?.pendingComposerAttach;
+
+  const clearPendingComposerState = useCallback(() => {
+    navigate(
+      {
+        pathname: location.pathname,
+        search: location.search,
+        hash: location.hash,
+      },
+      { replace: true, state: {} },
+    );
+  }, [navigate, location.pathname, location.search, location.hash]);
   const {
     messages,
     isTyping,
@@ -163,6 +180,10 @@ const ChatPage: React.FC = () => {
             onToggleAutoSpeak={() => setIsAutoSpeakEnabled(!isAutoSpeakEnabled)}
             disabled={isTyping || isHistoryLoading}
             dockToBottom={messages.length > 0 || isTyping || isHistoryLoading}
+            pendingSidebarAttach={pendingSidebarAttach}
+            onPendingSidebarAttachConsumed={
+              pendingSidebarAttach ? clearPendingComposerState : undefined
+            }
           />
         </div>
 

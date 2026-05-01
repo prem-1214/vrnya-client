@@ -5,10 +5,12 @@ import TitleBar from "./TitleBar";
 import Sidebar from "./Sidebar";
 import StatusBar from "./StatusBar";
 import { useModal, ModalComponent } from "../../context/ModalContext"; // ✅ NEW: Custom modal
+import { ComposerAttachProvider } from "../../context/ComposerAttachContext";
 
 const AppLayout: React.FC = () => {
   const { isOpen, config, closeModal } = useModal(); // ✅ NEW
   return (
+    <ComposerAttachProvider>
     <div
       style={{ padding: "8px" }}
       className="h-screen w-screen flex overflow-hidden bg-(--app-background)"
@@ -41,6 +43,7 @@ const AppLayout: React.FC = () => {
       {/* ✅ NEW: Render modal component */}
       <ModalComponent isOpen={isOpen} config={config} onClose={closeModal} />
     </div>
+    </ComposerAttachProvider>
   );
 };
 
