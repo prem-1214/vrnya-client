@@ -86,9 +86,7 @@ const ImagePreviewModal: React.FC<ImagePreviewModalProps> = ({
                   className="h-auto max-h-[78vh] w-auto max-w-full object-contain rounded-lg shadow-2xl"
                 />
               </div>
-              <p className="text-sm text-white/85">
-                {fileName}
-              </p>
+              <p className="text-sm text-white/85">{fileName}</p>
             </div>
           )}
         </motion.div>
