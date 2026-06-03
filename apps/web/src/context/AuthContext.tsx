@@ -13,10 +13,12 @@ interface AuthContextType {
   user: AuthUser | null;
   isAuthLoading: boolean; // true during initial session restore
   isAuthenticated: boolean;
+  sendOtp: (email: string) => Promise<void>;
   login: (email: string, password: string) => Promise<void>;
   register: (
     email: string,
     password: string,
+    otpCode: string,
     displayName?: string,
   ) => Promise<void>;
   logout: () => Promise<void>;
@@ -62,6 +64,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
     };
   }, []);
 
+  const sendOtp = useCallback(async (email: string) => {
+    await authApi.sendOtp({ email });
+  }, []);
 
   const login = useCallback(async (email: string, password: string) => {
     const { accessToken, user: loggedInUser } = await authApi.login({
@@ -73,11 +78,17 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
   }, []);
 
   const register = useCallback(
-    async (email: string, password: string, displayName?: string) => {
+    async (
+      email: string,
+      password: string,
+      otpCode: string,
+      displayName?: string,
+    ) => {
       const { accessToken, user: newUser } = await authApi.register({
         email,
         password,
         displayName,
+        otpCode,
       });
       tokenStore.set(accessToken);
       setUser(newUser);
@@ -102,6 +113,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
         user,
         isAuthLoading,
         isAuthenticated: user !== null,
+        sendOtp,
         login,
         register,
         logout,

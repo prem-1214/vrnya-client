@@ -776,10 +776,17 @@ export interface AuthUser {
 }
 
 export const authApi = {
+  sendOtp: (payload: { email: string }) =>
+    apiFetch<{ message: string }>("/api/v1/auth/send-otp", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
+
   register: (payload: {
     email: string;
     password: string;
     displayName?: string;
+    otpCode: string;
   }) =>
     apiFetch<{ accessToken: string; user: AuthUser }>("/api/v1/auth/register", {
       method: "POST",
