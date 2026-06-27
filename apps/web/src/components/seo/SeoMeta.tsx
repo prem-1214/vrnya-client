@@ -14,7 +14,7 @@ const SeoMeta: React.FC<SeoMetaProps> = ({
   description,
   canonical,
   robots = "index,follow",
-  ogImage = "https://vrnya.vercel.app/landing-waitlist-page.png?v=20260409",
+  ogImage = "https://vrnya.tech/landing-waitlist-page.png?v=20260409",
 }) => {
   return (
     <Helmet>

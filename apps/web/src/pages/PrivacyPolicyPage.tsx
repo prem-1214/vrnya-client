@@ -12,7 +12,7 @@ const PrivacyPolicyPage: React.FC = () => {
       <SeoMeta
         title="Privacy Policy - Vrnya"
         description="Privacy Policy for Vrnya, the AI-powered workspace for your documents."
-        canonical="https://vrnya.vercel.app/privacy-policy"
+        canonical="https://vrnya.tech/privacy-policy"
         robots="index,follow"
       />
       <div

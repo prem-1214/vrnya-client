@@ -12,7 +12,7 @@ const TermsOfServicePage: React.FC = () => {
       <SeoMeta
         title="Terms of Service - Vrnya"
         description="Terms of Service for Vrnya, the AI-powered workspace for your documents."
-        canonical="https://vrnya.vercel.app/terms-of-service"
+        canonical="https://vrnya.tech/terms-of-service"
         robots="index,follow"
       />
       <div

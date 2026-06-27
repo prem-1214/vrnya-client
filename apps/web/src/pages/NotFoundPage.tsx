@@ -9,7 +9,7 @@ const NotFoundPage: React.FC = () => {
             <SeoMeta
                 title="404 - Page Not Found | Vrnya"
                 description="The page you are looking for does not exist."
-                canonical="https://vrnya.vercel.app/waitlist"
+                canonical="https://vrnya.tech/waitlist"
                 robots="noindex,nofollow"
             />
 

@@ -16,7 +16,7 @@ const WaitlistPage: React.FC = () => {
       <SeoMeta
         title="Vrnya - AI Workspace For Your Documents"
         description="Search, preview, and chat with your documents in one AI-powered workspace."
-        canonical="https://vrnya.vercel.app/waitlist"
+        canonical="https://vrnya.tech/waitlist"
         robots="index,follow"
       />
       <Helmet>
@@ -29,11 +29,11 @@ const WaitlistPage: React.FC = () => {
             operatingSystem: "Windows, macOS, Linux, Web",
             description:
               "AI-powered workspace for searching, previewing, and chatting with your documents.",
-            url: "https://vrnya.vercel.app/waitlist",
+            url: "https://vrnya.tech/waitlist",
             publisher: {
               "@type": "Organization",
               name: "Vrnya",
-              url: "https://vrnya.vercel.app",
+              url: "https://vrnya.tech",
             },
           })}
         </script>

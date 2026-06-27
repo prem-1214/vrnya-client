@@ -8,4 +8,4 @@ Disallow: /files
 Disallow: /document/
 Disallow: /settings
 
-Sitemap: https://vrnya.vercel.app/sitemap.xml
+Sitemap: https://vrnya.tech/sitemap.xml
