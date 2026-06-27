@@ -1,0 +1,9 @@
+# Vrnya
+> AI-powered personal file system assistant with semantic search
+
+## About
+Vrnya lets you chat with your files using natural language. Built on pgvector, CLIP embeddings, and Gemini.
+
+## Live
+- App: https://vrnya.tech
+- API: https://api.vrnya.tech
