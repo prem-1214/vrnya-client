@@ -16,7 +16,7 @@ const WaitlistPage: React.FC = () => {
       <SeoMeta
         title="Vrnya - AI Workspace For Your Documents"
         description="Search, preview, and chat with your documents in one AI-powered workspace."
-        canonical="https://vrnya.tech/waitlist"
+        canonical="https://vrnya.tech/"
         robots="index,follow"
       />
       <Helmet>
