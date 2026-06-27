@@ -15,7 +15,7 @@ const DocumentViewerPage = lazy(() => import("./pages/DocumentViewerPage"));
 const SettingsPage = lazy(() => import("./pages/SettingsPage"));
 const AdminPage = lazy(() => import("./pages/AdminPage"));
 const NotFoundPage = lazy(() => import("./pages/NotFoundPage"));
-const WaitlistPage = lazy(() => import("./pages/WaitlistPage"));
+import WaitlistPage from "./pages/WaitlistPage";
 const PrivacyPolicyPage = lazy(() => import("./pages/PrivacyPolicyPage"));
 const TermsOfServicePage = lazy(() => import("./pages/TermsOfServicePage"));
 const AuthCallbackPage = lazy(() => import("./pages/AuthCallbackPage"));
