@@ -91,7 +91,7 @@ const WaitlistPage: React.FC = () => {
       <header className="sticky top-[20px] z-50 flex items-center justify-between w-full max-w-[1200px] mx-auto mb-16 px-6 py-0 rounded-[25px] bg-white/95 backdrop-blur-[6px] border border-white/40 shadow-[0_4px_24px_-1px_rgba(0,0,0,0.05)] h-[70px]">
         <div className="text-[1.4rem] font-extrabold tracking-[-0.03em] bg-gradient-to-br from-[var(--color-text-primary)] to-[#6366f1] bg-clip-text text-transparent">
           <img
-            src="/Vrnya-logo.png"
+            src="/Vrnya-logo.webp"
             alt="Vrnya Logo"
             className="h-[70px] w-auto object-contain transition-[height] duration-400 ease-[cubic-bezier(0.34,1.56,0.64,1)] hover:opacity-80"
           />

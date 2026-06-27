@@ -51,7 +51,7 @@ const WaitlistPage: React.FC = () => {
         className={`sticky top-5 z-50 mx-auto mb-16 flex max-w-[1200px] items-center justify-between rounded-[20px] px-6 py-0 shadow-[0_4px_24px_-1px_rgba(0,0,0,0.05)] ${glassNav}`}
       >
         <div className="flex items-center">
-          <img src="/Vrnya-logo.png" alt="Vrnya" className="navbar-logo" />
+          <img src="/Vrnya-logo.webp" alt="Vrnya" className="navbar-logo" />
         </div>
         <nav className="hidden items-center gap-8 md:flex" aria-label="Primary">
           <a

@@ -25,7 +25,7 @@ const TermsOfServicePage: React.FC = () => {
       >
         <div className="flex items-center">
           <Link to="/" className="no-underline flex items-center">
-            <img src="/Vrnya-logo.png" alt="Vrnya" className="navbar-logo" />
+            <img src="/Vrnya-logo.webp" alt="Vrnya" className="navbar-logo" />
           </Link>
         </div>
         <nav className="hidden items-center gap-8 md:flex" aria-label="Primary">

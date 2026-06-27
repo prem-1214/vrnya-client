@@ -144,7 +144,7 @@ const LoginModal: React.FC = () => {
     >
       {/* Logo / Brand */}
       <div className="mb-1 flex flex-col items-center gap-2">
-        <img src="/Vrnya-logo.png" alt="Vrnya" className="login-modal-logo" />
+        <img src="/Vrnya-logo.webp" alt="Vrnya" className="login-modal-logo" />
         <p className="text-sm text-(--color-text-muted)">
           Your AI-powered knowledge base
         </p>
